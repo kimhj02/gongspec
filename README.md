@@ -81,6 +81,8 @@ docker compose up --build
 
 공개 배포면 `.env`에서 `KAKAO_REDIRECT_URI`, `CORS_ORIGINS`를 실제 프론트 URL로 바꾸고 `COOKIE_SECURE=true`로 둡니다. `JWT_SECRET`도 로컬 기본값을 쓰지 않습니다.
 
+맥 미니에 올리는 순서는 [docs/mac-mini-deploy.md](docs/mac-mini-deploy.md)를 따릅니다.
+
 ## 기능
 
 - 카카오 로그인 (HttpOnly 쿠키)
