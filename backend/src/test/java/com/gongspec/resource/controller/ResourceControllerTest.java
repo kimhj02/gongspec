@@ -1,0 +1,87 @@
+package com.gongspec.resource.controller;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.gongspec.auth.config.AuthCookies;
+import com.gongspec.auth.jwt.JwtTokenProvider;
+import com.gongspec.user.entity.User;
+import com.gongspec.user.service.UserService;
+import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Transactional
+class ResourceControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Test
+    void requiresLogin() throws Exception {
+        mockMvc.perform(get("/api/resources"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("로그인이 필요합니다."));
+    }
+
+    @Test
+    void createsMergesSearchesAndDeletesResource() throws Exception {
+        Cookie token = tokenCookie();
+
+        MvcResult created = mockMvc.perform(post("/api/resources")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"tab":"certificate","title":"정보처리기사","details":{"credential":"기사","issuer":"큐넷"}}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tab").value("certificate"))
+                .andExpect(jsonPath("$.pinned").value(false))
+                .andExpect(jsonPath("$.details.credential").value("기사"))
+                .andReturn();
+        String id = JsonMapper.builder().build().readTree(created.getResponse().getContentAsString()).get("id").asText();
+
+        mockMvc.perform(put("/api/resources/" + id)
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"pinned\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pinned").value(true))
+                .andExpect(jsonPath("$.title").value("정보처리기사"))
+                .andExpect(jsonPath("$.details.issuer").value("큐넷"));
+
+        mockMvc.perform(get("/api/resources?tab=certificate&query=큐넷").cookie(token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(id));
+
+        mockMvc.perform(get("/api/resources?tab=memo").cookie(token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isEmpty());
+
+        mockMvc.perform(delete("/api/resources/" + id).cookie(token)).andExpect(status().isNoContent());
+    }
+
+    private Cookie tokenCookie() {
+        User user = userService.upsertFromKakao("kakao-resource", "현진", "r@example.com");
+        return new Cookie(AuthCookies.TOKEN, jwtTokenProvider.create(user.getId()));
+    }
+}
