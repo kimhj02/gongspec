@@ -57,12 +57,29 @@ API_BASE_URL=http://127.0.0.1:8080 npm run dev -- -p 13001
 
 브라우저에서 http://localhost:13001 로 접속합니다.
 
-`SPRING_PROFILES_ACTIVE=local`을 빼면 MySQL(`gongspec` / `gongspec`)에 붙습니다. Docker가 있으면 `backend/docker-compose.yml`로 MySQL을 띄울 수 있습니다.
+`SPRING_PROFILES_ACTIVE=local`을 빼면 MySQL(`gongspec` / `gongspec`)에 붙습니다. MySQL만 띄울 때는 `backend/docker-compose.yml`을 씁니다.
 
 ```bash
 cd backend
 docker compose up -d
 ```
+
+## Docker 배포
+
+루트 `docker-compose.yml`로 프론트, 백엔드, MySQL을 한 번에 띄웁니다. 루트 `.env`에 카카오 키를 넣고, 카카오 Redirect URI는 브라우저가 여는 프론트 주소와 같아야 합니다.
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+| 서비스 | 주소 |
+|---|---|
+| 프론트 | http://localhost:13001 |
+| 백엔드 | http://localhost:8080 |
+| MySQL | compose 네트워크 안 (`mysql:3306`) |
+
+공개 배포면 `.env`에서 `KAKAO_REDIRECT_URI`, `CORS_ORIGINS`를 실제 프론트 URL로 바꾸고 `COOKIE_SECURE=true`로 둡니다. `JWT_SECRET`도 로컬 기본값을 쓰지 않습니다.
 
 ## 기능
 

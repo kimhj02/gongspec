@@ -11,25 +11,41 @@ public final class AuthCookies {
     private AuthCookies() {}
 
     public static ResponseCookie token(String jwt, Duration maxAge) {
-        return base(TOKEN, jwt).maxAge(maxAge).build();
+        return token(jwt, maxAge, false);
+    }
+
+    public static ResponseCookie token(String jwt, Duration maxAge, boolean secure) {
+        return base(TOKEN, jwt, secure).maxAge(maxAge).build();
     }
 
     public static ResponseCookie clearToken() {
-        return base(TOKEN, "").maxAge(0).build();
+        return clearToken(false);
+    }
+
+    public static ResponseCookie clearToken(boolean secure) {
+        return base(TOKEN, "", secure).maxAge(0).build();
     }
 
     public static ResponseCookie state(String state) {
-        return base(STATE, state).maxAge(Duration.ofMinutes(10)).build();
+        return state(state, false);
+    }
+
+    public static ResponseCookie state(String state, boolean secure) {
+        return base(STATE, state, secure).maxAge(Duration.ofMinutes(10)).build();
     }
 
     public static ResponseCookie clearState() {
-        return base(STATE, "").maxAge(0).build();
+        return clearState(false);
     }
 
-    private static ResponseCookie.ResponseCookieBuilder base(String name, String value) {
+    public static ResponseCookie clearState(boolean secure) {
+        return base(STATE, "", secure).maxAge(0).build();
+    }
+
+    private static ResponseCookie.ResponseCookieBuilder base(String name, String value, boolean secure) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                .secure(false)
+                .secure(secure)
                 .path("/")
                 .sameSite("Lax");
     }

@@ -25,6 +25,12 @@ jwt:
   secret: ${JWT_SECRET:gongspec-local-dev-jwt-secret-key-32b}
   expire: ${JWT_EXPIRE:7d}
 
+app:
+  cors:
+    origins: ${CORS_ORIGINS:http://localhost:13001,http://127.0.0.1:13001,http://localhost:3000,http://127.0.0.1:3000}
+  cookie:
+    secure: ${COOKIE_SECURE:false}
+
 logging:
   level:
     org.hibernate.SQL: debug

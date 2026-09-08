@@ -6,6 +6,7 @@ import com.gongspec.auth.dto.KakaoLoginUrl;
 import com.gongspec.auth.dto.KakaoLoginUrlResponse;
 import com.gongspec.auth.jwt.JwtProperties;
 import com.gongspec.auth.service.AuthService;
+import com.gongspec.common.config.AppProperties;
 import com.gongspec.common.exception.ApiException;
 import com.gongspec.user.dto.UserResponse;
 import com.gongspec.user.entity.User;
@@ -29,18 +30,21 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
     private final JwtProperties jwtProperties;
+    private final AppProperties appProperties;
 
-    public AuthController(AuthService authService, UserService userService, JwtProperties jwtProperties) {
+    public AuthController(
+            AuthService authService, UserService userService, JwtProperties jwtProperties, AppProperties appProperties) {
         this.authService = authService;
         this.userService = userService;
         this.jwtProperties = jwtProperties;
+        this.appProperties = appProperties;
     }
 
     @GetMapping("/kakao/url")
     public ResponseEntity<KakaoLoginUrlResponse> kakaoUrl() {
         KakaoLoginUrl loginUrl = authService.createLoginUrl();
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, AuthCookies.state(loginUrl.state()).toString())
+                .header(HttpHeaders.SET_COOKIE, AuthCookies.state(loginUrl.state(), cookieSecure()).toString())
                 .body(new KakaoLoginUrlResponse(loginUrl.url()));
     }
 
@@ -53,8 +57,8 @@ public class AuthController {
         String token = authService.createToken(user);
         return ResponseEntity.ok()
                 .headers(headers -> {
-                    headers.add(HttpHeaders.SET_COOKIE, AuthCookies.token(token, jwtProperties.expire()).toString());
-                    headers.add(HttpHeaders.SET_COOKIE, AuthCookies.clearState().toString());
+                    headers.add(HttpHeaders.SET_COOKIE, AuthCookies.token(token, jwtProperties.expire(), cookieSecure()).toString());
+                    headers.add(HttpHeaders.SET_COOKIE, AuthCookies.clearState(cookieSecure()).toString());
                 })
                 .body(UserResponse.from(user));
     }
@@ -67,8 +71,12 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout() {
         return ResponseEntity.noContent()
-                .header(HttpHeaders.SET_COOKIE, AuthCookies.clearToken().toString())
+                .header(HttpHeaders.SET_COOKIE, AuthCookies.clearToken(cookieSecure()).toString())
                 .build();
+    }
+
+    private boolean cookieSecure() {
+        return appProperties.cookie() != null && appProperties.cookie().secure();
     }
 
     private static UUID currentUserId(Authentication authentication) {

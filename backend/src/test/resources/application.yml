@@ -17,3 +17,9 @@ kakao:
 jwt:
   secret: gongspec-test-jwt-secret-key-32bytes
   expire: 1h
+
+app:
+  cors:
+    origins: http://localhost:13001
+  cookie:
+    secure: false
