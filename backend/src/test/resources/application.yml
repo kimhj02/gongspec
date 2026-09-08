@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:gongspec;MODE=MySQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+
+kakao:
+  client-id: test-client-id
+  client-secret: test
+  redirect-uri: http://localhost:13001/auth/kakao/callback
+
+jwt:
+  secret: gongspec-test-jwt-secret-key-32bytes
+  expire: 1h

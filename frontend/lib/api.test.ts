@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { api, apiUrl, getApiError, request } from './api'
+import { ApiError, api, apiUrl, getApiError, isUnauthorized, request } from './api'
 
 function jsonResponse(body: unknown, status = 200) {
   return {
@@ -29,6 +29,7 @@ describe('api client', () => {
     const headers = fetchMock.mock.calls[0][1].headers as Headers
     expect(headers.has('Content-Type')).toBe(false)
     expect(fetchMock.mock.calls[0][0]).toBe('/api/resources?query=%EA%B8%B0%EC%82%AC')
+    expect(fetchMock.mock.calls[0][1].credentials).toBe('include')
   })
 
   it('sends json content-type on POST', async () => {
@@ -67,5 +68,25 @@ describe('api client', () => {
   it('reads api error messages', () => {
     expect(getApiError(new Error('연결 실패'))).toBe('연결 실패')
     expect(getApiError('nope')).toBe('서버와 통신할 수 없습니다.')
+  })
+
+  it('throws unauthorized api errors', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ message: '로그인이 필요합니다.' }, 401))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(api.auth.me()).rejects.toMatchObject({ status: 401, message: '로그인이 필요합니다.' })
+    await expect(api.auth.me()).rejects.toBeInstanceOf(ApiError)
+    expect(isUnauthorized(new ApiError(401, '로그인이 필요합니다.'))).toBe(true)
+    expect(isUnauthorized(new Error('로그인이 필요합니다.'))).toBe(false)
+  })
+
+  it('posts kakao callback payload', async () => {
+    const user = { id: '1', kakaoId: 'k', nickname: '현진', email: null, createdAt: '2026-01-01T00:00:00Z' }
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(user))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(api.auth.callback({ code: 'code', state: 'state' })).resolves.toEqual(user)
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/auth/kakao/callback')
+    expect(fetchMock.mock.calls[0][1].body).toBe(JSON.stringify({ code: 'code', state: 'state' }))
   })
 })

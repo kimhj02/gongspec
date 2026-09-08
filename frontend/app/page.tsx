@@ -8,9 +8,11 @@ import CalendarBoard from '@/components/calendar-board'
 import ConfirmDialog from '@/components/confirm-dialog'
 import DdayCard from '@/components/dday-card'
 import EssayBoard from '@/components/essay-board'
+import LoginGate from '@/components/login-gate'
 import ResourceCard from '@/components/resource-card'
 import ResourceForm from '@/components/resource-form'
 import ScheduleModal from '@/components/schedule-modal'
+import { useAuth } from '@/hooks/use-auth'
 import { useDebouncedValue } from '@/hooks/use-debounce'
 import { useTheme } from '@/hooks/use-theme'
 import { useKoreanHolidays } from '@/hooks/use-korean-holidays'
@@ -26,6 +28,7 @@ type PendingDelete =
 
 export default function Page() {
   const { theme, toggleTheme } = useTheme()
+  const { user, isLoading: authLoading, pending: authPending, error: authError, login, logout, mutate: mutateAuth } = useAuth()
   const [activeTab, setActiveTab] = useState<NavId>('calendar')
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query, 300)
@@ -44,12 +47,12 @@ export default function Page() {
   const resourceTab = isCalendar ? null : activeTab
 
   const resources = useSWR(
-    resourceTab ? resourceKey(resourceTab, debouncedQuery) : null,
+    user && resourceTab ? resourceKey(resourceTab, debouncedQuery) : null,
     ([, tab, nextQuery]) => api.resources.list({ tab, query: nextQuery }),
     { revalidateOnFocus: false, keepPreviousData: true },
   )
-  const applications = useSWR(applicationsKey, () => api.resources.list({ tab: 'applications' }), { revalidateOnFocus: false })
-  const schedules = useSWR(schedulesKey, () => api.schedules.list(), { revalidateOnFocus: false })
+  const applications = useSWR(user ? applicationsKey : null, () => api.resources.list({ tab: 'applications' }), { revalidateOnFocus: false })
+  const schedules = useSWR(user ? schedulesKey : null, () => api.schedules.list(), { revalidateOnFocus: false })
   const days = useMemo(() => monthDays(month), [month])
   const holidays = useKoreanHolidays(month.getFullYear())
   const events = useMemo(
@@ -63,6 +66,23 @@ export default function Page() {
     const timer = window.setTimeout(() => setNotice(null), 4000)
     return () => window.clearTimeout(timer)
   }, [notice])
+
+  const startLogin = async () => {
+    try {
+      await login()
+    } catch (error) {
+      setNotice({ type: 'error', message: getApiError(error) })
+    }
+  }
+
+  const startLogout = async () => {
+    try {
+      await logout()
+      setNotice({ type: 'success', message: '로그아웃했습니다.' })
+    } catch (error) {
+      setNotice({ type: 'error', message: getApiError(error) })
+    }
+  }
 
   const openCreate = () => {
     setEditing(null)
@@ -201,6 +221,18 @@ export default function Page() {
             </div>
           </div>
           <div className="top-actions">
+            {user ? (
+              <>
+                <span className="user-chip">{user.nickname}</span>
+                <button className="auth-action" onClick={() => void startLogout()} disabled={authPending}>
+                  로그아웃
+                </button>
+              </>
+            ) : (
+              <button className="kakao-button" onClick={() => void startLogin()} disabled={authPending || authLoading}>
+                카카오로 시작하기
+              </button>
+            )}
             <button className="icon-button" aria-label="테마 전환" onClick={toggleTheme}>
               {theme === 'light' ? <Moon size={17} /> : <Sun size={17} />}
             </button>
@@ -233,6 +265,14 @@ export default function Page() {
         </aside>
 
         <main className="main-content">
+          {authLoading ? (
+            <LoadingState />
+          ) : authError ? (
+            <InlineError message={getApiError(authError)} onRetry={() => void mutateAuth()} />
+          ) : !user ? (
+            <LoginGate onLogin={() => void startLogin()} pending={authPending} />
+          ) : (
+            <>
           <section className="page-intro">
             <div className="page-intro-copy">
               <div className="eyebrow">{tabCopy[activeTab].eyebrow}</div>
@@ -337,6 +377,8 @@ export default function Page() {
                   actionLabel={tabCopy[activeTab].createLabel}
                 />
               )}
+            </>
+          )}
             </>
           )}
         </main>

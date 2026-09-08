@@ -14,9 +14,30 @@ export type Resource = {
   details?: Record<string, string>
 }
 export type Schedule = { id: string; title: string; date: string; endDate?: string; memo?: string; type: ScheduleType }
+export type AuthUser = {
+  id: string
+  kakaoId: string
+  nickname: string
+  email: string | null
+  createdAt: string
+}
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '')
 const REQUEST_TIMEOUT_MS = 15_000
+
+export class ApiError extends Error {
+  readonly status: number
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+export function isUnauthorized(error: unknown) {
+  return error instanceof ApiError && error.status === 401
+}
 
 export function apiUrl(path: string) {
   return `${API_BASE_URL ?? ''}${path}`
@@ -38,13 +59,13 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const signal = init?.signal ? mergeSignals([init.signal, timeout.signal]) : timeout.signal
 
   try {
-    const response = await fetch(apiUrl(path), { ...init, headers, signal })
+    const response = await fetch(apiUrl(path), { credentials: 'include', ...init, headers, signal })
     if (!response.ok) {
       const contentType = response.headers.get('content-type') ?? ''
       const message = contentType.includes('application/json')
         ? await response.json().then((body) => body.message || body.error).catch(() => '')
         : ''
-      throw new Error(message || `Spring Boot 서버 요청에 실패했습니다. (${response.status})`)
+      throw new ApiError(response.status, message || `Spring Boot 서버 요청에 실패했습니다. (${response.status})`)
     }
     if (response.status === 204) return undefined as T
     return response.json() as Promise<T>
@@ -59,6 +80,13 @@ export async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  auth: {
+    kakaoUrl: () => request<{ url: string }>('/api/auth/kakao/url'),
+    callback: (body: { code: string; state: string }) =>
+      request<AuthUser>('/api/auth/kakao/callback', { method: 'POST', body: JSON.stringify(body) }),
+    me: () => request<AuthUser>('/api/auth/me'),
+    logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
+  },
   resources: {
     list: (params?: { tab?: ResourceTab; query?: string }, init?: RequestInit) => {
       const search = new URLSearchParams()
@@ -82,6 +110,7 @@ export function getApiError(error: unknown) {
   return error instanceof Error ? error.message : '서버와 통신할 수 없습니다.'
 }
 
+export const meKey = ['/api/auth/me'] as const
 export const resourceKey = (tab: ResourceTab, query: string) => ['/api/resources', tab, query] as const
 export const applicationsKey = ['/api/resources', 'applications', 'calendar'] as const
 export const schedulesKey = ['/api/schedules'] as const
