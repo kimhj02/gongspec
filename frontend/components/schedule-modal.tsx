@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { CalendarDays, Plus, StickyNote, X } from 'lucide-react'
+import { CalendarDays, StickyNote, X } from 'lucide-react'
 import DateRangePicker from '@/components/date-range-picker'
 import ModalShell from '@/components/modal-shell'
 import type { CalendarEvent } from '@/lib/calendar-events'
@@ -126,7 +126,6 @@ export default function ScheduleModal({
           ) : null}
           <button className="primary-button" aria-label={editing ? '일정 저장' : '일정 추가'} disabled={saving || !title.trim()}>
             {saving ? '저장 중...' : editing ? '저장' : '추가'}
-            {editing ? null : <Plus size={16} />}
           </button>
         </div>
       </form>

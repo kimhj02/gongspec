@@ -2,7 +2,7 @@ import type { Resource, Schedule, ScheduleType } from '@/lib/api'
 import { toDateInputValue } from '@/lib/resource-fields'
 
 export type CalendarEvent = Schedule & {
-  source: 'schedule' | 'application'
+  source: 'schedule' | 'application' | 'holiday'
   resourceId?: string
   stage?: string
 }
@@ -16,7 +16,8 @@ export const applicationDateFields: { key: string; type: ScheduleType; stage: st
   { key: 'interviewAnnouncementAt', type: '면접', stage: '면접발표' },
 ]
 
-export function eventTypeClass(type: string) {
+export function eventTypeClass(type: string, source?: CalendarEvent['source']) {
+  if (source === 'holiday') return 'holiday'
   if (type === '서류' || type === '지원') return 'document'
   if (type === '필기') return 'written'
   if (type === '면접') return 'interview'

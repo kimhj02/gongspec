@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filledDetails, groupEssaysByPosting, initialFieldValues, overlayApplication, parseEssayEntries, toApplicationPayload, toDateInputValue, toEssayPayload, toResourcePayload } from './resource-fields'
+import { filledDetails, fieldsByTab, groupEssaysByPosting, initialFieldValues, overlayApplication, parseEssayEntries, parsePeriodRange, toApplicationPayload, toDateInputValue, toEssayPayload, toResourcePayload } from './resource-fields'
 
 describe('resource fields', () => {
   it('fills select defaults so they are saved without user change', () => {
@@ -16,6 +16,22 @@ describe('resource fields', () => {
     expect(toDateInputValue('20260101')).toBe('2026-01-01')
     expect(toDateInputValue('2026.01.01')).toBe('2026-01-01')
     expect(toDateInputValue('2026-01-01')).toBe('2026-01-01')
+    expect(toDateInputValue('2024.03')).toBe('2024-03-01')
+  })
+
+  it('parses a stored education period into a date range', () => {
+    expect(parsePeriodRange('2024.03 ~ 2024.06')).toEqual({ start: '2024-03-01', end: '2024-06-01' })
+    expect(parsePeriodRange('2026.09.01 ~ 2026.09.10')).toEqual({ start: '2026-09-01', end: '2026-09-10' })
+  })
+
+  it('saves an education period from calendar dates', () => {
+    const payload = toResourcePayload('education', '', {
+      subject: '헌법',
+      periodStart: '2026-09-01',
+      periodEnd: '2026-09-10',
+    })
+    expect(payload.details?.period).toBe('2026.09.01 ~ 2026.09.10')
+    expect(payload.date).toBe('2026-09-01')
   })
 
   it('uses issuer as subtitle when institution is empty', () => {
@@ -122,5 +138,59 @@ describe('resource fields', () => {
     expect(rows).toEqual([
       { label: '발급기관', value: '한국산업인력공단' },
     ])
+  })
+
+  it('calculates certificate expiry from validity years', () => {
+    const payload = toResourcePayload('certificate', '정보처리기사', {
+      issuer: '한국산업인력공단',
+      acquiredAt: '2026-09-02',
+      validity: '5년',
+    })
+    expect(payload.details).toMatchObject({ validity: '5년', expiresAt: '2031-09-02' })
+  })
+
+  it('omits expiry when a certificate is permanent', () => {
+    const payload = toResourcePayload('certificate', '정보처리기사', {
+      acquiredAt: '2026-09-02',
+      validity: '영구',
+      expiresAt: '2030-01-01',
+    })
+    expect(payload.details?.validity).toBe('영구')
+    expect(payload.details?.expiresAt).toBeUndefined()
+  })
+
+  it('lets career employment type be intern, contract, or full-time', () => {
+    const field = fieldsByTab.career.find((item) => item.key === 'employmentType')
+    expect(field?.type).toBe('select')
+    expect(field?.options).toEqual(['인턴', '계약직', '정규직'])
+    expect(initialFieldValues('career').employmentType).toBe('인턴')
+  })
+
+  it('lets career work period be picked on a calendar and drops leaving reason', () => {
+    expect(fieldsByTab.career.find((item) => item.key === 'period')?.type).toBe('daterange')
+    expect(fieldsByTab.career.some((item) => item.key === 'reasonForLeaving')).toBe(false)
+    const payload = toResourcePayload('career', '', {
+      institution: '서울시',
+      periodStart: '2022-01-03',
+      periodEnd: '2024-02-28',
+      reasonForLeaving: '이직',
+    })
+    expect(payload.details?.period).toBe('2022.01.03 ~ 2024.02.28')
+    expect(payload.details?.reasonForLeaving).toBeUndefined()
+  })
+
+  it('does not collect a certificate homepage', () => {
+    expect(fieldsByTab.certificate.some((field) => field.key === 'homepage')).toBe(false)
+  })
+
+  it('includes permanent as a certificate validity option', () => {
+    expect(fieldsByTab.certificate.find((field) => field.key === 'validity')?.options).toContain('영구')
+    expect(initialFieldValues('certificate').validity).toBe('영구')
+  })
+
+  it('treats application homepage as optional free text', () => {
+    const field = fieldsByTab.applications.find((item) => item.key === 'homepage')
+    expect(field?.required).toBeFalsy()
+    expect(field?.type).not.toBe('url')
   })
 })

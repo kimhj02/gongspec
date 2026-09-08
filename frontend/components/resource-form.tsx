@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
+import PeriodField from '@/components/period-field'
 import ModalShell from '@/components/modal-shell'
 import { getApiError, type Resource, type ResourceTab } from '@/lib/api'
 import {
@@ -21,6 +22,7 @@ import {
   type EssayEntry,
   type Field,
 } from '@/lib/resource-fields'
+import { expiresAtDisplay } from '@/lib/dates'
 import { tabCopy } from '@/lib/tabs'
 
 export default function ResourceForm({
@@ -58,6 +60,7 @@ export default function ResourceForm({
   const [error, setError] = useState('')
 
   const setValue = (key: string, value: string) => setValues((current) => ({ ...current, [key]: value }))
+  const patchValues = (patch: Record<string, string>) => setValues((current) => ({ ...current, ...patch }))
   const setEntry = (index: number, patch: Partial<EssayEntry>) => {
     setEntries((current) => current.map((entry, entryIndex) => (entryIndex === index ? { ...entry, ...patch } : entry)))
   }
@@ -198,7 +201,14 @@ export default function ResourceForm({
         ) : (
           <div className="detail-form-grid">
             {fields.map((field) => (
-              <FieldControl key={field.key} field={field} values={values} autoFocus={hideTitle && field.key === titleKey} onChange={setValue} />
+              <FieldControl
+                key={field.key}
+                field={field}
+                values={tab === 'certificate' ? { ...values, expiresAt: expiresAtDisplay(values.acquiredAt, values.validity) } : values}
+                autoFocus={hideTitle && field.key === titleKey}
+                onChange={setValue}
+                onPatch={patchValues}
+              />
             ))}
           </div>
         )}
@@ -209,7 +219,6 @@ export default function ResourceForm({
           </button>
           <button className="primary-button" disabled={saving || !resolvedTitle.trim()}>
             {saving ? '저장 중...' : initial ? '수정' : '추가'}
-            <Plus size={16} />
           </button>
         </div>
       </form>
@@ -222,16 +231,35 @@ function FieldControl({
   values,
   autoFocus = false,
   onChange,
+  onPatch,
 }: {
   field: Field
   values: Record<string, string>
   autoFocus?: boolean
   onChange: (key: string, value: string) => void
+  onPatch?: (patch: Record<string, string>) => void
 }) {
+  const options = field.options ?? []
+  const current = values[field.key] ?? options[0] ?? ''
+  const selectOptions = current && !options.includes(current) ? [current, ...options] : options
+
+  if (field.type === 'daterange') {
+    return (
+      <PeriodField
+        label={field.label}
+        startDate={values.periodStart ?? ''}
+        endDate={values.periodEnd ?? ''}
+        onChange={(next) => onPatch?.({ periodStart: next.startDate, periodEnd: next.endDate })}
+      />
+    )
+  }
+
   return (
     <label>
       {field.required ? `${field.label} *` : field.label}
-      {field.type === 'textarea' ? (
+      {field.computed ? (
+        <input type="text" value={values[field.key] ?? ''} placeholder={field.placeholder} readOnly tabIndex={-1} className="is-computed" />
+      ) : field.type === 'textarea' ? (
         <textarea
           value={values[field.key] ?? ''}
           onChange={(event) => onChange(field.key, event.target.value)}
@@ -240,8 +268,8 @@ function FieldControl({
           required={field.required}
         />
       ) : field.type === 'select' ? (
-        <select value={values[field.key] ?? field.options?.[0] ?? ''} onChange={(event) => onChange(field.key, event.target.value)} required={field.required}>
-          {field.options?.map((option) => (
+        <select value={current} onChange={(event) => onChange(field.key, event.target.value)} required={field.required}>
+          {selectOptions.map((option) => (
             <option key={option}>{option}</option>
           ))}
         </select>

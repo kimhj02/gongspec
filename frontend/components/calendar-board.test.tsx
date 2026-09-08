@@ -106,8 +106,30 @@ describe('calendar board', () => {
       />,
     )
 
-    expect(screen.getByText('추석')).toBeTruthy()
+    const holiday = screen.getByText('추석')
+    expect(holiday.className).toContain('event-bar')
+    expect(holiday.className).toContain('holiday')
     expect(screen.getByRole('button', { name: /9월 25일, 추석/ }).className).toContain('is-holiday')
+  })
+
+  it('shows consecutive holidays as one connected bar', () => {
+    render(
+      <CalendarBoard
+        month={new Date(2026, 8, 1)}
+        setMonth={() => undefined}
+        days={monthDays(new Date(2026, 8, 1))}
+        today="2026-09-08"
+        selectedDay={null}
+        holidays={{ '2026-09-24': '추석', '2026-09-25': '추석', '2026-09-26': '추석' }}
+        onSelectDay={() => undefined}
+        onSelectEvent={() => undefined}
+        events={[]}
+      />,
+    )
+
+    const bars = screen.getAllByText('추석')
+    expect(bars).toHaveLength(1)
+    expect(bars[0].style.gridColumn).toBe('5 / 8')
   })
 })
 

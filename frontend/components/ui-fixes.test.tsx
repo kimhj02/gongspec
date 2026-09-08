@@ -10,6 +10,7 @@ import ConfirmDialog from '@/components/confirm-dialog'
 
 afterEach(() => {
   cleanup()
+  vi.useRealTimers()
 })
 
 describe('resource form', () => {
@@ -28,6 +29,23 @@ describe('resource form', () => {
     )
   })
 
+  it('calculates expiry from acquired date and selected years', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
+
+    await user.type(screen.getByPlaceholderText('예: 정보처리기사'), '정보처리기사')
+    await user.type(screen.getByLabelText('취득일'), '2026-09-02')
+    await user.selectOptions(screen.getByLabelText('유효기간'), '5년')
+    expect(screen.getByDisplayValue('2031-09-02')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        details: expect.objectContaining({ validity: '5년', expiresAt: '2031-09-02' }),
+      }),
+    )
+  })
+
   it('hides the title field when a tab already has a name', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn().mockResolvedValue(undefined)
@@ -38,6 +56,30 @@ describe('resource form', () => {
     await user.click(screen.getByRole('button', { name: /추가/ }))
 
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ tab: 'education', title: '헌법' }))
+  })
+
+  it('lets the user pick an education period on the calendar', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-09-08T00:00:00'))
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="education" onClose={() => undefined} onSave={onSave} />)
+
+    await user.type(screen.getByPlaceholderText('과목명'), '헌법')
+    await user.click(screen.getByRole('button', { name: '이수기간' }))
+    await user.click(screen.getByRole('button', { name: '9월 1일 선택' }))
+    await user.click(screen.getByRole('button', { name: '9월 10일 선택' }))
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        details: expect.objectContaining({
+          periodStart: '2026-09-01',
+          periodEnd: '2026-09-10',
+          period: '2026.09.01 ~ 2026.09.10',
+        }),
+      }),
+    )
   })
 })
 

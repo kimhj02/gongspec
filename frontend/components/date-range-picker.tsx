@@ -8,21 +8,27 @@ export default function DateRangePicker({
   startDate,
   endDate,
   rangeEnabled,
+  hideSummary = false,
   onChange,
 }: {
   startDate: string
   endDate: string
   rangeEnabled: boolean
+  hideSummary?: boolean
   onChange: (next: { startDate: string; endDate: string; rangeEnabled: boolean }) => void
 }) {
-  const [month, setMonth] = useState(() => new Date(`${startDate}T00:00:00`))
   const today = dateKey(new Date())
+  const [month, setMonth] = useState(() => new Date(`${startDate || today}T00:00:00`))
   const days = monthDays(month)
-  const span = scheduleSpan({ date: startDate, endDate: rangeEnabled ? endDate || startDate : startDate })
+  const span = startDate ? scheduleSpan({ date: startDate, endDate: rangeEnabled ? endDate || startDate : startDate }) : null
 
   const selectDay = (key: string) => {
     if (!rangeEnabled) {
       onChange({ startDate: key, endDate: key, rangeEnabled: false })
+      return
+    }
+    if (!startDate) {
+      onChange({ startDate: key, endDate: key, rangeEnabled: true })
       return
     }
     if (!endDate || endDate === startDate) {
@@ -35,7 +41,11 @@ export default function DateRangePicker({
 
   return (
     <div className="mini-cal">
-      <div className="mini-cal-summary">{formatKoreanRange(startDate, rangeEnabled ? endDate || startDate : startDate, rangeEnabled)}</div>
+      {hideSummary ? null : (
+        <div className="mini-cal-summary">
+          {startDate ? formatKoreanRange(startDate, rangeEnabled ? endDate || startDate : startDate, rangeEnabled) : '날짜를 선택하세요'}
+        </div>
+      )}
       <div className="mini-cal-nav">
         <strong>
           {month.getFullYear()}년 {pad(month.getMonth() + 1)}월
@@ -61,9 +71,9 @@ export default function DateRangePicker({
         {days.map((day, index) => {
           if (!day) return <span key={`empty-${index}`} />
           const key = dateKey(day)
-          const inRange = rangeEnabled && endDate && key > span.start && key < span.end
-          const isStart = key === span.start
-          const isEnd = rangeEnabled && Boolean(endDate) && key === span.end
+          const inRange = Boolean(span && rangeEnabled && endDate && key > span.start && key < span.end)
+          const isStart = Boolean(span && key === span.start)
+          const isEnd = Boolean(span && rangeEnabled && endDate && key === span.end)
           return (
             <button
               key={key}

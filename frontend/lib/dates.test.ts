@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { dateKey, ddayLabel, diffInDays, formatKoreanDate, formatKoreanRange, formatSchedulePeriod, isOnDay, upcomingSchedules } from './dates'
+import { dateKey, ddayLabel, diffInDays, expiresAtDisplay, expiresAtFrom, formatKoreanDate, formatKoreanRange, formatSchedulePeriod, isOnDay, upcomingSchedules } from './dates'
 
 describe('dates', () => {
   it('formats a date key with zero padding', () => {
@@ -10,6 +10,13 @@ describe('dates', () => {
     expect(ddayLabel(0)).toBe('D-Day')
     expect(ddayLabel(7)).toBe('D-7')
     expect(ddayLabel(-2)).toBe('D+2')
+  })
+
+  it('calculates certificate expiry from acquired date and years', () => {
+    expect(expiresAtFrom('2026-09-02', '5년')).toBe('2031-09-02')
+    expect(expiresAtFrom('2026-09-02', '영구')).toBe('')
+    expect(expiresAtDisplay('2026-09-02', '영구')).toBe('없음')
+    expect(expiresAtDisplay('', '3년')).toBe('')
   })
 
   it('hides past schedules and sorts upcoming ones', () => {

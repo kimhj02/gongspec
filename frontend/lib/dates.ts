@@ -53,6 +53,31 @@ export function formatSchedulePeriod(item: { date: string; endDate?: string }) {
   return `${from} ~ ${end.replaceAll('-', '.')}`
 }
 
+export function addCalendarYears(date: string, years: number) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || years <= 0) return ''
+  const next = new Date(`${date}T00:00:00`)
+  if (Number.isNaN(next.getTime())) return ''
+  next.setFullYear(next.getFullYear() + years)
+  return dateKey(next)
+}
+
+export function validityYears(validity?: string) {
+  if (!validity || validity === '영구') return 0
+  const matched = validity.trim().match(/^(\d+)\s*년$/)
+  return matched ? Number(matched[1]) : 0
+}
+
+export function expiresAtFrom(acquiredAt?: string, validity?: string) {
+  return addCalendarYears(acquiredAt ?? '', validityYears(validity))
+}
+
+export function expiresAtDisplay(acquiredAt?: string, validity?: string) {
+  const expires = expiresAtFrom(acquiredAt, validity)
+  if (expires) return expires
+  if (!validityYears(validity)) return '없음'
+  return ''
+}
+
 export function ddayLabel(days: number) {
   if (days === 0) return 'D-Day'
   if (days > 0) return `D-${days}`

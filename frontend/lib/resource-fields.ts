@@ -1,13 +1,15 @@
 import type { Resource, ResourceTab } from '@/lib/api'
+import { expiresAtFrom, formatSchedulePeriod } from '@/lib/dates'
 
 export type Field = {
   key: string
   label: string
   placeholder?: string
-  type?: 'text' | 'date' | 'url' | 'textarea' | 'select'
+  type?: 'text' | 'date' | 'url' | 'textarea' | 'select' | 'daterange'
   options?: string[]
   rows?: number
   required?: boolean
+  computed?: boolean
 }
 
 export type ApplicationStageId = 'document' | 'written' | 'interview'
@@ -17,7 +19,7 @@ const resultOptions = ['대기중', '합격', '불합격']
 export const applicationCommonFields: Field[] = [
   { key: 'category', label: '구분', type: 'select', options: ['정규직', '계약직', '인턴', '기타'] },
   { key: 'institution', label: '기관명', placeholder: '기관명', required: true },
-  { key: 'homepage', label: '지원 홈페이지', placeholder: '예: https://recruit.example.com', type: 'url' },
+  { key: 'homepage', label: '지원 홈페이지', placeholder: '채용 사이트 주소 (선택)' },
 ]
 
 export const applicationStages: { id: ApplicationStageId; label: string; fields: Field[] }[] = [
@@ -50,22 +52,23 @@ export const applicationStages: { id: ApplicationStageId; label: string; fields:
   },
 ]
 
+export const certificateValidityOptions = [...Array.from({ length: 10 }, (_, index) => `${index + 1}년`), '영구']
+
 export const fieldsByTab: Record<ResourceTab, Field[]> = {
   certificate: [
     { key: 'credential', label: '자격증명', placeholder: '예: 정보처리기사', required: true },
-    { key: 'homepage', label: '자격증 홈페이지', placeholder: 'https://', type: 'url' },
     { key: 'level', label: '급수', placeholder: '예: 기사' },
     { key: 'issuer', label: '발급기관', placeholder: '예: 한국산업인력공단' },
     { key: 'acquiredAt', label: '취득일', type: 'date' },
+    { key: 'validity', label: '유효기간', type: 'select', options: certificateValidityOptions },
+    { key: 'expiresAt', label: '만료일', computed: true, placeholder: '취득일을 입력하면 계산됩니다' },
     { key: 'registrationNumber', label: '등록번호', placeholder: '등록번호' },
-    { key: 'validity', label: '유효기간', placeholder: '예: 영구' },
-    { key: 'expiresAt', label: '만료일', type: 'date' },
   ],
   education: [
     { key: 'subject', label: '과목명', placeholder: '과목명', required: true },
     { key: 'credits', label: '학점', placeholder: '예: 3학점' },
     { key: 'grade', label: '성적', placeholder: '예: A+' },
-    { key: 'period', label: '이수기간', placeholder: '예: 2024.03 ~ 2024.06' },
+    { key: 'period', label: '이수기간', type: 'daterange' },
     { key: 'content', label: '내용', type: 'textarea', placeholder: '배운 내용과 경험을 기록해 주세요.' },
   ],
   training: [
@@ -73,15 +76,14 @@ export const fieldsByTab: Record<ResourceTab, Field[]> = {
     { key: 'subject', label: '과목명', placeholder: '과목명' },
     { key: 'ncs', label: 'NCS분류', placeholder: 'NCS 분류 코드 또는 명칭' },
     { key: 'hours', label: '교육시간', placeholder: '예: 120시간' },
-    { key: 'period', label: '이수기간', placeholder: '예: 2024.03 ~ 2024.06' },
+    { key: 'period', label: '이수기간', type: 'daterange' },
     { key: 'content', label: '내용', type: 'textarea', placeholder: '교육 내용과 활용 경험을 기록해 주세요.' },
   ],
   career: [
     { key: 'institution', label: '기관명', placeholder: '기관명', required: true },
-    { key: 'employmentType', label: '고용형태', placeholder: '예: 정규직' },
-    { key: 'period', label: '근무기간', placeholder: '예: 2022.01 ~ 2024.02' },
+    { key: 'employmentType', label: '고용형태', type: 'select', options: ['인턴', '계약직', '정규직'] },
+    { key: 'period', label: '근무기간', type: 'daterange' },
     { key: 'responsibilities', label: '담당업무', type: 'textarea', placeholder: '담당 업무와 성과를 기록해 주세요.' },
-    { key: 'reasonForLeaving', label: '퇴사사유', type: 'textarea', placeholder: '퇴사 사유' },
   ],
   applications: [...applicationCommonFields, ...applicationStages.flatMap((stage) => stage.fields)],
   essays: [],
@@ -176,11 +178,30 @@ export function overlayApplication(existing: Resource, incoming: Omit<Resource, 
 export function toDateInputValue(value?: string) {
   if (!value) return ''
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
-  const compact = value.replaceAll('.', '').replaceAll('-', '').replaceAll('/', '')
+  const compact = value.replaceAll('.', '').replaceAll('-', '').replaceAll('/', '').replaceAll(' ', '')
   if (/^\d{8}$/.test(compact)) {
     return `${compact.slice(0, 4)}-${compact.slice(4, 6)}-${compact.slice(6, 8)}`
   }
+  if (/^\d{6}$/.test(compact)) {
+    return `${compact.slice(0, 4)}-${compact.slice(4, 6)}-01`
+  }
   return value
+}
+
+export function parsePeriodRange(period?: string) {
+  if (!period?.trim()) return { start: '', end: '' }
+  const [rawStart, rawEnd] = period.split(/\s*~\s*/)
+  const start = toDateInputValue(rawStart)
+  const end = toDateInputValue(rawEnd || rawStart)
+  const iso = (value: string) => (/^\d{4}-\d{2}-\d{2}$/.test(value) ? value : '')
+  return { start: iso(start), end: iso(end) }
+}
+
+export function periodDisplay(details: Record<string, string> = {}) {
+  if (details.periodStart) {
+    return formatSchedulePeriod({ date: details.periodStart, endDate: details.periodEnd || details.periodStart })
+  }
+  return details.period?.trim() ?? ''
 }
 
 export function initialFieldValues(tab: ResourceTab, details: Record<string, string> = {}, title = '') {
@@ -191,10 +212,15 @@ export function initialFieldValues(tab: ResourceTab, details: Record<string, str
   }
   for (const field of fieldsByTab[tab]) {
     if (field.type === 'select' && !values[field.key] && !(tab === 'applications' && field.key !== 'category')) {
-      values[field.key] = field.options?.[0] ?? ''
+      values[field.key] = field.key === 'validity' ? '영구' : (field.options?.[0] ?? '')
     }
     if (field.type === 'date' && values[field.key]) {
       values[field.key] = toDateInputValue(values[field.key])
+    }
+    if (field.type === 'daterange') {
+      const parsed = parsePeriodRange(values.period)
+      if (!values.periodStart && parsed.start) values.periodStart = parsed.start
+      if (!values.periodEnd && parsed.end) values.periodEnd = parsed.end
     }
   }
   return values
@@ -205,14 +231,24 @@ export function toResourcePayload(tab: ResourceTab, title: string, values: Recor
   const subtitle = [values.item, values.institution, values.subject, values.category, values.issuer, values.level]
     .map((value) => value?.trim() ?? '')
     .find((value) => value && value !== resolvedTitle) ?? ''
+  const details = { ...values }
+  if (tab === 'certificate') {
+    const expires = expiresAtFrom(values.acquiredAt, values.validity)
+    if (expires) details.expiresAt = expires
+    else delete details.expiresAt
+  }
+  if (values.periodStart) {
+    details.period = formatSchedulePeriod({ date: values.periodStart, endDate: values.periodEnd || values.periodStart })
+  }
+  if (tab === 'career') delete details.reasonForLeaving
   return {
     tab,
     title: resolvedTitle,
     subtitle,
     body: values.essay || values.content || values.responsibilities || values.description || '',
-    details: values,
+    details,
     tags: [],
-    date: values.acquiredAt || values.period || values.documentAt || values.writtenAt || values.interviewAt || values.expiresAt || '',
+    date: values.acquiredAt || values.periodStart || values.period || values.documentAt || values.writtenAt || values.interviewAt || details.expiresAt || '',
   }
 }
 
@@ -220,7 +256,10 @@ export function filledDetails(item: Resource) {
   const details = item.details ?? {}
   return (fieldsByTab[item.tab] ?? [])
     .filter((field) => field.key !== titleFieldByTab[item.tab])
-    .map((field) => ({ label: field.label, value: details[field.key]?.trim() ?? '' }))
+    .map((field) => {
+      if (field.type === 'daterange') return { label: field.label, value: periodDisplay(details) }
+      return { label: field.label, value: details[field.key]?.trim() ?? '' }
+    })
     .filter((row) => row.value && row.label !== '자기소개서' && row.label !== '자기소개서 항목')
 }
 
