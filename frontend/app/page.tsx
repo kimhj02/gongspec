@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
-import { Archive, CalendarDays, Moon, Plus, Search, Sparkles, Sun, X } from 'lucide-react'
+import { Archive, CalendarDays, Moon, Plus, Search, Sun, X } from 'lucide-react'
 import AppNotice, { type Notice } from '@/components/app-notice'
 import CalendarBoard from '@/components/calendar-board'
 import ConfirmDialog from '@/components/confirm-dialog'
@@ -230,14 +230,6 @@ export default function Page() {
               </button>
             ))}
           </nav>
-          <div className="sidebar-note">
-            <Sparkles size={16} />
-            <p>
-              좋은 경험은
-              <br />
-              <b>좋은 문장</b>이 됩니다.
-            </p>
-          </div>
         </aside>
 
         <main className="main-content">
