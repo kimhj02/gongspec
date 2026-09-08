@@ -1,0 +1,11 @@
+.DS_Store
+node_modules/
+.env
+.env.local
+.env*.local
+backend/target/
+backend/.tools/
+.idea/
+.idea/
+*.iml
+

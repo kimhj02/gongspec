@@ -1,0 +1,9 @@
+target/
+.tools/
+data/
+.git/
+.env
+application-local.yml
+docker-compose.yml
+*.iml
+.idea/

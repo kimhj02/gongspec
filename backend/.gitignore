@@ -1,0 +1,12 @@
+target/
+.tools/
+.idea/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.vscode/
+.env
+application-local.yml
+data/

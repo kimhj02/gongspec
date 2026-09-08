@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: gongspec
+      MYSQL_USER: ${MYSQL_USER:-gongspec}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gongspec}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - gongspec-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  backend:
+    build:
+      context: ./backend
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      MYSQL_URL: jdbc:mysql://mysql:3306/gongspec?characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci
+      MYSQL_USER: ${MYSQL_USER:-gongspec}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gongspec}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      KAKAO_REDIRECT_URI: ${KAKAO_REDIRECT_URI:-http://localhost:13001/auth/kakao/callback}
+      JWT_SECRET: ${JWT_SECRET:-gongspec-local-dev-jwt-secret-key-32b}
+      JWT_EXPIRE: ${JWT_EXPIRE:-7d}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:13001,http://127.0.0.1:13001}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        API_BASE_URL: http://backend:8080
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "13001:3000"
+
+volumes:
+  gongspec-mysql:
