@@ -228,9 +228,17 @@ button { cursor: pointer; }
 .modal-header .page-intro-copy h2 { margin: 7px 0 0; }
 .essay-form-grid { grid-template-columns: 1fr; }
 .essay-form-card { width: min(100%, 720px); }
-.essay-group-header .secondary-button { display: inline-flex; align-items: center; gap: 6px; }
+.essay-group-header .secondary-button { display: inline-flex; align-items: center; gap: 6px; width: auto; height: auto; padding: 8px 11px; }
+.essay-entry-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.essay-entry-card-head h3 { flex: 1; margin: 0; }
+.essay-entry-card-head .icon-button { flex: 0 0 auto; width: 28px; height: 28px; margin: -4px -6px 0 0; color: var(--ink-soft); }
 .essay-posting { padding: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); }
+.page-intro-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
+.page-intro-actions .secondary-button { display: inline-flex; align-items: center; gap: 7px; }
+.card-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 14px; }
+.card-links .secondary-button { padding: 8px 11px; font-size: 12px; }
 .essay-posting.is-pinned { border-color: color-mix(in srgb, var(--sage) 50%, var(--line)); }
+.essay-posting.is-focused { border-color: color-mix(in srgb, var(--sage) 70%, var(--line)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sage) 16%, transparent); }
 .essay-posting .card-actions { align-items: center; }
 .essay-entry-list { display: flex; flex-direction: column; gap: 14px; }
 .essay-add-entry { display: inline-flex; align-items: center; justify-content: center; gap: 6px; width: 100%; }
@@ -256,4 +264,4 @@ button { cursor: pointer; }
   .calendar-week-events { inset: 24px 0 6px; }
   .event-bar, .event-more { font-size: 9px; }
 }
-@media (max-width: 720px) { .topbar { height: auto; min-height: 66px; padding: 14px 18px; gap: 12px; }.topbar-inner { display: flex; max-width: none; }.brand { padding-left: 0; }.brand span, .top-actions .soft-button { display: none; }.top-actions { margin-left: auto; padding-right: 0; }.app-layout { display: block; }.sidebar { min-height: auto; padding: 15px 18px 0; border-right: 0; }.sidebar-heading { padding-inline: 0; }.tabs-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }.nav-item { flex-direction: column; gap: 5px; justify-content: center; padding: 9px 3px; font-size: 10px; text-align: center; }.nav-item em { display: none; }.main-content { padding: 30px 18px 28px; }.page-intro { align-items: flex-start; flex-direction: column; margin-bottom: 14px; }.page-intro h1 { font-size: 28px; }.toolbar { align-items: stretch; flex-direction: column; }.search-field { max-width: none; }.view-caption { justify-content: space-between; }.resource-grid { grid-template-columns: 1fr; }.right-rail { display: flex; padding: 0 18px 30px; }.form-row { flex-direction: column; }.modal-card { padding: 20px; }.detail-form-grid { grid-template-columns: 1fr; }.app-notice { top: auto; bottom: 18px; right: 18px; left: 18px; max-width: none; } }
+@media (max-width: 720px) { .topbar { height: auto; min-height: 66px; padding: 14px 18px; gap: 12px; }.topbar-inner { display: flex; max-width: none; }.brand { padding-left: 0; }.brand span, .top-actions .soft-button { display: none; }.top-actions { margin-left: auto; padding-right: 0; }.app-layout { display: block; }.sidebar { min-height: auto; padding: 15px 18px 0; border-right: 0; }.sidebar-heading { padding-inline: 0; }.tabs-nav { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; }.nav-item { flex-direction: column; gap: 5px; justify-content: center; padding: 9px 3px; font-size: 10px; text-align: center; }.nav-item em { display: none; }.main-content { padding: 30px 18px 28px; }.page-intro { align-items: flex-start; flex-direction: column; margin-bottom: 14px; }.page-intro-actions { justify-content: flex-start; }.page-intro h1 { font-size: 28px; }.toolbar { align-items: stretch; flex-direction: column; }.search-field { max-width: none; }.view-caption { justify-content: space-between; }.resource-grid { grid-template-columns: 1fr; }.right-rail { display: flex; padding: 0 18px 30px; }.form-row { flex-direction: column; }.modal-card { padding: 20px; }.detail-form-grid { grid-template-columns: 1fr; }.app-notice { top: auto; bottom: 18px; right: 18px; left: 18px; max-width: none; } }

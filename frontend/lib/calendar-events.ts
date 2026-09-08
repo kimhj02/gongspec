@@ -1,5 +1,5 @@
 import type { Resource, Schedule, ScheduleType } from '@/lib/api'
-import { toDateInputValue } from '@/lib/resource-fields'
+import { applicationPostingName, toDateInputValue } from '@/lib/resource-fields'
 
 export type CalendarEvent = Schedule & {
   source: 'schedule' | 'application' | 'holiday'
@@ -27,7 +27,7 @@ export function eventTypeClass(type: string, source?: CalendarEvent['source']) {
 export function eventsFromApplication(resource: Resource): CalendarEvent[] {
   if (resource.tab !== 'applications') return []
   const details = resource.details ?? {}
-  const name = details.institution?.trim() || resource.subtitle || resource.title
+  const name = applicationPostingName(resource)
   return applicationDateFields.flatMap((field) => {
     const date = toDateInputValue(details[field.key])
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return []

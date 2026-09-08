@@ -31,6 +31,6 @@ describe('calendar events', () => {
       [{ id: 's1', title: '스터디', date: '2026-09-12', type: '개인' }],
       [application],
     )
-    expect(events.map((item) => item.title)).toEqual(['서울시 서류마감', '스터디', '서울시 필기', '서울시 면접'])
+    expect(events.map((item) => item.title)).toEqual(['서울시 9급 서류마감', '스터디', '서울시 9급 필기', '서울시 9급 면접'])
   })
 })

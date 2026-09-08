@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import ResourceForm from '@/components/resource-form'
 import DdayCard from '@/components/dday-card'
+import EssayBoard from '@/components/essay-board'
 import ResourceCard from '@/components/resource-card'
 import ConfirmDialog from '@/components/confirm-dialog'
 
@@ -93,7 +94,8 @@ describe('application form', () => {
     expect(screen.queryByText('필기 시험일')).toBeNull()
     expect(screen.queryByText('서류일')).toBeNull()
 
-    await user.type(screen.getByPlaceholderText('기관명'), '서울시')
+    await user.type(screen.getByPlaceholderText('예: 서울교통공사'), '서울교통공사')
+    await user.type(screen.getByPlaceholderText('예: 2026년 9급 행정직'), '9급 행정직')
     await user.click(screen.getByRole('tab', { name: '필기' }))
     expect(screen.getByText('필기 시험일')).toBeTruthy()
     expect(screen.queryByText('서류 마감일')).toBeNull()
@@ -104,8 +106,9 @@ describe('application form', () => {
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         tab: 'applications',
-        title: '서울시',
-        details: expect.objectContaining({ institution: '서울시', writtenAt: '2026-09-20' }),
+        title: '9급 행정직',
+        subtitle: '서울교통공사',
+        details: expect.objectContaining({ institution: '서울교통공사', posting: '9급 행정직', writtenAt: '2026-09-20' }),
       }),
     )
     expect(onSave.mock.calls[0][0].details.documentAt).toBeUndefined()
@@ -118,7 +121,7 @@ describe('essay form', () => {
     const onSave = vi.fn().mockResolvedValue(undefined)
     render(<ResourceForm initial={null} activeTab="essays" onClose={() => undefined} onSave={onSave} />)
 
-    await user.type(screen.getByPlaceholderText('예: 서울시 9급'), '서울시 9급')
+    await user.type(screen.getByPlaceholderText('예: 2026년 9급 행정직'), '서울시 9급')
     await user.type(screen.getByPlaceholderText('예: 지원동기, 성장과정, 입사 후 포부'), '지원동기')
     await user.type(screen.getByPlaceholderText('해당 항목의 자기소개서를 작성해 주세요.'), '공공의 이익을 위해 지원했습니다.')
     expect(screen.getByText(/공백 포함 18자/)).toBeTruthy()
@@ -166,6 +169,70 @@ describe('resource card', () => {
     expect(screen.getByText('발급기관')).toBeTruthy()
     expect(screen.getByText('한국산업인력공단')).toBeTruthy()
     expect(screen.getByText('취득일')).toBeTruthy()
+  })
+
+  it('lets an application open the essay editor or list', async () => {
+    const user = userEvent.setup()
+    const onWriteEssay = vi.fn()
+    const onOpenEssay = vi.fn()
+    render(
+      <ResourceCard
+        item={{ id: '1', tab: 'applications', title: '서울시' }}
+        collapsed={false}
+        onEdit={() => undefined}
+        onDelete={() => undefined}
+        onTogglePin={() => undefined}
+        onToggleCollapsed={() => undefined}
+        onWriteEssay={onWriteEssay}
+        onOpenEssay={onOpenEssay}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: '자기소개서 작성' }))
+    await user.click(screen.getByRole('button', { name: '자기소개서 바로가기' }))
+    expect(onWriteEssay).toHaveBeenCalledTimes(1)
+    expect(onOpenEssay).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('essay board', () => {
+  it('highlights the posting opened from an application', () => {
+    const noop = () => undefined
+    render(
+      <EssayBoard
+        items={[
+          { id: '1', tab: 'essays', title: '서울시', subtitle: '지원동기', details: { item: '지원동기', essay: '공공을 위해' } },
+          { id: '2', tab: 'essays', title: '경기도', subtitle: '성장과정', details: { item: '성장과정', essay: '동아리' } },
+        ]}
+        focusTitle="서울시"
+        onEdit={noop}
+        onDelete={noop}
+        onDeleteEntry={noop}
+        onTogglePin={noop}
+      />,
+    )
+
+    expect(document.querySelector('[data-posting="서울시"]')?.className).toContain('is-focused')
+    expect(document.querySelector('[data-posting="경기도"]')?.className).not.toContain('is-focused')
+  })
+
+  it('deletes an essay item on the board', async () => {
+    const user = userEvent.setup()
+    const onDeleteEntry = vi.fn()
+    const noop = () => undefined
+    render(
+      <EssayBoard
+        items={[{ id: '1', tab: 'essays', title: '서울시', details: { item: '지원동기', essay: '공공을 위해' } }]}
+        onEdit={noop}
+        onDelete={noop}
+        onDeleteEntry={onDeleteEntry}
+        onTogglePin={noop}
+      />,
+    )
+
+    expect(screen.queryByRole('button', { name: '항목 추가' })).toBeNull()
+    await user.click(screen.getByRole('button', { name: '항목 삭제' }))
+    expect(onDeleteEntry).toHaveBeenCalledWith(expect.objectContaining({ title: '서울시' }), 0)
   })
 })
 

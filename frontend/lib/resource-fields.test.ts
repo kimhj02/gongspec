@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { filledDetails, fieldsByTab, groupEssaysByPosting, initialFieldValues, overlayApplication, parseEssayEntries, parsePeriodRange, toApplicationPayload, toDateInputValue, toEssayPayload, toResourcePayload } from './resource-fields'
+import { applicationPostingName, filledDetails, fieldsByTab, groupEssaysByPosting, initialFieldValues, overlayApplication, parseEssayEntries, parsePeriodRange, toApplicationPayload, toDateInputValue, toEssayPayload, toResourcePayload } from './resource-fields'
 
 describe('resource fields', () => {
   it('fills select defaults so they are saved without user change', () => {
@@ -7,9 +7,10 @@ describe('resource fields', () => {
     expect(values.category).toBe('정규직')
     expect(values.documentResult).toBeUndefined()
 
-    const payload = toResourcePayload('applications', '', { ...values, institution: '서울시' })
+    const payload = toResourcePayload('applications', '', { ...values, institution: '서울교통공사', posting: '9급 행정직' })
     expect(payload.details?.category).toBe('정규직')
-    expect(payload.title).toBe('서울시')
+    expect(payload.title).toBe('9급 행정직')
+    expect(payload.subtitle).toBe('서울교통공사')
   })
 
   it('normalizes compact dates for date inputs', () => {
@@ -53,20 +54,23 @@ describe('resource fields', () => {
     const payload = toApplicationPayload(
       {
         category: '정규직',
-        institution: '서울시',
+        institution: '서울교통공사',
+        posting: '9급 행정직',
         documentAt: '2026-09-10',
         writtenAt: '2026-09-20',
       },
       'document',
     )
-    expect(payload.title).toBe('서울시')
+    expect(payload.title).toBe('9급 행정직')
+    expect(payload.subtitle).toBe('서울교통공사')
     expect(payload.details).toEqual({
       category: '정규직',
-      institution: '서울시',
+      institution: '서울교통공사',
+      posting: '9급 행정직',
       documentAt: '2026-09-10',
       documentResult: '대기중',
     })
-    expect(payload.subtitle).toBe('서류')
+    expect(payload.tags).toEqual(['서류'])
   })
 
   it('merges a later stage onto an existing application', () => {
@@ -74,13 +78,14 @@ describe('resource fields', () => {
       {
         id: '1',
         tab: 'applications',
-        title: '서울시',
-        details: { institution: '서울시', documentAt: '2026-09-10', documentResult: '합격' },
+        title: '9급 행정직',
+        subtitle: '서울교통공사',
+        details: { institution: '서울교통공사', posting: '9급 행정직', documentAt: '2026-09-10', documentResult: '합격' },
       },
       {
         tab: 'applications',
-        title: '서울시',
-        details: { institution: '서울시', writtenAt: '2026-09-20' },
+        title: '9급 행정직',
+        details: { institution: '서울교통공사', posting: '9급 행정직', writtenAt: '2026-09-20' },
       },
     )
     expect(payload.details).toMatchObject({
@@ -89,7 +94,9 @@ describe('resource fields', () => {
       writtenAt: '2026-09-20',
       writtenResult: '대기중',
     })
-    expect(payload.subtitle).toBe('서류, 필기')
+    expect(payload.title).toBe('9급 행정직')
+    expect(payload.subtitle).toBe('서울교통공사')
+    expect(payload.tags).toEqual(['서류', '필기'])
   })
 
   it('stores multiple essay items on one posting', () => {
@@ -186,6 +193,16 @@ describe('resource fields', () => {
   it('includes permanent as a certificate validity option', () => {
     expect(fieldsByTab.certificate.find((field) => field.key === 'validity')?.options).toContain('영구')
     expect(initialFieldValues('certificate').validity).toBe('영구')
+  })
+
+  it('lets essays follow the application posting name', () => {
+    expect(
+      applicationPostingName({
+        title: '서울시',
+        details: { institution: '서울교통공사', posting: '9급 행정직' },
+      }),
+    ).toBe('9급 행정직')
+    expect(applicationPostingName({ title: '옛 공고', details: {} })).toBe('옛 공고')
   })
 
   it('treats application homepage as optional free text', () => {

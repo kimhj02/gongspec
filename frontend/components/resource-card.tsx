@@ -12,6 +12,8 @@ export default function ResourceCard({
   onDelete,
   onTogglePin,
   onToggleCollapsed,
+  onWriteEssay,
+  onOpenEssay,
 }: {
   item: Resource
   collapsed: boolean
@@ -19,6 +21,8 @@ export default function ResourceCard({
   onDelete: () => void
   onTogglePin: () => void
   onToggleCollapsed: () => void
+  onWriteEssay?: () => void
+  onOpenEssay?: () => void
 }) {
   const details = filledDetails(item)
   const bodyIsDuplicated = Boolean(item.body && details.some((row) => row.value === item.body))
@@ -70,6 +74,20 @@ export default function ResourceCard({
           </div>
         </>
       )}
+      {onWriteEssay || onOpenEssay ? (
+        <div className="card-links">
+          {onWriteEssay ? (
+            <button type="button" className="secondary-button" onClick={onWriteEssay}>
+              자기소개서 작성
+            </button>
+          ) : null}
+          {onOpenEssay ? (
+            <button type="button" className="secondary-button" onClick={onOpenEssay}>
+              자기소개서 바로가기
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   )
 }

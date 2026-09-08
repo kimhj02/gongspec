@@ -17,6 +17,7 @@ public class JobApplication extends ResourceItem {
     private static final Set<String> KEYS = Set.of(
             "category",
             "institution",
+            "posting",
             "homepage",
             "documentAt",
             "documentAnnouncementAt",
@@ -33,6 +34,9 @@ public class JobApplication extends ResourceItem {
 
     @Column(length = 255)
     private String institution;
+
+    @Column(length = 255)
+    private String posting;
 
     @Column(length = 500)
     private String homepage;
@@ -84,6 +88,7 @@ public class JobApplication extends ResourceItem {
     protected void applySpecific(Map<String, String> details) {
         category = DetailMap.get(details, "category");
         institution = DetailMap.get(details, "institution");
+        posting = DetailMap.get(details, "posting");
         homepage = DetailMap.get(details, "homepage");
         documentAt = DetailMap.get(details, "documentAt");
         documentAnnouncementAt = DetailMap.get(details, "documentAnnouncementAt");
@@ -100,6 +105,7 @@ public class JobApplication extends ResourceItem {
     protected void exportSpecific(Map<String, String> details) {
         DetailMap.put(details, "category", category);
         DetailMap.put(details, "institution", institution);
+        DetailMap.put(details, "posting", posting);
         DetailMap.put(details, "homepage", homepage);
         DetailMap.put(details, "documentAt", documentAt);
         DetailMap.put(details, "documentAnnouncementAt", documentAnnouncementAt);

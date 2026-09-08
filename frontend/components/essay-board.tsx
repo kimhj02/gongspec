@@ -1,31 +1,47 @@
 'use client'
 
-import { Pencil, Pin, PinOff, Plus, Trash2 } from 'lucide-react'
+import { useEffect } from 'react'
+import { Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
 import { groupEssaysByPosting, mergeEssayResources, parseEssayEntries } from '@/lib/resource-fields'
 
 export default function EssayBoard({
   items,
-  onAddItem,
+  focusTitle,
   onEdit,
   onDelete,
+  onDeleteEntry,
   onTogglePin,
 }: {
   items: Resource[]
-  onAddItem: (posting: Resource) => void
+  focusTitle?: string
   onEdit: (item: Resource) => void
   onDelete: (items: Resource[]) => void
+  onDeleteEntry: (posting: Resource, index: number) => void
   onTogglePin: (item: Resource) => void
 }) {
   const groups = groupEssaysByPosting(items)
+
+  useEffect(() => {
+    if (!focusTitle) return
+    const node = document.querySelector(`[data-posting="${CSS.escape(focusTitle)}"]`)
+    if (node && typeof node.scrollIntoView === 'function') {
+      node.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [focusTitle, items])
 
   return (
     <div className="essay-board">
       {groups.map(([postingName, essays]) => {
         const posting = mergeEssayResources(essays)
         const entries = parseEssayEntries(posting)
+        const focused = Boolean(focusTitle && postingName === focusTitle)
         return (
-          <article className={`essay-posting ${posting.pinned ? 'is-pinned' : ''}`} key={postingName}>
+          <article
+            className={`essay-posting ${posting.pinned ? 'is-pinned' : ''} ${focused ? 'is-focused' : ''}`}
+            data-posting={postingName}
+            key={postingName}
+          >
             <div className="essay-group-header">
               <div className="page-intro-copy">
                 <div className="eyebrow">POSTING</div>
@@ -39,11 +55,8 @@ export default function EssayBoard({
                 <button onClick={() => onEdit(posting)} aria-label="수정">
                   <Pencil size={15} />
                 </button>
-                <button onClick={() => onDelete(essays)} aria-label="삭제">
+                <button onClick={() => onDelete(essays)} aria-label="공고 삭제">
                   <Trash2 size={15} />
-                </button>
-                <button className="secondary-button" onClick={() => onAddItem(posting)}>
-                  <Plus size={15} /> 항목 추가
                 </button>
               </div>
             </div>
@@ -51,10 +64,15 @@ export default function EssayBoard({
               {entries.length ? (
                 entries.map((entry, index) => (
                   <section className="essay-entry-card" key={`${entry.item}-${index}`}>
-                    <h3>
-                      {entry.item || `항목 ${index + 1}`}
-                      <span className="char-count">공백 포함 {entry.essay.length}자 · 공백 제외 {entry.essay.replace(/\s/g, '').length}자</span>
-                    </h3>
+                    <div className="essay-entry-card-head">
+                      <h3>
+                        {entry.item || `항목 ${index + 1}`}
+                        <span className="char-count">공백 포함 {entry.essay.length}자 · 공백 제외 {entry.essay.replace(/\s/g, '').length}자</span>
+                      </h3>
+                      <button type="button" className="icon-button" onClick={() => onDeleteEntry(posting, index)} aria-label="항목 삭제">
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                     <p>{entry.essay || '내용을 아직 작성하지 않았습니다.'}</p>
                   </section>
                 ))

@@ -18,7 +18,8 @@ const resultOptions = ['대기중', '합격', '불합격']
 
 export const applicationCommonFields: Field[] = [
   { key: 'category', label: '구분', type: 'select', options: ['정규직', '계약직', '인턴', '기타'] },
-  { key: 'institution', label: '기관명', placeholder: '기관명', required: true },
+  { key: 'institution', label: '회사명', placeholder: '예: 서울교통공사', required: true },
+  { key: 'posting', label: '공고명', placeholder: '예: 2026년 9급 행정직', required: true },
   { key: 'homepage', label: '지원 홈페이지', placeholder: '채용 사이트 주소 (선택)' },
 ]
 
@@ -99,12 +100,20 @@ export const titleFieldByTab: Partial<Record<ResourceTab, string>> = {
   education: 'subject',
   training: 'institution',
   career: 'institution',
-  applications: 'institution',
+  applications: 'posting',
 }
 
 export function resolveResourceTitle(tab: ResourceTab, title: string, values: Record<string, string>) {
   const key = titleFieldByTab[tab]
   return (key ? values[key] ?? title : title).trim()
+}
+
+export function applicationPostingName(item: Pick<Resource, 'title' | 'details'>) {
+  return item.details?.posting?.trim() || item.title.trim()
+}
+
+export function applicationCompanyName(item: Pick<Resource, 'subtitle' | 'details'>) {
+  return item.details?.institution?.trim() || item.subtitle?.trim() || ''
 }
 
 export function applicationStageById(id: ApplicationStageId) {
@@ -165,7 +174,7 @@ export function toApplicationPayload(values: Record<string, string>, stageId: Ap
   const stages = applicationStages.filter((stage) => stageHasContent(details, stage)).map((stage) => stage.label)
   return {
     ...toResourcePayload('applications', '', details),
-    subtitle: stages.join(', '),
+    subtitle: details.institution?.trim() || '',
     tags: stages,
   }
 }
@@ -256,6 +265,7 @@ export function filledDetails(item: Resource) {
   const details = item.details ?? {}
   return (fieldsByTab[item.tab] ?? [])
     .filter((field) => field.key !== titleFieldByTab[item.tab])
+    .filter((field) => !(item.tab === 'applications' && field.key === 'institution'))
     .map((field) => {
       if (field.type === 'daterange') return { label: field.label, value: periodDisplay(details) }
       return { label: field.label, value: details[field.key]?.trim() ?? '' }

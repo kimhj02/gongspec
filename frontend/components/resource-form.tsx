@@ -99,13 +99,13 @@ export default function ResourceForm({
       <form onSubmit={(event) => void submit(event)}>
         {hideTitle ? null : (
           <label>
-            {isEssay ? '공고 이름 *' : '제목 *'}
+            {isEssay ? '공고명 *' : '제목 *'}
             <input
               autoFocus
               list={isEssay ? 'posting-names' : undefined}
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder={isEssay ? '예: 서울시 9급' : tab === 'memo' ? '메모 제목' : '자료 제목'}
+              placeholder={isEssay ? '예: 2026년 9급 행정직' : tab === 'memo' ? '메모 제목' : '자료 제목'}
               required
             />
           </label>
@@ -169,7 +169,7 @@ export default function ResourceForm({
           <>
             <div className="detail-form-grid">
               {applicationCommonFields.map((field) => (
-                <FieldControl key={field.key} field={field} values={values} autoFocus={field.key === titleKey} onChange={setValue} />
+                <FieldControl key={field.key} field={field} values={values} autoFocus={field.key === 'institution'} onChange={setValue} />
               ))}
             </div>
             <div className="application-stage-picker">

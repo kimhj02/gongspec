@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useTheme } from '@/hooks/use-theme'
 import { api, getApiError } from '@/lib/api'
 
+const EXCHANGE_LOCK = 'gongspec:kakao-oauth'
+
 export default function KakaoCallbackPage() {
   const { theme } = useTheme()
   const [error, setError] = useState<string | null>(null)
@@ -20,12 +22,19 @@ export default function KakaoCallbackPage() {
       return
     }
 
+    const lockKey = `${EXCHANGE_LOCK}:${code}:${state}`
+    if (sessionStorage.getItem(lockKey)) {
+      return
+    }
+    sessionStorage.setItem(lockKey, '1')
+
     api.auth
       .callback({ code, state })
       .then(() => {
         window.location.replace('/')
       })
       .catch((requestError) => {
+        sessionStorage.removeItem(lockKey)
         setError(getApiError(requestError))
       })
   }, [])

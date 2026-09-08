@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
-import { Archive, CalendarDays, Moon, Plus, Search, Sun, X } from 'lucide-react'
+import { Archive, CalendarDays, Moon, PenLine, Plus, Search, Sun, X } from 'lucide-react'
 import AppNotice, { type Notice } from '@/components/app-notice'
 import CalendarBoard from '@/components/calendar-board'
 import ConfirmDialog from '@/components/confirm-dialog'
@@ -19,12 +19,13 @@ import { useKoreanHolidays } from '@/hooks/use-korean-holidays'
 import { api, applicationsKey, getApiError, resourceKey, schedulesKey, type NavId, type Resource, type Schedule } from '@/lib/api'
 import { mergeCalendarEvents, type CalendarEvent } from '@/lib/calendar-events'
 import { dateKey, monthDays } from '@/lib/dates'
-import { overlayApplication, parseEssayEntries, toEssayPayload } from '@/lib/resource-fields'
+import { overlayApplication, parseEssayEntries, applicationPostingName, applicationCompanyName, mergeEssayResources, toEssayPayload } from '@/lib/resource-fields'
 import { calendarNav, resourceTabs, tabCopy, tabLabel } from '@/lib/tabs'
 
 type PendingDelete =
   | { kind: 'resource'; id: string; title: string; extraIds?: string[] }
   | { kind: 'schedule'; id: string; title: string }
+  | { kind: 'essay-entry'; posting: Resource; index: number; title: string }
 
 export default function Page() {
   const { theme, toggleTheme } = useTheme()
@@ -35,8 +36,8 @@ export default function Page() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Resource | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
-  const [appendEssayEntry, setAppendEssayEntry] = useState(false)
   const [essayExtraIds, setEssayExtraIds] = useState<string[]>([])
+  const [focusEssayTitle, setFocusEssayTitle] = useState('')
   const [month, setMonth] = useState(new Date())
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
@@ -87,16 +88,55 @@ export default function Page() {
   const openCreate = () => {
     setEditing(null)
     setDraftTitle('')
-    setAppendEssayEntry(false)
     setEssayExtraIds([])
     setShowForm(true)
   }
 
-  const openEssayEditor = (posting: Resource, appendEmptyEntry = false) => {
+  const openEssayCreate = (title = '') => {
+    setActiveTab('essays')
+    setFocusEssayTitle('')
+    setEditing(null)
+    setDraftTitle(title)
+    setEssayExtraIds([])
+    setShowForm(true)
+  }
+
+  const goToEssays = (title = '') => {
+    setActiveTab('essays')
+    setFocusEssayTitle(title)
+    setShowForm(false)
+    setEditing(null)
+    setDraftTitle('')
+    setEssayExtraIds([])
+  }
+
+  const goToEssayEdit = async (postingName: string) => {
+    setActiveTab('essays')
+    setFocusEssayTitle(postingName)
+    try {
+      const essays = await api.resources.list({ tab: 'essays' })
+      const group = essays.filter((item) => item.title.trim() === postingName.trim())
+      if (!group.length) {
+        setEditing(null)
+        setDraftTitle(postingName)
+        setEssayExtraIds([])
+        setShowForm(true)
+        return
+      }
+      const posting = mergeEssayResources(group)
+      setEditing(posting)
+      setDraftTitle('')
+      setEssayExtraIds(group.slice(1).map((item) => item.id))
+      setShowForm(true)
+    } catch (error) {
+      setNotice({ type: 'error', message: getApiError(error) })
+    }
+  }
+
+  const openEssayEditor = (posting: Resource) => {
     const group = (resources.data ?? []).filter((item) => item.title === posting.title)
     setEditing(posting)
     setDraftTitle('')
-    setAppendEssayEntry(appendEmptyEntry)
     setEssayExtraIds(group.slice(1).map((item) => item.id))
     setShowForm(true)
   }
@@ -114,7 +154,11 @@ export default function Page() {
         await api.resources.create(data)
       }
     } else if (data.tab === 'applications') {
-      const existing = (resources.data ?? []).find((item) => item.title.trim() === data.title.trim())
+      const existing = (resources.data ?? []).find(
+        (item) =>
+          applicationPostingName(item) === applicationPostingName(data) &&
+          applicationCompanyName(item) === applicationCompanyName(data),
+      )
       if (existing) {
         await api.resources.update(existing.id, overlayApplication(existing, data))
       } else {
@@ -127,7 +171,6 @@ export default function Page() {
     setShowForm(false)
     setEditing(null)
     setDraftTitle('')
-    setAppendEssayEntry(false)
     setEssayExtraIds([])
     setNotice({ type: 'success', message: editing ? '자료를 수정했습니다.' : '자료를 추가했습니다.' })
   }
@@ -194,6 +237,18 @@ export default function Page() {
         await api.resources.remove(pendingDelete.id)
         await Promise.all((pendingDelete.extraIds ?? []).map((id) => api.resources.remove(id)))
         await Promise.all([resources.mutate(), applications.mutate()])
+      } else if (pendingDelete.kind === 'essay-entry') {
+        const posting = pendingDelete.posting
+        const group = (resources.data ?? []).filter((item) => item.title === posting.title)
+        const entries = parseEssayEntries(posting).filter((_, index) => index !== pendingDelete.index)
+        if (!entries.length) {
+          await api.resources.remove(group[0]?.id ?? posting.id)
+          await Promise.all(group.slice(1).map((item) => api.resources.remove(item.id)))
+        } else {
+          await api.resources.update(group[0]?.id ?? posting.id, toEssayPayload(posting.title, entries))
+          await Promise.all(group.slice(1).map((item) => api.resources.remove(item.id)))
+        }
+        await resources.mutate()
       } else {
         await api.schedules.remove(pendingDelete.id)
         await schedules.mutate()
@@ -256,7 +311,10 @@ export default function Page() {
           </div>
           <nav className="tabs-nav" aria-label="자료 분류">
             {resourceTabs.map(({ id, label, icon: Icon }) => (
-              <button key={id} className={`nav-item ${activeTab === id ? 'active' : ''}`} onClick={() => setActiveTab(id)}>
+              <button key={id} className={`nav-item ${activeTab === id ? 'active' : ''}`} onClick={() => {
+                setActiveTab(id)
+                if (id !== 'essays') setFocusEssayTitle('')
+              }}>
                 <Icon size={17} />
                 <span>{label}</span>
               </button>
@@ -280,9 +338,21 @@ export default function Page() {
               <p>{tabCopy[activeTab].intro}</p>
             </div>
             {!isCalendar ? (
-              <button className="primary-button" onClick={openCreate}>
-                <Plus size={17} /> {tabCopy[activeTab].createLabel}
-              </button>
+              <div className="page-intro-actions">
+                {activeTab === 'applications' ? (
+                  <>
+                    <button type="button" className="secondary-button" onClick={() => openEssayCreate()}>
+                      <PenLine size={16} /> 자기소개서 작성
+                    </button>
+                    <button type="button" className="secondary-button" onClick={() => goToEssays()}>
+                      자기소개서 바로가기
+                    </button>
+                  </>
+                ) : null}
+                <button className="primary-button" onClick={openCreate}>
+                  <Plus size={17} /> {tabCopy[activeTab].createLabel}
+                </button>
+              </div>
             ) : null}
           </section>
 
@@ -338,7 +408,7 @@ export default function Page() {
                 resourceTab === 'essays' ? (
                   <EssayBoard
                     items={resources.data}
-                    onAddItem={(posting) => openEssayEditor(posting, true)}
+                    focusTitle={focusEssayTitle}
                     onEdit={(item) => openEssayEditor(item)}
                     onDelete={(group) =>
                       setPendingDelete({
@@ -349,6 +419,16 @@ export default function Page() {
                       })
                     }
                     onTogglePin={(item) => void togglePin(item)}
+                    onDeleteEntry={(posting, index) => {
+                      const entries = parseEssayEntries(posting)
+                      const entry = entries[index]
+                      setPendingDelete({
+                        kind: 'essay-entry',
+                        posting,
+                        index,
+                        title: entry?.item || `항목 ${index + 1}`,
+                      })
+                    }}
                   />
                 ) : (
                   <div className="resource-grid">
@@ -365,6 +445,8 @@ export default function Page() {
                         onDelete={() => setPendingDelete({ kind: 'resource', id: item.id, title: item.title })}
                         onTogglePin={() => void togglePin(item)}
                         onToggleCollapsed={() => setCollapsed((current) => ({ ...current, [item.id]: !current[item.id] }))}
+                        onWriteEssay={resourceTab === 'applications' ? () => openEssayCreate(applicationPostingName(item)) : undefined}
+                        onOpenEssay={resourceTab === 'applications' ? () => void goToEssayEdit(applicationPostingName(item)) : undefined}
                       />
                     ))}
                   </div>
@@ -390,13 +472,16 @@ export default function Page() {
           initial={editing}
           activeTab={editing?.tab ?? resourceTab ?? 'memo'}
           defaultTitle={draftTitle}
-          appendEmptyEntry={appendEssayEntry}
-          postingNames={[...new Set([...(applications.data ?? []).map((item) => item.title), ...(resources.data ?? []).map((item) => item.title)])].filter(Boolean)}
+          postingNames={[
+            ...new Set([
+              ...(applications.data ?? []).map(applicationPostingName),
+              ...(resources.data ?? []).map((item) => item.title),
+            ]),
+          ].filter(Boolean)}
           onClose={() => {
             setShowForm(false)
             setEditing(null)
             setDraftTitle('')
-            setAppendEssayEntry(false)
             setEssayExtraIds([])
           }}
           onSave={saveResource}
@@ -418,7 +503,7 @@ export default function Page() {
       ) : null}
       {pendingDelete ? (
         <ConfirmDialog
-          title={pendingDelete.kind === 'resource' ? '자료 삭제' : '일정 삭제'}
+          title={pendingDelete.kind === 'schedule' ? '일정 삭제' : pendingDelete.kind === 'essay-entry' ? '항목 삭제' : '자료 삭제'}
           message={`"${pendingDelete.title}"을(를) 삭제할까요? 이 작업은 되돌릴 수 없습니다.`}
           onClose={() => setPendingDelete(null)}
           onConfirm={() => void confirmDelete()}
