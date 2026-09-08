@@ -1,7 +1,7 @@
 package com.gongspec.resource.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.gongspec.resource.entity.Resource;
+import com.gongspec.resource.entity.ResourceItem;
 import com.gongspec.resource.entity.ResourceTab;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,7 @@ public record ResourceResponse(
         boolean collapsed,
         Map<String, String> details) {
 
-    public static ResourceResponse from(Resource resource) {
+    public static ResourceResponse from(ResourceItem resource) {
         return new ResourceResponse(
                 resource.getId().toString(),
                 resource.getTab(),

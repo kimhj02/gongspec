@@ -3,32 +3,26 @@ package com.gongspec.resource.entity;
 import com.gongspec.common.convert.StringListConverter;
 import com.gongspec.common.convert.StringMapConverter;
 import com.gongspec.common.entity.BaseEntity;
+import com.gongspec.resource.support.DetailMap;
 import com.gongspec.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.MappedSuperclass;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-@Entity
-@Table(name = "resources")
-public class Resource extends BaseEntity {
+@MappedSuperclass
+public abstract class ResourceItem extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 32)
-    private ResourceTab tab;
 
     @Column(nullable = false, length = 255)
     private String title;
@@ -54,18 +48,24 @@ public class Resource extends BaseEntity {
 
     @Convert(converter = StringMapConverter.class)
     @Column(columnDefinition = "TEXT")
-    private Map<String, String> details = new LinkedHashMap<>();
+    private Map<String, String> extras = new LinkedHashMap<>();
 
-    protected Resource() {}
+    protected ResourceItem() {}
 
-    public Resource(User user, ResourceTab tab, String title) {
+    protected ResourceItem(User user, String title) {
         this.user = user;
-        this.tab = tab;
         this.title = title;
     }
 
+    public abstract ResourceTab getTab();
+
+    protected abstract Set<String> specificKeys();
+
+    protected abstract void applySpecific(Map<String, String> details);
+
+    protected abstract void exportSpecific(Map<String, String> details);
+
     public void merge(
-            ResourceTab tab,
             String title,
             String subtitle,
             String body,
@@ -74,9 +74,6 @@ public class Resource extends BaseEntity {
             Boolean pinned,
             Boolean collapsed,
             Map<String, String> details) {
-        if (tab != null) {
-            this.tab = tab;
-        }
         if (title != null) {
             this.title = title;
         }
@@ -99,16 +96,13 @@ public class Resource extends BaseEntity {
             this.collapsed = collapsed;
         }
         if (details != null) {
-            this.details = new LinkedHashMap<>(details);
+            applySpecific(details);
+            this.extras = DetailMap.extras(details, specificKeys());
         }
     }
 
     public User getUser() {
         return user;
-    }
-
-    public ResourceTab getTab() {
-        return tab;
     }
 
     public String getTitle() {
@@ -140,6 +134,11 @@ public class Resource extends BaseEntity {
     }
 
     public Map<String, String> getDetails() {
+        Map<String, String> details = new LinkedHashMap<>();
+        exportSpecific(details);
+        if (extras != null) {
+            extras.forEach(details::putIfAbsent);
+        }
         return details;
     }
 
@@ -154,7 +153,7 @@ public class Resource extends BaseEntity {
         if (tags != null && tags.stream().anyMatch(tag -> contains(tag, needle))) {
             return true;
         }
-        return details != null && details.values().stream().anyMatch(value -> contains(value, needle));
+        return getDetails().values().stream().anyMatch(value -> contains(value, needle));
     }
 
     private static boolean contains(String value, String needle) {
