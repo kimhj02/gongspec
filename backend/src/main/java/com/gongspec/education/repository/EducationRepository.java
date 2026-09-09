@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface EducationRepository extends JpaRepository<Education, UUID> {
-    List<Education> findByUserIdOrderByPinnedDescCreatedAtDesc(UUID userId);
+    List<Education> findByUserId(UUID userId);
 
     Optional<Education> findByIdAndUserId(UUID id, UUID userId);
 }

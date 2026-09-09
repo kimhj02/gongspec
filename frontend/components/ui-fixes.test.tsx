@@ -59,6 +59,23 @@ describe('resource form', () => {
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ tab: 'education', title: '헌법' }))
   })
 
+  it('shows a character count on education content', async () => {
+    const user = userEvent.setup()
+    render(<ResourceForm initial={null} activeTab="education" onClose={() => undefined} onSave={async () => undefined} />)
+
+    expect(screen.getByText('(공백 포함 0자 · 공백 제외 0자)')).toBeTruthy()
+    await user.type(screen.getByPlaceholderText('배운 내용과 경험을 기록해 주세요.'), '헌법 사례')
+    expect(screen.getByText('(공백 포함 5자 · 공백 제외 4자)')).toBeTruthy()
+  })
+
+  it('shows a character count on career responsibilities', async () => {
+    const user = userEvent.setup()
+    render(<ResourceForm initial={null} activeTab="career" onClose={() => undefined} onSave={async () => undefined} />)
+
+    await user.type(screen.getByPlaceholderText('담당 업무와 성과를 기록해 주세요.'), '민원 응대')
+    expect(screen.getByText('(공백 포함 5자 · 공백 제외 4자)')).toBeTruthy()
+  })
+
   it('lets the user pick an education period on the calendar', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-09-08T00:00:00'))
@@ -112,6 +129,34 @@ describe('application form', () => {
       }),
     )
     expect(onSave.mock.calls[0][0].details.documentAt).toBeUndefined()
+  })
+
+  it('lets the user pick a first, second, or third interview under 면접', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="applications" onClose={() => undefined} onSave={onSave} />)
+
+    expect(screen.queryByRole('tab', { name: '1차' })).toBeNull()
+    await user.click(screen.getByRole('tab', { name: '면접' }))
+    expect(screen.getByRole('tab', { name: '1차' })).toBeTruthy()
+    expect(screen.getByText('1차 면접일')).toBeTruthy()
+    expect(screen.queryByText('2차 면접일')).toBeNull()
+
+    await user.click(screen.getByRole('tab', { name: '2차' }))
+    expect(screen.getByText('2차 면접일')).toBeTruthy()
+    expect(screen.queryByText('1차 면접일')).toBeNull()
+
+    await user.type(screen.getByPlaceholderText('예: 서울교통공사'), '서울교통공사')
+    await user.type(screen.getByPlaceholderText('예: 2026년 9급 행정직'), '9급 행정직')
+    await user.type(screen.getByLabelText('2차 면접일'), '2026-10-20')
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        details: expect.objectContaining({ interview2At: '2026-10-20', interview2Result: '대기중' }),
+      }),
+    )
+    expect(onSave.mock.calls[0][0].details.interviewAt).toBeUndefined()
   })
 })
 
@@ -169,6 +214,36 @@ describe('resource card', () => {
     expect(screen.getByText('발급기관')).toBeTruthy()
     expect(screen.getByText('한국산업인력공단')).toBeTruthy()
     expect(screen.getByText('취득일')).toBeTruthy()
+  })
+
+  it('shows the training course name as the heading and the institution below it', () => {
+    render(
+      <ResourceCard
+        item={{
+          id: '1',
+          tab: 'training',
+          title: '에듀퓨어',
+          subtitle: 'NCS 사무행정',
+          details: {
+            institution: '에듀퓨어',
+            subject: 'NCS 사무행정',
+            ncs: '02010101',
+            hours: '28',
+          },
+        }}
+        collapsed={false}
+        onEdit={() => undefined}
+        onDelete={() => undefined}
+        onTogglePin={() => undefined}
+        onToggleCollapsed={() => undefined}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { level: 2, name: 'NCS 사무행정' })).toBeTruthy()
+    expect(screen.getByText('에듀퓨어')).toBeTruthy()
+    expect(screen.queryByText('과목명')).toBeNull()
+    expect(screen.queryByText('교육기관명')).toBeNull()
+    expect(screen.getByText('NCS분류')).toBeTruthy()
   })
 
   it('lets an application open the essay editor or list', async () => {

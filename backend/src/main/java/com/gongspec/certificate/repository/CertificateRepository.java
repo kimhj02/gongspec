@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CertificateRepository extends JpaRepository<Certificate, UUID> {
-    List<Certificate> findByUserIdOrderByPinnedDescCreatedAtDesc(UUID userId);
+    List<Certificate> findByUserId(UUID userId);
 
     Optional<Certificate> findByIdAndUserId(UUID id, UUID userId);
 }

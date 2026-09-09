@@ -8,12 +8,16 @@ import { getApiError, type Resource, type ResourceTab } from '@/lib/api'
 import {
   applicationCommonFields,
   applicationStages,
+  characterCountLabel,
   defaultApplicationStage,
+  defaultInterviewRound,
   emptyEssayEntry,
   fieldsByTab,
   initialFieldValues,
+  interviewRounds,
   parseEssayEntries,
   resolveResourceTitle,
+  stageFields,
   titleFieldByTab,
   toApplicationPayload,
   toEssayPayload,
@@ -21,6 +25,7 @@ import {
   type ApplicationStageId,
   type EssayEntry,
   type Field,
+  type InterviewRoundId,
 } from '@/lib/resource-fields'
 import { expiresAtDisplay } from '@/lib/dates'
 import { tabCopy } from '@/lib/tabs'
@@ -51,6 +56,7 @@ export default function ResourceForm({
   const [title, setTitle] = useState(initial?.title ?? defaultTitle)
   const [values, setValues] = useState<Record<string, string>>(() => initialFieldValues(tab, initial?.details, initial?.title ?? defaultTitle))
   const [stageId, setStageId] = useState<ApplicationStageId>(() => defaultApplicationStage(initial?.details))
+  const [roundId, setRoundId] = useState<InterviewRoundId>(() => defaultInterviewRound(initial?.details))
   const [entries, setEntries] = useState<EssayEntry[]>(() => {
     const parsed = initial ? parseEssayEntries(initial) : []
     const rows = parsed.length ? parsed : [emptyEssayEntry()]
@@ -77,7 +83,7 @@ export default function ResourceForm({
     setSaving(true)
     setError('')
     try {
-      await onSave(isEssay ? toEssayPayload(title, entries) : isApplication ? toApplicationPayload(values, stageId, initial?.details) : toResourcePayload(tab, resolvedTitle, values))
+      await onSave(isEssay ? toEssayPayload(title, entries) : isApplication ? toApplicationPayload(values, stageId, initial?.details, roundId) : toResourcePayload(tab, resolvedTitle, values))
     } catch (caught) {
       setError(getApiError(caught))
     } finally {
@@ -148,7 +154,7 @@ export default function ResourceForm({
                   <span className="field-label-row">
                     자기소개서
                     <span className="char-count" aria-live="polite">
-                      공백 포함 {entry.essay.length}자 · 공백 제외 {entry.essay.replace(/\s/g, '').length}자
+                      {characterCountLabel(entry.essay)}
                     </span>
                   </span>
                   <textarea
@@ -188,14 +194,35 @@ export default function ResourceForm({
                   </button>
                 ))}
               </div>
-              <p>지금은 {applicationStages.find((stage) => stage.id === stageId)?.label}만 작성하면 됩니다. 나머지 전형은 날짜가 정해진 뒤에 추가하세요.</p>
+              <p>
+                {stageId === 'interview'
+                  ? `지금은 면접 ${interviewRounds.find((round) => round.id === roundId)?.label}만 작성하면 됩니다. 다른 차수는 날짜가 정해진 뒤에 추가하세요.`
+                  : `지금은 ${applicationStages.find((stage) => stage.id === stageId)?.label}만 작성하면 됩니다. 나머지 전형은 날짜가 정해진 뒤에 추가하세요.`}
+              </p>
             </div>
+            {stageId === 'interview' ? (
+              <div className="application-stage-picker interview-round-picker">
+                <span>면접</span>
+                <div className="stage-tabs" role="tablist" aria-label="면접 차수">
+                  {interviewRounds.map((round) => (
+                    <button
+                      key={round.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={round.id === roundId}
+                      className={`stage-tab ${round.id === roundId ? 'active' : ''}`}
+                      onClick={() => setRoundId(round.id)}
+                    >
+                      {round.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="detail-form-grid application-stage-fields">
-              {applicationStages
-                .find((stage) => stage.id === stageId)
-                ?.fields.map((field) => (
-                  <FieldControl key={field.key} field={field} values={values} onChange={setValue} />
-                ))}
+              {stageFields(stageId, roundId).map((field) => (
+                <FieldControl key={field.key} field={field} values={values} onChange={setValue} />
+              ))}
             </div>
           </>
         ) : (
@@ -256,7 +283,14 @@ function FieldControl({
 
   return (
     <label>
-      {field.required ? `${field.label} *` : field.label}
+      <span className={field.countChars ? 'field-label-row' : undefined}>
+        {field.required ? `${field.label} *` : field.label}
+        {field.countChars ? (
+          <span className="char-count" aria-live="polite">
+            {characterCountLabel(values[field.key] ?? '')}
+          </span>
+        ) : null}
+      </span>
       {field.computed ? (
         <input type="text" value={values[field.key] ?? ''} placeholder={field.placeholder} readOnly tabIndex={-1} className="is-computed" />
       ) : field.type === 'textarea' ? (

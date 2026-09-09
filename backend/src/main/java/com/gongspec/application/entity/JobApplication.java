@@ -27,7 +27,13 @@ public class JobApplication extends ResourceItem {
             "writtenResult",
             "interviewAt",
             "interviewAnnouncementAt",
-            "interviewResult");
+            "interviewResult",
+            "interview2At",
+            "interview2AnnouncementAt",
+            "interview2Result",
+            "interview3At",
+            "interview3AnnouncementAt",
+            "interview3Result");
 
     @Column(length = 50)
     private String category;
@@ -68,6 +74,24 @@ public class JobApplication extends ResourceItem {
     @Column(length = 20)
     private String interviewResult;
 
+    @Column(length = 10)
+    private String interview2At;
+
+    @Column(length = 10)
+    private String interview2AnnouncementAt;
+
+    @Column(length = 20)
+    private String interview2Result;
+
+    @Column(length = 10)
+    private String interview3At;
+
+    @Column(length = 10)
+    private String interview3AnnouncementAt;
+
+    @Column(length = 20)
+    private String interview3Result;
+
     protected JobApplication() {}
 
     public JobApplication(User user, String title) {
@@ -99,6 +123,12 @@ public class JobApplication extends ResourceItem {
         interviewAt = DetailMap.get(details, "interviewAt");
         interviewAnnouncementAt = DetailMap.get(details, "interviewAnnouncementAt");
         interviewResult = DetailMap.get(details, "interviewResult");
+        interview2At = DetailMap.get(details, "interview2At");
+        interview2AnnouncementAt = DetailMap.get(details, "interview2AnnouncementAt");
+        interview2Result = DetailMap.get(details, "interview2Result");
+        interview3At = DetailMap.get(details, "interview3At");
+        interview3AnnouncementAt = DetailMap.get(details, "interview3AnnouncementAt");
+        interview3Result = DetailMap.get(details, "interview3Result");
     }
 
     @Override
@@ -116,5 +146,11 @@ public class JobApplication extends ResourceItem {
         DetailMap.put(details, "interviewAt", interviewAt);
         DetailMap.put(details, "interviewAnnouncementAt", interviewAnnouncementAt);
         DetailMap.put(details, "interviewResult", interviewResult);
+        DetailMap.put(details, "interview2At", interview2At);
+        DetailMap.put(details, "interview2AnnouncementAt", interview2AnnouncementAt);
+        DetailMap.put(details, "interview2Result", interview2Result);
+        DetailMap.put(details, "interview3At", interview3At);
+        DetailMap.put(details, "interview3AnnouncementAt", interview3AnnouncementAt);
+        DetailMap.put(details, "interview3Result", interview3Result);
     }
 }

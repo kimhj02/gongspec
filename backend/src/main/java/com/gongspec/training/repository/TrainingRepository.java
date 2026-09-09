@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TrainingRepository extends JpaRepository<Training, UUID> {
-    List<Training> findByUserIdOrderByPinnedDescCreatedAtDesc(UUID userId);
+    List<Training> findByUserId(UUID userId);
 
     Optional<Training> findByIdAndUserId(UUID id, UUID userId);
 }

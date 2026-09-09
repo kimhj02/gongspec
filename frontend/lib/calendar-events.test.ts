@@ -21,9 +21,20 @@ describe('calendar events', () => {
     expect(events.map((item) => [item.date, item.type, item.stage])).toEqual([
       ['2026-09-10', '서류', '서류마감'],
       ['2026-09-20', '필기', '필기'],
-      ['2026-10-05', '면접', '면접'],
+      ['2026-10-05', '면접', '1차면접'],
     ])
     expect(events.every((item) => item.source === 'application')).toBe(true)
+  })
+
+  it('turns second and third interview dates into calendar events', () => {
+    const events = eventsFromApplication({
+      ...application,
+      details: { interview2At: '2026-10-12', interview3At: '2026-10-20' },
+    })
+    expect(events.map((item) => [item.date, item.stage])).toEqual([
+      ['2026-10-12', '2차면접'],
+      ['2026-10-20', '3차면접'],
+    ])
   })
 
   it('merges registered schedules with application dates', () => {
@@ -31,6 +42,6 @@ describe('calendar events', () => {
       [{ id: 's1', title: '스터디', date: '2026-09-12', type: '개인' }],
       [application],
     )
-    expect(events.map((item) => item.title)).toEqual(['서울시 9급 서류마감', '스터디', '서울시 9급 필기', '서울시 9급 면접'])
+    expect(events.map((item) => item.title)).toEqual(['서울시 9급 서류마감', '스터디', '서울시 9급 필기', '서울시 9급 1차면접'])
   })
 })

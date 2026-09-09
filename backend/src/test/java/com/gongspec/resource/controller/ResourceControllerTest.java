@@ -80,6 +80,59 @@ class ResourceControllerTest {
         mockMvc.perform(delete("/api/resources/" + id).cookie(token)).andExpect(status().isNoContent());
     }
 
+    @Test
+    void reordersResourcesInTheSameTab() throws Exception {
+        Cookie token = tokenCookie();
+        String first = JsonMapper.builder().build().readTree(mockMvc.perform(post("/api/resources")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tab\":\"memo\",\"title\":\"첫번째\"}"))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString()).get("id").asText();
+        String second = JsonMapper.builder().build().readTree(mockMvc.perform(post("/api/resources")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tab\":\"memo\",\"title\":\"두번째\"}"))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString()).get("id").asText();
+
+        mockMvc.perform(get("/api/resources?tab=memo").cookie(token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(second))
+                .andExpect(jsonPath("$[1].id").value(first));
+
+        mockMvc.perform(put("/api/resources/order")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"ids\":[\"" + first + "\",\"" + second + "\"]}"))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/resources?tab=memo").cookie(token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(first))
+                .andExpect(jsonPath("$[1].id").value(second));
+    }
+
+    @Test
+    void savesSecondInterviewRoundOnApplication() throws Exception {
+        Cookie token = tokenCookie();
+
+        mockMvc.perform(post("/api/resources")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"tab":"applications","title":"9급 행정직","details":{"institution":"서울교통공사","posting":"9급 행정직","interview2At":"2026-10-20","interview2Result":"대기중"}}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tab").value("applications"))
+                .andExpect(jsonPath("$.details.interview2At").value("2026-10-20"))
+                .andExpect(jsonPath("$.details.interview2Result").value("대기중"));
+    }
+
     private Cookie tokenCookie() {
         User user = userService.upsertFromKakao("kakao-resource", "현진", "r@example.com");
         return new Cookie(AuthCookies.TOKEN, jwtTokenProvider.create(user.getId()));

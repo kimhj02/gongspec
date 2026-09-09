@@ -3,7 +3,8 @@
 import { useEffect } from 'react'
 import { Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
-import { groupEssaysByPosting, mergeEssayResources, parseEssayEntries } from '@/lib/resource-fields'
+import { characterCountLabel, groupEssaysByPosting, mergeEssayResources, parseEssayEntries } from '@/lib/resource-fields'
+import SortableList from '@/components/sortable-list'
 
 export default function EssayBoard({
   items,
@@ -12,6 +13,7 @@ export default function EssayBoard({
   onDelete,
   onDeleteEntry,
   onTogglePin,
+  onReorder,
 }: {
   items: Resource[]
   focusTitle?: string
@@ -19,6 +21,7 @@ export default function EssayBoard({
   onDelete: (items: Resource[]) => void
   onDeleteEntry: (posting: Resource, index: number) => void
   onTogglePin: (item: Resource) => void
+  onReorder?: (items: Resource[]) => void
 }) {
   const groups = groupEssaysByPosting(items)
 
@@ -31,16 +34,22 @@ export default function EssayBoard({
   }, [focusTitle, items])
 
   return (
-    <div className="essay-board">
-      {groups.map(([postingName, essays]) => {
+    <SortableList
+      className="essay-board"
+      items={groups}
+      getId={([postingName]) => postingName}
+      disabled={!onReorder}
+      onReorder={(next) => onReorder?.(next.flatMap(([, essays]) => essays))}
+      renderItem={([postingName, essays], bind) => {
         const posting = mergeEssayResources(essays)
         const entries = parseEssayEntries(posting)
         const focused = Boolean(focusTitle && postingName === focusTitle)
+        const { className, ...rest } = bind
         return (
           <article
-            className={`essay-posting ${posting.pinned ? 'is-pinned' : ''} ${focused ? 'is-focused' : ''}`}
+            {...rest}
+            className={`essay-posting ${className} ${posting.pinned ? 'is-pinned' : ''} ${focused ? 'is-focused' : ''}`}
             data-posting={postingName}
-            key={postingName}
           >
             <div className="essay-group-header">
               <div className="page-intro-copy">
@@ -67,7 +76,7 @@ export default function EssayBoard({
                     <div className="essay-entry-card-head">
                       <h3>
                         {entry.item || `항목 ${index + 1}`}
-                        <span className="char-count">공백 포함 {entry.essay.length}자 · 공백 제외 {entry.essay.replace(/\s/g, '').length}자</span>
+                        <span className="char-count">{characterCountLabel(entry.essay)}</span>
                       </h3>
                       <button type="button" className="icon-button" onClick={() => onDeleteEntry(posting, index)} aria-label="항목 삭제">
                         <Trash2 size={15} />
@@ -82,7 +91,7 @@ export default function EssayBoard({
             </div>
           </article>
         )
-      })}
-    </div>
+      }}
+    />
   )
 }

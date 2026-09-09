@@ -2,7 +2,7 @@
 
 import { ChevronDown, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
-import { filledDetails } from '@/lib/resource-fields'
+import { characterCountLabel, filledDetails, resourceCardSubtitle, resourceCardTitle } from '@/lib/resource-fields'
 import { tabLabel } from '@/lib/tabs'
 
 export default function ResourceCard({
@@ -25,6 +25,8 @@ export default function ResourceCard({
   onOpenEssay?: () => void
 }) {
   const details = filledDetails(item)
+  const title = resourceCardTitle(item)
+  const subtitle = resourceCardSubtitle(item)
   const bodyIsDuplicated = Boolean(item.body && details.some((row) => row.value === item.body))
 
   return (
@@ -45,8 +47,8 @@ export default function ResourceCard({
       </div>
       <button className="card-title-row" onClick={onToggleCollapsed}>
         <div>
-          <h2>{item.title}</h2>
-          {item.subtitle && <p>{item.subtitle}</p>}
+          <h2>{title}</h2>
+          {subtitle ? <p>{subtitle}</p> : null}
         </div>
         <ChevronDown className={collapsed ? 'rotate' : ''} size={17} />
       </button>
@@ -56,8 +58,11 @@ export default function ResourceCard({
           {details.length ? (
             <dl className="card-details">
               {details.map((row) => (
-                <div key={row.label}>
-                  <dt>{row.label}</dt>
+                <div key={row.label} className={row.countChars ? 'has-char-count' : undefined}>
+                  <dt>
+                    {row.label}
+                    {row.countChars ? <span className="char-count">{characterCountLabel(row.value)}</span> : null}
+                  </dt>
                   <dd>{row.value}</dd>
                 </div>
               ))}

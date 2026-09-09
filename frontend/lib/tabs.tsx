@@ -1,7 +1,8 @@
-import { Archive, Award, BriefcaseBusiness, CalendarDays, ClipboardList, FileText, GraduationCap, PenLine, Sparkles } from 'lucide-react'
+import { Archive, Award, BriefcaseBusiness, CalendarDays, ClipboardList, FileText, GraduationCap, Landmark, PenLine, Sparkles } from 'lucide-react'
 import type { NavId, ResourceTab } from '@/lib/api'
 
 export const calendarNav = { id: 'calendar' as const, label: '캘린더', icon: CalendarDays }
+export const recruitsNav = { id: 'recruits' as const, label: '채용 공고', icon: Landmark }
 
 export const resourceTabs: { id: ResourceTab; label: string; icon: typeof Archive }[] = [
   { id: 'certificate', label: '자격증', icon: Award },
@@ -14,7 +15,7 @@ export const resourceTabs: { id: ResourceTab; label: string; icon: typeof Archiv
   { id: 'sites', label: '사이트', icon: Sparkles },
 ]
 
-export const navItems: { id: NavId; label: string; icon: typeof Archive }[] = [calendarNav, ...resourceTabs]
+export const navItems: { id: NavId; label: string; icon: typeof Archive }[] = [calendarNav, recruitsNav, ...resourceTabs]
 
 export function tabLabel(id: string) {
   return navItems.find((tab) => tab.id === id)?.label ?? id
@@ -32,6 +33,15 @@ export const tabCopy: Record<
     createLabel: '일정 추가',
     editLabel: '일정 수정',
     countLabel: '일정',
+  },
+  recruits: {
+    eyebrow: 'RECRUIT',
+    intro: '공공기관에서 진행 중인 공고를 정규직·계약직·인턴으로 나눠 봅니다. 매일 오전 8시 10분, 오후 4시 10분에 새로 가져옵니다.',
+    emptyTitle: '진행 중인 공고가 없어요',
+    emptyDescription: '지금 불러오기로 공공기관 채용공고를 받아 보세요.',
+    createLabel: '지금 불러오기',
+    editLabel: '채용 공고',
+    countLabel: '공고',
   },
   certificate: {
     eyebrow: 'CERTIFICATE',
@@ -71,7 +81,7 @@ export const tabCopy: Record<
   },
   applications: {
     eyebrow: 'APPLICATION',
-    intro: '서류, 필기, 면접은 날짜가 정해질 때마다 하나씩 추가하세요.',
+    intro: '서류, 필기, 면접은 날짜가 정해질 때마다 하나씩 추가하세요. 면접은 1차·2차·3차로 나눠 적을 수 있습니다.',
     emptyTitle: '지원 현황이 없어요',
     emptyDescription: '회사명과 공고명을 적고, 서류·필기·면접 중 지금 아는 전형만 작성해 보세요.',
     createLabel: '지원 현황 추가',

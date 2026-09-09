@@ -2,6 +2,7 @@ package com.gongspec.resource.controller;
 
 import com.gongspec.auth.CurrentUser;
 import com.gongspec.resource.dto.ResourceCreateRequest;
+import com.gongspec.resource.dto.ResourceReorderRequest;
 import com.gongspec.resource.dto.ResourceResponse;
 import com.gongspec.resource.dto.ResourceUpdateRequest;
 import com.gongspec.resource.entity.ResourceTab;
@@ -43,6 +44,12 @@ public class ResourceController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResourceResponse create(@Valid @RequestBody ResourceCreateRequest request) {
         return ResourceResponse.from(resourceService.create(CurrentUser.id(), request));
+    }
+
+    @PutMapping("/order")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void reorder(@Valid @RequestBody ResourceReorderRequest request) {
+        resourceService.reorder(CurrentUser.id(), request.ids());
     }
 
     @PutMapping("/{id}")

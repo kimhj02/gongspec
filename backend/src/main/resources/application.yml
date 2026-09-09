@@ -31,6 +31,14 @@ app:
   cookie:
     secure: ${COOKIE_SECURE:false}
 
+alio:
+  service-key: ${ALIO_SERVICE_KEY:}
+  base-url: https://opendata.alio.go.kr
+  sync:
+    enabled: true
+    cron: "0 10 8,16 * * *"
+    zone: Asia/Seoul
+
 logging:
   level:
     org.hibernate.SQL: debug

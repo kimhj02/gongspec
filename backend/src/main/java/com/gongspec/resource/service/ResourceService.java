@@ -23,10 +23,16 @@ import com.gongspec.training.entity.Training;
 import com.gongspec.training.repository.TrainingRepository;
 import com.gongspec.user.entity.User;
 import com.gongspec.user.service.UserService;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +73,7 @@ public class ResourceService {
     }
 
     public List<ResourceItem> list(UUID userId, ResourceTab tab, String query) {
-        List<ResourceItem> items = tab == null ? listAll(userId) : new ArrayList<>(listByTab(userId, tab));
+        List<ResourceItem> items = tab == null ? listAll(userId) : sorted(listByTab(userId, tab));
         return items.stream().filter(item -> item.matchesQuery(query)).toList();
     }
 
@@ -75,6 +81,7 @@ public class ResourceService {
     public ResourceItem create(UUID userId, ResourceCreateRequest request) {
         User user = userService.getById(userId);
         ResourceItem item = newItem(user, request.tab(), request.title());
+        item.setSortOrder(nextSortOrder(listByTab(userId, request.tab())));
         apply(item, request.title(), request.subtitle(), request.body(), request.tags(), request.date(), request.pinned(), request.collapsed(), request.details());
         return save(item);
     }
@@ -91,33 +98,78 @@ public class ResourceService {
         deleteItem(getOwned(userId, id));
     }
 
+    @Transactional
+    public void reorder(UUID userId, List<UUID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            throw ApiException.badRequest("순서가 올바르지 않습니다.");
+        }
+        Set<UUID> unique = new LinkedHashSet<>(ids);
+        if (unique.size() != ids.size()) {
+            throw ApiException.badRequest("순서가 올바르지 않습니다.");
+        }
+        ResourceItem first = getOwned(userId, ids.getFirst());
+        List<ResourceItem> all = sorted(listByTab(userId, first.getTab()));
+        Map<UUID, ResourceItem> byId = new LinkedHashMap<>();
+        for (ResourceItem item : all) {
+            byId.put(item.getId(), item);
+        }
+        for (UUID id : ids) {
+            if (!byId.containsKey(id)) {
+                throw ApiException.badRequest("순서가 올바르지 않습니다.");
+            }
+        }
+        Deque<UUID> queue = new ArrayDeque<>(ids);
+        List<ResourceItem> next = new ArrayList<>(all.size());
+        for (ResourceItem item : all) {
+            if (unique.contains(item.getId())) {
+                next.add(byId.get(queue.removeFirst()));
+            } else {
+                next.add(item);
+            }
+        }
+        for (int index = 0; index < next.size(); index++) {
+            next.get(index).setSortOrder(index);
+        }
+    }
+
     private List<ResourceItem> listAll(UUID userId) {
         List<ResourceItem> items = new ArrayList<>();
-        items.addAll(certificateRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId));
-        items.addAll(educationRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId));
-        items.addAll(trainingRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId));
-        items.addAll(careerRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId));
-        items.addAll(jobApplicationRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId));
-        items.addAll(essayRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId));
-        items.addAll(memoRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId));
-        items.addAll(siteRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId));
-        items.sort(Comparator.comparing(ResourceItem::isPinned)
-                .reversed()
-                .thenComparing(ResourceItem::getCreatedAt, Comparator.reverseOrder()));
+        items.addAll(sorted(certificateRepository.findByUserId(userId)));
+        items.addAll(sorted(educationRepository.findByUserId(userId)));
+        items.addAll(sorted(trainingRepository.findByUserId(userId)));
+        items.addAll(sorted(careerRepository.findByUserId(userId)));
+        items.addAll(sorted(jobApplicationRepository.findByUserId(userId)));
+        items.addAll(sorted(essayRepository.findByUserId(userId)));
+        items.addAll(sorted(memoRepository.findByUserId(userId)));
+        items.addAll(sorted(siteRepository.findByUserId(userId)));
         return items;
     }
 
     private List<? extends ResourceItem> listByTab(UUID userId, ResourceTab tab) {
         return switch (tab) {
-            case certificate -> certificateRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId);
-            case education -> educationRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId);
-            case training -> trainingRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId);
-            case career -> careerRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId);
-            case applications -> jobApplicationRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId);
-            case essays -> essayRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId);
-            case memo -> memoRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId);
-            case sites -> siteRepository.findByUserIdOrderByPinnedDescCreatedAtDesc(userId);
+            case certificate -> certificateRepository.findByUserId(userId);
+            case education -> educationRepository.findByUserId(userId);
+            case training -> trainingRepository.findByUserId(userId);
+            case career -> careerRepository.findByUserId(userId);
+            case applications -> jobApplicationRepository.findByUserId(userId);
+            case essays -> essayRepository.findByUserId(userId);
+            case memo -> memoRepository.findByUserId(userId);
+            case sites -> siteRepository.findByUserId(userId);
         };
+    }
+
+    private static List<ResourceItem> sorted(List<? extends ResourceItem> items) {
+        return items.stream()
+                .sorted(Comparator.comparingInt(ResourceItem::getSortOrder)
+                        .thenComparing(ResourceItem::isPinned, Comparator.reverseOrder())
+                        .thenComparing(ResourceItem::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing(item -> item.getId().toString()))
+                .map(ResourceItem.class::cast)
+                .toList();
+    }
+
+    private static int nextSortOrder(List<? extends ResourceItem> items) {
+        return items.stream().mapToInt(ResourceItem::getSortOrder).min().orElse(1) - 1;
     }
 
     private ResourceItem newItem(User user, ResourceTab tab, String title) {

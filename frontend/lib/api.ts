@@ -1,5 +1,6 @@
 export type ResourceTab = 'certificate' | 'education' | 'training' | 'career' | 'applications' | 'essays' | 'memo' | 'sites'
-export type NavId = 'calendar' | ResourceTab
+export type NavId = 'calendar' | 'recruits' | ResourceTab
+export type HireTypeFilter = '정규직' | '계약직' | '인턴'
 export type ScheduleType = '개인' | '서류' | '필기' | '면접' | '지원'
 export type Resource = {
   id: string
@@ -21,9 +22,29 @@ export type AuthUser = {
   email: string | null
   createdAt: string
 }
+export type PublicRecruit = {
+  id: string
+  recrutPblntSn: number
+  instNm: string
+  title: string
+  hireType: HireTypeFilter | string
+  hireTypes: string
+  recrutSeNm: string
+  workRgnNmLst: string
+  pbancBgngYmd: string
+  pbancEndYmd: string
+  ongoing: boolean
+  srcUrl: string
+  recrutNope: number | null
+  ncsCdNmLst: string
+}
+export type RecruitSyncResult = { fetched: number; saved: number; closed: number }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, '')
 const REQUEST_TIMEOUT_MS = 15_000
+const SYNC_TIMEOUT_MS = 120_000
+
+type RequestOptions = RequestInit & { timeoutMs?: number }
 
 export class ApiError extends Error {
   readonly status: number
@@ -48,18 +69,19 @@ function mergeSignals(signals: AbortSignal[]) {
   return signals[0]
 }
 
-export async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const headers = new Headers(init?.headers)
-  if (init?.body && !headers.has('Content-Type')) {
+export async function request<T>(path: string, init: RequestOptions = {}): Promise<T> {
+  const { timeoutMs, signal: userSignal, headers: initHeaders, ...fetchInit } = init
+  const headers = new Headers(initHeaders)
+  if (fetchInit.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
 
   const timeout = new AbortController()
-  const timer = setTimeout(() => timeout.abort(), REQUEST_TIMEOUT_MS)
-  const signal = init?.signal ? mergeSignals([init.signal, timeout.signal]) : timeout.signal
+  const timer = setTimeout(() => timeout.abort(), timeoutMs ?? REQUEST_TIMEOUT_MS)
+  const signal = userSignal ? mergeSignals([userSignal, timeout.signal]) : timeout.signal
 
   try {
-    const response = await fetch(apiUrl(path), { credentials: 'include', ...init, headers, signal })
+    const response = await fetch(apiUrl(path), { credentials: 'include', ...fetchInit, headers, signal })
     if (!response.ok) {
       const contentType = response.headers.get('content-type') ?? ''
       const message = contentType.includes('application/json')
@@ -96,6 +118,7 @@ export const api = {
     },
     create: (resource: Omit<Resource, 'id'>) => request<Resource>('/api/resources', { method: 'POST', body: JSON.stringify(resource) }),
     update: (id: string, resource: Partial<Resource>) => request<Resource>(`/api/resources/${id}`, { method: 'PUT', body: JSON.stringify(resource) }),
+    reorder: (ids: string[]) => request<void>('/api/resources/order', { method: 'PUT', body: JSON.stringify({ ids }) }),
     remove: (id: string) => request<void>(`/api/resources/${id}`, { method: 'DELETE' }),
   },
   schedules: {
@@ -103,6 +126,15 @@ export const api = {
     create: (schedule: Omit<Schedule, 'id'>) => request<Schedule>('/api/schedules', { method: 'POST', body: JSON.stringify(schedule) }),
     update: (id: string, schedule: Omit<Schedule, 'id'>) => request<Schedule>(`/api/schedules/${id}`, { method: 'PUT', body: JSON.stringify(schedule) }),
     remove: (id: string) => request<void>(`/api/schedules/${id}`, { method: 'DELETE' }),
+  },
+  recruits: {
+    list: (params?: { query?: string; hireType?: HireTypeFilter | '' }, init?: RequestInit) => {
+      const search = new URLSearchParams()
+      if (params?.query) search.set('query', params.query)
+      if (params?.hireType) search.set('hireType', params.hireType)
+      return request<PublicRecruit[]>(`/api/recruits${search.size ? `?${search}` : ''}`, init)
+    },
+    sync: () => request<RecruitSyncResult>('/api/recruits/sync', { method: 'POST', timeoutMs: SYNC_TIMEOUT_MS }),
   },
 }
 
@@ -114,3 +146,4 @@ export const meKey = ['/api/auth/me'] as const
 export const resourceKey = (tab: ResourceTab, query: string) => ['/api/resources', tab, query] as const
 export const applicationsKey = ['/api/resources', 'applications', 'calendar'] as const
 export const schedulesKey = ['/api/schedules'] as const
+export const recruitsKey = (query: string, hireType: HireTypeFilter | '') => ['/api/recruits', query, hireType] as const
