@@ -2,7 +2,7 @@
 
 import { ChevronDown, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
-import { filledDetails } from '@/lib/resource-fields'
+import { characterCountLabel, filledDetails } from '@/lib/resource-fields'
 import { tabLabel } from '@/lib/tabs'
 
 export default function ResourceCard({
@@ -56,8 +56,11 @@ export default function ResourceCard({
           {details.length ? (
             <dl className="card-details">
               {details.map((row) => (
-                <div key={row.label}>
-                  <dt>{row.label}</dt>
+                <div key={row.label} className={row.countChars ? 'has-char-count' : undefined}>
+                  <dt>
+                    {row.label}
+                    {row.countChars ? <span className="char-count">{characterCountLabel(row.value)}</span> : null}
+                  </dt>
                   <dd>{row.value}</dd>
                 </div>
               ))}

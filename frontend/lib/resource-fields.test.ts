@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applicationPostingName, filledDetails, fieldsByTab, groupEssaysByPosting, initialFieldValues, overlayApplication, parseEssayEntries, parsePeriodRange, toApplicationPayload, toDateInputValue, toEssayPayload, toResourcePayload } from './resource-fields'
+import { applicationPostingName, characterCountLabel, filledDetails, fieldsByTab, groupEssaysByPosting, initialFieldValues, interviewRounds, overlayApplication, parseEssayEntries, parsePeriodRange, toApplicationPayload, toDateInputValue, toEssayPayload, toResourcePayload } from './resource-fields'
 
 describe('resource fields', () => {
   it('fills select defaults so they are saved without user change', () => {
@@ -143,7 +143,7 @@ describe('resource fields', () => {
       details: { issuer: '한국산업인력공단', credential: '' },
     })
     expect(rows).toEqual([
-      { label: '발급기관', value: '한국산업인력공단' },
+      { label: '발급기관', value: '한국산업인력공단', countChars: false },
     ])
   })
 
@@ -203,6 +203,63 @@ describe('resource fields', () => {
       }),
     ).toBe('9급 행정직')
     expect(applicationPostingName({ title: '옛 공고', details: {} })).toBe('옛 공고')
+  })
+
+  it('counts spaces the same way the essay form does', () => {
+    expect(characterCountLabel('공공 이익')).toBe('(공백 포함 5자 · 공백 제외 4자)')
+    expect(fieldsByTab.education.find((field) => field.key === 'content')?.countChars).toBe(true)
+    expect(fieldsByTab.training.find((field) => field.key === 'content')?.countChars).toBe(true)
+    expect(fieldsByTab.career.find((field) => field.key === 'responsibilities')?.countChars).toBe(true)
+    expect(fieldsByTab.memo.find((field) => field.key === 'content')?.countChars).toBeFalsy()
+  })
+
+  it('shows character counts on education content in filled details', () => {
+    expect(
+      filledDetails({
+        id: '1',
+        tab: 'education',
+        title: '헌법',
+        details: { content: '기본권 사례를 정리했다.' },
+      }),
+    ).toEqual([{ label: '내용', value: '기본권 사례를 정리했다.', countChars: true }])
+  })
+
+  it('saves a later interview round without wiping the first', () => {
+    const payload = overlayApplication(
+      {
+        id: '1',
+        tab: 'applications',
+        title: '9급 행정직',
+        details: {
+          institution: '서울교통공사',
+          posting: '9급 행정직',
+          interviewAt: '2026-10-05',
+          interviewResult: '합격',
+        },
+      },
+      {
+        tab: 'applications',
+        title: '9급 행정직',
+        details: {
+          institution: '서울교통공사',
+          posting: '9급 행정직',
+          interview2At: '2026-10-20',
+        },
+      },
+    )
+    expect(payload.details).toMatchObject({
+      interviewAt: '2026-10-05',
+      interviewResult: '합격',
+      interview2At: '2026-10-20',
+      interview2Result: '대기중',
+    })
+    expect(payload.tags).toEqual(['면접'])
+  })
+
+  it('exposes first through third interview rounds under the interview stage', () => {
+    expect(interviewRounds.map((round) => round.label)).toEqual(['1차', '2차', '3차'])
+    expect(fieldsByTab.applications.some((field) => field.key === 'interview2At')).toBe(true)
+    expect(fieldsByTab.applications.some((field) => field.key === 'interview3At')).toBe(true)
   })
 
   it('treats application homepage as optional free text', () => {

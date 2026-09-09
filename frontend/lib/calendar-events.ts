@@ -12,8 +12,12 @@ export const applicationDateFields: { key: string; type: ScheduleType; stage: st
   { key: 'documentAnnouncementAt', type: '서류', stage: '서류발표' },
   { key: 'writtenAt', type: '필기', stage: '필기' },
   { key: 'writtenAnnouncementAt', type: '필기', stage: '필기발표' },
-  { key: 'interviewAt', type: '면접', stage: '면접' },
-  { key: 'interviewAnnouncementAt', type: '면접', stage: '면접발표' },
+  { key: 'interviewAt', type: '면접', stage: '1차면접' },
+  { key: 'interviewAnnouncementAt', type: '면접', stage: '1차면접발표' },
+  { key: 'interview2At', type: '면접', stage: '2차면접' },
+  { key: 'interview2AnnouncementAt', type: '면접', stage: '2차면접발표' },
+  { key: 'interview3At', type: '면접', stage: '3차면접' },
+  { key: 'interview3AnnouncementAt', type: '면접', stage: '3차면접발표' },
 ]
 
 export function eventTypeClass(type: string, source?: CalendarEvent['source']) {

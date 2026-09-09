@@ -71,7 +71,7 @@ export const tabCopy: Record<
   },
   applications: {
     eyebrow: 'APPLICATION',
-    intro: '서류, 필기, 면접은 날짜가 정해질 때마다 하나씩 추가하세요.',
+    intro: '서류, 필기, 면접은 날짜가 정해질 때마다 하나씩 추가하세요. 면접은 1차·2차·3차로 나눠 적을 수 있습니다.',
     emptyTitle: '지원 현황이 없어요',
     emptyDescription: '회사명과 공고명을 적고, 서류·필기·면접 중 지금 아는 전형만 작성해 보세요.',
     createLabel: '지원 현황 추가',

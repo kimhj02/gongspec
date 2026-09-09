@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
-import { groupEssaysByPosting, mergeEssayResources, parseEssayEntries } from '@/lib/resource-fields'
+import { characterCountLabel, groupEssaysByPosting, mergeEssayResources, parseEssayEntries } from '@/lib/resource-fields'
 
 export default function EssayBoard({
   items,
@@ -67,7 +67,7 @@ export default function EssayBoard({
                     <div className="essay-entry-card-head">
                       <h3>
                         {entry.item || `항목 ${index + 1}`}
-                        <span className="char-count">공백 포함 {entry.essay.length}자 · 공백 제외 {entry.essay.replace(/\s/g, '').length}자</span>
+                        <span className="char-count">{characterCountLabel(entry.essay)}</span>
                       </h3>
                       <button type="button" className="icon-button" onClick={() => onDeleteEntry(posting, index)} aria-label="항목 삭제">
                         <Trash2 size={15} />
