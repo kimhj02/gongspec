@@ -257,8 +257,19 @@ export function toApplicationPayload(
 }
 
 export function overlayApplication(existing: Resource, incoming: Omit<Resource, 'id'>) {
-  const details = incoming.details ?? {}
-  return toApplicationPayload(details, detectIncomingStage(details), existing.details ?? {}, detectIncomingInterviewRound(details))
+  const existingDetails = existing.details ?? {}
+  const incomingDetails = incoming.details ?? {}
+  const changed: Record<string, string> = {}
+  for (const [key, value] of Object.entries(incomingDetails)) {
+    if ((value ?? '') !== (existingDetails[key] ?? '')) changed[key] = value
+  }
+  const scope = Object.keys(changed).length ? changed : incomingDetails
+  return toApplicationPayload(
+    incomingDetails,
+    detectIncomingStage(scope),
+    existingDetails,
+    detectIncomingInterviewRound(scope),
+  )
 }
 
 export function toDateInputValue(value?: string) {

@@ -289,6 +289,45 @@ describe('resource fields', () => {
     expect(payload.tags).toEqual(['면접'])
   })
 
+  it('keeps later interview edits when the incoming snapshot still has document and first-round data', () => {
+    const payload = overlayApplication(
+      {
+        id: '1',
+        tab: 'applications',
+        title: '9급 행정직',
+        details: {
+          institution: '서울교통공사',
+          posting: '9급 행정직',
+          documentAt: '2026-09-10',
+          documentResult: '합격',
+          interviewAt: '2026-10-05',
+          interviewResult: '합격',
+        },
+      },
+      {
+        tab: 'applications',
+        title: '9급 행정직',
+        details: {
+          institution: '서울교통공사',
+          posting: '9급 행정직',
+          documentAt: '2026-09-10',
+          documentResult: '합격',
+          interviewAt: '2026-10-05',
+          interviewResult: '합격',
+          interview2At: '2026-10-20',
+        },
+      },
+    )
+    expect(payload.details).toMatchObject({
+      documentAt: '2026-09-10',
+      documentResult: '합격',
+      interviewAt: '2026-10-05',
+      interviewResult: '합격',
+      interview2At: '2026-10-20',
+      interview2Result: '대기중',
+    })
+  })
+
   it('exposes first through third interview rounds under the interview stage', () => {
     expect(interviewRounds.map((round) => round.label)).toEqual(['1차', '2차', '3차'])
     expect(fieldsByTab.applications.some((field) => field.key === 'interview2At')).toBe(true)

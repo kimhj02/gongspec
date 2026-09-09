@@ -23,7 +23,7 @@ public interface PublicRecruitRepository extends JpaRepository<PublicRecruit, ja
                     or lower(r.instNm) like lower(concat('%', :query, '%'))
                     or lower(r.title) like lower(concat('%', :query, '%'))
                   )
-            order by coalesce(r.pbancEndYmd, '9999-99-99') asc, r.instNm asc, r.title asc
+            order by coalesce(nullif(r.pbancEndYmd, ''), '9999-99-99') asc, r.instNm asc, r.title asc
             """)
     List<PublicRecruit> searchOngoing(@Param("hireType") String hireType, @Param("query") String query);
 }

@@ -81,6 +81,20 @@ class RecruitServiceTest {
     }
 
     @Test
+    void doesNotCloseOngoingWhenTheFetchIsIncomplete() throws Exception {
+        when(client.fetchOngoing(1)).thenReturn(new AlioRecruitClient.Page(List.of(), 250));
+        PublicRecruit stale = new PublicRecruit(99L, "지난 공고");
+        stale.replace("기관", "지난 공고", "정규직", "정규직", "R1010", "", "", "2026-01-01", "2026-01-31", true, "", null, "", null);
+
+        RecruitSyncResponse result = service.sync();
+
+        assertThat(result.fetched()).isZero();
+        assertThat(result.closed()).isZero();
+        assertThat(stale.isOngoing()).isTrue();
+        verify(repository, never()).findByOngoingTrue();
+    }
+
+    @Test
     void listsOngoingByHireType() {
         when(repository.searchOngoing("인턴", "한국")).thenReturn(List.of());
         assertThat(service.list(" 한국 ", "인턴")).isEmpty();

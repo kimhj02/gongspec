@@ -71,10 +71,12 @@ public class RecruitService {
         }
 
         int closed = 0;
-        for (PublicRecruit recruit : repository.findByOngoingTrue()) {
-            if (!seen.contains(recruit.getRecrutPblntSn())) {
-                recruit.markClosed();
-                closed++;
+        if (fetched >= totalCount) {
+            for (PublicRecruit recruit : repository.findByOngoingTrue()) {
+                if (!seen.contains(recruit.getRecrutPblntSn())) {
+                    recruit.markClosed();
+                    closed++;
+                }
             }
         }
         return new RecruitSyncResponse(fetched, saved, closed);

@@ -1,6 +1,7 @@
 'use client'
 
-import { Fragment, useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { Fragment, useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { moveItem } from '@/lib/reorder'
 
 export default function SortableList<T>({
   items,
@@ -26,10 +27,13 @@ export default function SortableList<T>({
     const from = items.findIndex((item) => getId(item) === fromId)
     const to = items.findIndex((item) => getId(item) === toId)
     if (from < 0 || to < 0) return
-    const next = [...items]
-    const [item] = next.splice(from, 1)
-    next.splice(to, 0, item)
-    onReorder(next)
+    onReorder(moveItem(items, from, to))
+  }
+
+  const moveByKey = (id: string, offset: number) => {
+    const from = items.findIndex((item) => getId(item) === id)
+    if (from < 0) return
+    onReorder(moveItem(items, from, from + offset))
   }
 
   return (
@@ -39,6 +43,15 @@ export default function SortableList<T>({
         const bind: SortableBind = {
           className: `sortable-item${draggingId === id ? ' is-dragging' : ''}${overId === id && draggingId !== id ? ' is-over' : ''}${disabled ? '' : ' is-sortable'}`,
           draggable: !disabled,
+          tabIndex: disabled ? -1 : 0,
+          'aria-label': '순서 변경. 위아래 화살표로 이동합니다.',
+          onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+            const target = event.target as HTMLElement
+            if (disabled || target.closest('button, a, input, textarea, select, label')) return
+            if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+            event.preventDefault()
+            moveByKey(id, event.key === 'ArrowUp' ? -1 : 1)
+          },
           onDragStart: (event: DragEvent<HTMLElement>) => {
             const target = event.target as HTMLElement
             if (disabled || target.closest('button, a, input, textarea, select, label')) {
@@ -80,6 +93,9 @@ export default function SortableList<T>({
 export type SortableBind = {
   className: string
   draggable: boolean
+  tabIndex: number
+  'aria-label': string
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void
   onDragStart: (event: DragEvent<HTMLElement>) => void
   onDragOver: (event: DragEvent<HTMLElement>) => void
   onDrop: (event: DragEvent<HTMLElement>) => void
