@@ -81,6 +81,43 @@ class ResourceControllerTest {
     }
 
     @Test
+    void reordersResourcesInTheSameTab() throws Exception {
+        Cookie token = tokenCookie();
+        String first = JsonMapper.builder().build().readTree(mockMvc.perform(post("/api/resources")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tab\":\"memo\",\"title\":\"첫번째\"}"))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString()).get("id").asText();
+        String second = JsonMapper.builder().build().readTree(mockMvc.perform(post("/api/resources")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"tab\":\"memo\",\"title\":\"두번째\"}"))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getContentAsString()).get("id").asText();
+
+        mockMvc.perform(get("/api/resources?tab=memo").cookie(token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(second))
+                .andExpect(jsonPath("$[1].id").value(first));
+
+        mockMvc.perform(put("/api/resources/order")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"ids\":[\"" + first + "\",\"" + second + "\"]}"))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/resources?tab=memo").cookie(token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(first))
+                .andExpect(jsonPath("$[1].id").value(second));
+    }
+
+    @Test
     void savesSecondInterviewRoundOnApplication() throws Exception {
         Cookie token = tokenCookie();
 

@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface JobApplicationRepository extends JpaRepository<JobApplication, UUID> {
-    List<JobApplication> findByUserIdOrderByPinnedDescCreatedAtDesc(UUID userId);
+    List<JobApplication> findByUserId(UUID userId);
 
     Optional<JobApplication> findByIdAndUserId(UUID id, UUID userId);
 }

@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface MemoRepository extends JpaRepository<Memo, UUID> {
-    List<Memo> findByUserIdOrderByPinnedDescCreatedAtDesc(UUID userId);
+    List<Memo> findByUserId(UUID userId);
 
     Optional<Memo> findByIdAndUserId(UUID id, UUID userId);
 }

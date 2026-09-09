@@ -105,8 +105,8 @@ export const fieldsByTab: Record<ResourceTab, Field[]> = {
     { key: 'content', label: '내용', type: 'textarea', placeholder: '배운 내용과 경험을 기록해 주세요.', countChars: true },
   ],
   training: [
+    { key: 'subject', label: '과목명', placeholder: '과목명', required: true },
     { key: 'institution', label: '교육기관명', placeholder: '교육기관명', required: true },
-    { key: 'subject', label: '과목명', placeholder: '과목명' },
     { key: 'ncs', label: 'NCS분류', placeholder: 'NCS 분류 코드 또는 명칭' },
     { key: 'hours', label: '교육시간', placeholder: '예: 120시간' },
     { key: 'period', label: '이수기간', type: 'daterange' },
@@ -130,14 +130,28 @@ export const fieldsByTab: Record<ResourceTab, Field[]> = {
 export const titleFieldByTab: Partial<Record<ResourceTab, string>> = {
   certificate: 'credential',
   education: 'subject',
-  training: 'institution',
+  training: 'subject',
   career: 'institution',
   applications: 'posting',
 }
 
 export function resolveResourceTitle(tab: ResourceTab, title: string, values: Record<string, string>) {
   const key = titleFieldByTab[tab]
-  return (key ? values[key] ?? title : title).trim()
+  return (key ? values[key]?.trim() || title : title).trim()
+}
+
+export function resourceCardTitle(item: Pick<Resource, 'tab' | 'title' | 'details'>) {
+  return resolveResourceTitle(item.tab, item.title, item.details ?? {})
+}
+
+export function resourceCardSubtitle(item: Pick<Resource, 'tab' | 'title' | 'subtitle' | 'details'>) {
+  const title = resourceCardTitle(item)
+  if (item.tab === 'training') {
+    const institution = item.details?.institution?.trim() || (item.title.trim() !== title ? item.title.trim() : '')
+    if (institution && institution !== title) return institution
+  }
+  const subtitle = item.subtitle?.trim() ?? ''
+  return subtitle && subtitle !== title ? subtitle : ''
 }
 
 export function applicationPostingName(item: Pick<Resource, 'title' | 'details'>) {
@@ -280,7 +294,8 @@ export function initialFieldValues(tab: ResourceTab, details: Record<string, str
   const values: Record<string, string> = { ...details }
   const titleKey = titleFieldByTab[tab]
   if (titleKey && !values[titleKey]?.trim() && title.trim()) {
-    values[titleKey] = title.trim()
+    const titleLooksLikeInstitution = tab === 'training' && values.institution?.trim() === title.trim()
+    if (!titleLooksLikeInstitution) values[titleKey] = title.trim()
   }
   for (const field of fieldsByTab[tab]) {
     if (field.type === 'select' && !values[field.key] && !(tab === 'applications' && field.key !== 'category')) {
@@ -338,7 +353,7 @@ export function filledDetails(item: Resource) {
   const details = item.details ?? {}
   return (fieldsByTab[item.tab] ?? [])
     .filter((field) => field.key !== titleFieldByTab[item.tab])
-    .filter((field) => !(item.tab === 'applications' && field.key === 'institution'))
+    .filter((field) => !((item.tab === 'applications' || item.tab === 'training') && field.key === 'institution'))
     .map((field) => {
       if (field.type === 'daterange') return { label: field.label, value: periodDisplay(details), countChars: false }
       return { label: field.label, value: details[field.key]?.trim() ?? '', countChars: Boolean(field.countChars) }

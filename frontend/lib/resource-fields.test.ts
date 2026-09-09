@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { applicationPostingName, characterCountLabel, filledDetails, fieldsByTab, groupEssaysByPosting, initialFieldValues, interviewRounds, overlayApplication, parseEssayEntries, parsePeriodRange, toApplicationPayload, toDateInputValue, toEssayPayload, toResourcePayload } from './resource-fields'
+import { applicationPostingName, characterCountLabel, filledDetails, fieldsByTab, groupEssaysByPosting, initialFieldValues, interviewRounds, overlayApplication, parseEssayEntries, parsePeriodRange, resourceCardSubtitle, resourceCardTitle, toApplicationPayload, toDateInputValue, toEssayPayload, toResourcePayload } from './resource-fields'
 
 describe('resource fields', () => {
   it('fills select defaults so they are saved without user change', () => {
@@ -48,6 +48,26 @@ describe('resource fields', () => {
     const payload = toResourcePayload('education', '', { subject: '헌법', credits: '3학점' })
     expect(payload.title).toBe('헌법')
     expect(payload.subtitle).toBe('')
+  })
+
+  it('uses the course name as the training title and the institution as the subtitle', () => {
+    const payload = toResourcePayload('training', '', {
+      institution: '에듀퓨어',
+      subject: 'NCS 사무행정',
+      ncs: '02010101',
+      hours: '28',
+    })
+    expect(payload.title).toBe('NCS 사무행정')
+    expect(payload.subtitle).toBe('에듀퓨어')
+    expect(
+      filledDetails({
+        id: '1',
+        tab: 'training',
+        title: payload.title,
+        subtitle: payload.subtitle,
+        details: payload.details,
+      }).map((row) => row.label),
+    ).toEqual(['NCS분류', '교육시간'])
   })
 
   it('saves only the selected application stage', () => {
@@ -145,6 +165,19 @@ describe('resource fields', () => {
     expect(rows).toEqual([
       { label: '발급기관', value: '한국산업인력공단', countChars: false },
     ])
+  })
+
+  it('keeps the training course name as the card title for older records', () => {
+    const item = {
+      id: '1',
+      tab: 'training' as const,
+      title: '에듀퓨어',
+      subtitle: 'NCS 사무행정',
+      details: { institution: '에듀퓨어', subject: 'NCS 사무행정', ncs: '02010101' },
+    }
+    expect(resourceCardTitle(item)).toBe('NCS 사무행정')
+    expect(resourceCardSubtitle(item)).toBe('에듀퓨어')
+    expect(filledDetails(item).map((row) => row.label)).toEqual(['NCS분류'])
   })
 
   it('calculates certificate expiry from validity years', () => {

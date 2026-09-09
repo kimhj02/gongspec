@@ -43,6 +43,8 @@ public abstract class ResourceItem extends BaseEntity {
     @Column(nullable = false)
     private boolean pinned;
 
+    private Integer sortOrder;
+
     @Column(nullable = false)
     private boolean collapsed;
 
@@ -127,6 +129,14 @@ public abstract class ResourceItem extends BaseEntity {
 
     public boolean isPinned() {
         return pinned;
+    }
+
+    public int getSortOrder() {
+        return sortOrder == null ? 0 : sortOrder;
+    }
+
+    public void setSortOrder(int sortOrder) {
+        this.sortOrder = sortOrder;
     }
 
     public boolean isCollapsed() {

@@ -2,25 +2,28 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
-import { Archive, CalendarDays, Moon, PenLine, Plus, Search, Sun, X } from 'lucide-react'
+import { Archive, CalendarDays, Landmark, Moon, PenLine, Plus, RefreshCw, Search, Sun, X } from 'lucide-react'
 import AppNotice, { type Notice } from '@/components/app-notice'
 import CalendarBoard from '@/components/calendar-board'
 import ConfirmDialog from '@/components/confirm-dialog'
 import DdayCard from '@/components/dday-card'
 import EssayBoard from '@/components/essay-board'
 import LoginGate from '@/components/login-gate'
+import RecruitBoard from '@/components/recruit-board'
+import HireFilters from '@/components/hire-filters'
 import ResourceCard from '@/components/resource-card'
 import ResourceForm from '@/components/resource-form'
+import SortableList from '@/components/sortable-list'
 import ScheduleModal from '@/components/schedule-modal'
 import { useAuth } from '@/hooks/use-auth'
 import { useDebouncedValue } from '@/hooks/use-debounce'
 import { useTheme } from '@/hooks/use-theme'
 import { useKoreanHolidays } from '@/hooks/use-korean-holidays'
-import { api, applicationsKey, getApiError, resourceKey, schedulesKey, type NavId, type Resource, type Schedule } from '@/lib/api'
+import { api, applicationsKey, getApiError, recruitsKey, resourceKey, schedulesKey, type HireTypeFilter, type NavId, type Resource, type Schedule } from '@/lib/api'
 import { mergeCalendarEvents, type CalendarEvent } from '@/lib/calendar-events'
 import { dateKey, monthDays } from '@/lib/dates'
 import { overlayApplication, parseEssayEntries, applicationPostingName, applicationCompanyName, mergeEssayResources, toEssayPayload } from '@/lib/resource-fields'
-import { calendarNav, resourceTabs, tabCopy, tabLabel } from '@/lib/tabs'
+import { calendarNav, recruitsNav, resourceTabs, tabCopy, tabLabel } from '@/lib/tabs'
 
 type PendingDelete =
   | { kind: 'resource'; id: string; title: string; extraIds?: string[] }
@@ -44,8 +47,11 @@ export default function Page() {
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({})
   const [notice, setNotice] = useState<Notice | null>(null)
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
+  const [hireFilter, setHireFilter] = useState<HireTypeFilter | ''>('')
+  const [syncing, setSyncing] = useState(false)
   const isCalendar = activeTab === 'calendar'
-  const resourceTab = isCalendar ? null : activeTab
+  const isRecruits = activeTab === 'recruits'
+  const resourceTab = isCalendar || isRecruits ? null : activeTab
 
   const resources = useSWR(
     user && resourceTab ? resourceKey(resourceTab, debouncedQuery) : null,
@@ -54,6 +60,11 @@ export default function Page() {
   )
   const applications = useSWR(user ? applicationsKey : null, () => api.resources.list({ tab: 'applications' }), { revalidateOnFocus: false })
   const schedules = useSWR(user ? schedulesKey : null, () => api.schedules.list(), { revalidateOnFocus: false })
+  const recruits = useSWR(
+    user && isRecruits ? recruitsKey(debouncedQuery, hireFilter) : null,
+    ([, nextQuery, hireType]) => api.recruits.list({ query: nextQuery, hireType }),
+    { revalidateOnFocus: false, keepPreviousData: true },
+  )
   const days = useMemo(() => monthDays(month), [month])
   const holidays = useKoreanHolidays(month.getFullYear())
   const events = useMemo(
@@ -82,6 +93,19 @@ export default function Page() {
       setNotice({ type: 'success', message: '로그아웃했습니다.' })
     } catch (error) {
       setNotice({ type: 'error', message: getApiError(error) })
+    }
+  }
+
+  const syncRecruits = async () => {
+    setSyncing(true)
+    try {
+      const result = await api.recruits.sync()
+      await recruits.mutate()
+      setNotice({ type: 'success', message: `채용공고 ${result.saved}건을 저장했습니다.` })
+    } catch (error) {
+      setNotice({ type: 'error', message: getApiError(error) })
+    } finally {
+      setSyncing(false)
     }
   }
 
@@ -180,6 +204,17 @@ export default function Page() {
       await api.resources.update(item.id, { pinned: !item.pinned })
       await resources.mutate()
     } catch (error) {
+      setNotice({ type: 'error', message: getApiError(error) })
+    }
+  }
+
+  const saveResourceOrder = async (next: Resource[]) => {
+    const previous = resources.data
+    await resources.mutate(next, { revalidate: false })
+    try {
+      await api.resources.reorder(next.map((item) => item.id))
+    } catch (error) {
+      await resources.mutate(previous, { revalidate: false })
       setNotice({ type: 'error', message: getApiError(error) })
     }
   }
@@ -305,6 +340,10 @@ export default function Page() {
               <CalendarDays size={17} />
               <span>{calendarNav.label}</span>
             </button>
+            <button className={`nav-item ${isRecruits ? 'active' : ''}`} onClick={() => setActiveTab('recruits')}>
+              <Landmark size={17} />
+              <span>{recruitsNav.label}</span>
+            </button>
           </nav>
           <div className="sidebar-heading">
             <span>자료실</span>
@@ -337,7 +376,13 @@ export default function Page() {
               <h1>{tabLabel(activeTab)}</h1>
               <p>{tabCopy[activeTab].intro}</p>
             </div>
-            {!isCalendar ? (
+            {isRecruits ? (
+              <div className="page-intro-actions">
+                <button type="button" className="primary-button" onClick={() => void syncRecruits()} disabled={syncing}>
+                  <RefreshCw size={17} /> {syncing ? '불러오는 중' : tabCopy.recruits.createLabel}
+                </button>
+              </div>
+            ) : !isCalendar ? (
               <div className="page-intro-actions">
                 {activeTab === 'applications' ? (
                   <>
@@ -384,6 +429,39 @@ export default function Page() {
                 />
               </div>
             )
+          ) : isRecruits ? (
+            <>
+              <div className="toolbar">
+                <div className="search-field">
+                  <Search size={17} />
+                  <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="기관·공고명 검색하기" aria-label="채용 공고 검색" />
+                  {query ? (
+                    <button onClick={() => setQuery('')} aria-label="검색어 지우기">
+                      <X size={15} />
+                    </button>
+                  ) : null}
+                </div>
+                <HireFilters value={hireFilter} onChange={setHireFilter} />
+                <div className="view-caption">
+                  <span>{recruits.data?.length ?? 0}개의 {tabCopy.recruits.countLabel}</span>
+                </div>
+              </div>
+              {recruits.error ? (
+                <InlineError message={getApiError(recruits.error)} onRetry={() => void recruits.mutate()} />
+              ) : recruits.isLoading && !recruits.data ? (
+                <LoadingState />
+              ) : recruits.data?.length ? (
+                <RecruitBoard items={recruits.data} />
+              ) : (
+                <EmptyState
+                  onAdd={() => void syncRecruits()}
+                  title={tabCopy.recruits.emptyTitle}
+                  description={tabCopy.recruits.emptyDescription}
+                  actionLabel={syncing ? '불러오는 중' : tabCopy.recruits.createLabel}
+                  disabled={syncing}
+                />
+              )}
+            </>
           ) : (
             <>
               <div className="toolbar">
@@ -419,6 +497,7 @@ export default function Page() {
                       })
                     }
                     onTogglePin={(item) => void togglePin(item)}
+                    onReorder={debouncedQuery ? undefined : (next) => void saveResourceOrder(next)}
                     onDeleteEntry={(posting, index) => {
                       const entries = parseEssayEntries(posting)
                       const entry = entries[index]
@@ -431,25 +510,31 @@ export default function Page() {
                     }}
                   />
                 ) : (
-                  <div className="resource-grid">
-                    {resources.data.map((item) => (
-                      <ResourceCard
-                        key={item.id}
-                        item={item}
-                        collapsed={Boolean(collapsed[item.id])}
-                        onEdit={() => {
-                          setDraftTitle('')
-                          setEditing(item)
-                          setShowForm(true)
-                        }}
-                        onDelete={() => setPendingDelete({ kind: 'resource', id: item.id, title: item.title })}
-                        onTogglePin={() => void togglePin(item)}
-                        onToggleCollapsed={() => setCollapsed((current) => ({ ...current, [item.id]: !current[item.id] }))}
-                        onWriteEssay={resourceTab === 'applications' ? () => openEssayCreate(applicationPostingName(item)) : undefined}
-                        onOpenEssay={resourceTab === 'applications' ? () => void goToEssayEdit(applicationPostingName(item)) : undefined}
-                      />
-                    ))}
-                  </div>
+                  <SortableList
+                    className="resource-grid"
+                    items={resources.data}
+                    getId={(item) => item.id}
+                    disabled={Boolean(debouncedQuery)}
+                    onReorder={(next) => void saveResourceOrder(next)}
+                    renderItem={(item, bind) => (
+                      <div {...bind}>
+                        <ResourceCard
+                          item={item}
+                          collapsed={Boolean(collapsed[item.id])}
+                          onEdit={() => {
+                            setDraftTitle('')
+                            setEditing(item)
+                            setShowForm(true)
+                          }}
+                          onDelete={() => setPendingDelete({ kind: 'resource', id: item.id, title: item.title })}
+                          onTogglePin={() => void togglePin(item)}
+                          onToggleCollapsed={() => setCollapsed((current) => ({ ...current, [item.id]: !current[item.id] }))}
+                          onWriteEssay={resourceTab === 'applications' ? () => openEssayCreate(applicationPostingName(item)) : undefined}
+                          onOpenEssay={resourceTab === 'applications' ? () => void goToEssayEdit(applicationPostingName(item)) : undefined}
+                        />
+                      </div>
+                    )}
+                  />
                 )
               ) : (
                 <EmptyState
@@ -542,11 +627,13 @@ function EmptyState({
   title,
   description,
   actionLabel,
+  disabled,
 }: {
   onAdd: () => void
   title: string
   description: string
   actionLabel: string
+  disabled?: boolean
 }) {
   return (
     <div className="empty-state">
@@ -555,7 +642,7 @@ function EmptyState({
       </div>
       <h2>{title}</h2>
       <p>{description}</p>
-      <button className="primary-button" onClick={onAdd}>
+      <button className="primary-button" onClick={onAdd} disabled={disabled}>
         <Plus size={16} /> {actionLabel}
       </button>
     </div>

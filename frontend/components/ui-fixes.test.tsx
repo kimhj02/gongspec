@@ -216,6 +216,36 @@ describe('resource card', () => {
     expect(screen.getByText('취득일')).toBeTruthy()
   })
 
+  it('shows the training course name as the heading and the institution below it', () => {
+    render(
+      <ResourceCard
+        item={{
+          id: '1',
+          tab: 'training',
+          title: '에듀퓨어',
+          subtitle: 'NCS 사무행정',
+          details: {
+            institution: '에듀퓨어',
+            subject: 'NCS 사무행정',
+            ncs: '02010101',
+            hours: '28',
+          },
+        }}
+        collapsed={false}
+        onEdit={() => undefined}
+        onDelete={() => undefined}
+        onTogglePin={() => undefined}
+        onToggleCollapsed={() => undefined}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { level: 2, name: 'NCS 사무행정' })).toBeTruthy()
+    expect(screen.getByText('에듀퓨어')).toBeTruthy()
+    expect(screen.queryByText('과목명')).toBeNull()
+    expect(screen.queryByText('교육기관명')).toBeNull()
+    expect(screen.getByText('NCS분류')).toBeTruthy()
+  })
+
   it('lets an application open the essay editor or list', async () => {
     const user = userEvent.setup()
     const onWriteEssay = vi.fn()

@@ -2,7 +2,7 @@
 
 import { ChevronDown, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
-import { characterCountLabel, filledDetails } from '@/lib/resource-fields'
+import { characterCountLabel, filledDetails, resourceCardSubtitle, resourceCardTitle } from '@/lib/resource-fields'
 import { tabLabel } from '@/lib/tabs'
 
 export default function ResourceCard({
@@ -25,6 +25,8 @@ export default function ResourceCard({
   onOpenEssay?: () => void
 }) {
   const details = filledDetails(item)
+  const title = resourceCardTitle(item)
+  const subtitle = resourceCardSubtitle(item)
   const bodyIsDuplicated = Boolean(item.body && details.some((row) => row.value === item.body))
 
   return (
@@ -45,8 +47,8 @@ export default function ResourceCard({
       </div>
       <button className="card-title-row" onClick={onToggleCollapsed}>
         <div>
-          <h2>{item.title}</h2>
-          {item.subtitle && <p>{item.subtitle}</p>}
+          <h2>{title}</h2>
+          {subtitle ? <p>{subtitle}</p> : null}
         </div>
         <ChevronDown className={collapsed ? 'rotate' : ''} size={17} />
       </button>

@@ -89,4 +89,30 @@ describe('api client', () => {
     expect(fetchMock.mock.calls[0][0]).toBe('/api/auth/kakao/callback')
     expect(fetchMock.mock.calls[0][1].body).toBe(JSON.stringify({ code: 'code', state: 'state' }))
   })
+
+  it('lists recruits with hire type and posts sync without json content-type', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse({ fetched: 1, saved: 1, closed: 0 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.recruits.list({ query: '한국전력', hireType: '정규직' })
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/recruits?query=%ED%95%9C%EA%B5%AD%EC%A0%84%EB%A0%A5&hireType=%EC%A0%95%EA%B7%9C%EC%A7%81')
+
+    await api.recruits.sync()
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/recruits/sync')
+    expect(fetchMock.mock.calls[1][1].method).toBe('POST')
+    const headers = fetchMock.mock.calls[1][1].headers as Headers
+    expect(headers.has('Content-Type')).toBe(false)
+  })
+
+  it('puts resource order ids', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ...jsonResponse(undefined, 204), json: async () => undefined })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await api.resources.reorder(['a', 'b'])
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/resources/order')
+    expect(fetchMock.mock.calls[0][1].method).toBe('PUT')
+    expect(fetchMock.mock.calls[0][1].body).toBe(JSON.stringify({ ids: ['a', 'b'] }))
+  })
 })
