@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
 import { characterCountLabel, groupEssaysByPosting, mergeEssayResources, parseEssayEntries } from '@/lib/resource-fields'
-import SortableList from '@/components/sortable-list'
+import SortableList, { SortableHandle } from '@/components/sortable-list'
 
 export default function EssayBoard({
   items,
@@ -44,7 +44,7 @@ export default function EssayBoard({
         const posting = mergeEssayResources(essays)
         const entries = parseEssayEntries(posting)
         const focused = Boolean(focusTitle && postingName === focusTitle)
-        const { className, ...rest } = bind
+        const { className, handle, ...rest } = bind
         return (
           <article
             {...rest}
@@ -52,10 +52,13 @@ export default function EssayBoard({
             data-posting={postingName}
           >
             <div className="essay-group-header">
-              <div className="page-intro-copy">
-                <div className="eyebrow">POSTING</div>
-                <h2>{postingName}</h2>
-                <p>{entries.length}개의 자기소개서 항목</p>
+              <div className="essay-group-heading">
+                <SortableHandle bind={handle} />
+                <div className="page-intro-copy">
+                  <div className="eyebrow">POSTING</div>
+                  <h2>{postingName}</h2>
+                  <p>{entries.length}개의 자기소개서 항목</p>
+                </div>
               </div>
               <div className="card-actions">
                 <button onClick={() => onTogglePin(posting)} aria-label={posting.pinned ? '고정 해제' : '고정'}>

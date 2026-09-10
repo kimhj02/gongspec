@@ -118,6 +118,19 @@ export const fieldsByTab: Record<ResourceTab, Field[]> = {
     { key: 'period', label: '근무기간', type: 'daterange' },
     { key: 'responsibilities', label: '담당업무', type: 'textarea', placeholder: '담당 업무와 성과를 기록해 주세요.', countChars: true },
   ],
+  project: [
+    { key: 'name', label: '프로젝트명', placeholder: '예: MediCheck', required: true },
+    { key: 'oneLiner', label: '한 줄 소개', type: 'textarea', rows: 2, placeholder: '무엇을 한 프로젝트인지 한 줄로 적어 주세요.' },
+    { key: 'period', label: '기간', type: 'daterange' },
+    { key: 'role', label: '역할', placeholder: '예: 1인 풀스택' },
+    { key: 'url', label: '서비스 주소', type: 'url', placeholder: 'https://' },
+    { key: 'stack', label: '기술 스택', type: 'textarea', rows: 2, placeholder: '예: Java 21, Spring Boot, React, MySQL, AWS' },
+    { key: 'background', label: '만든 이유', type: 'textarea', placeholder: '왜 이 서비스를 만들었는지 적어 주세요.' },
+    { key: 'work', label: '맡은 일', type: 'textarea', placeholder: '기획·구현·배포 중 직접 한 일과 핵심 기능을 적어 주세요.' },
+    { key: 'problem', label: '문제와 해결', type: 'textarea', placeholder: '막혔던 문제와 어떻게 풀었는지, 그 결과를 적어 주세요.' },
+    { key: 'results', label: '성과·수치', type: 'textarea', rows: 3, placeholder: '기간, API 수, 운영 URL처럼 숫자로 말할 수 있는 결과를 적어 주세요.' },
+    { key: 'essay', label: '자소서 문장', type: 'textarea', placeholder: '지원서에 그대로 넣을 문단을 적어 두세요.' },
+  ],
   applications: [...applicationCommonFields, ...applicationStages.flatMap((stage) => stage.fields)],
   essays: [],
   memo: [{ key: 'content', label: '내용', type: 'textarea', placeholder: '기억하고 싶은 내용을 기록해 주세요.' }],
@@ -132,6 +145,7 @@ export const titleFieldByTab: Partial<Record<ResourceTab, string>> = {
   education: 'subject',
   training: 'subject',
   career: 'institution',
+  project: 'name',
   applications: 'posting',
 }
 
@@ -149,6 +163,10 @@ export function resourceCardSubtitle(item: Pick<Resource, 'tab' | 'title' | 'sub
   if (item.tab === 'training') {
     const institution = item.details?.institution?.trim() || (item.title.trim() !== title ? item.title.trim() : '')
     if (institution && institution !== title) return institution
+  }
+  if (item.tab === 'project') {
+    const oneLiner = item.details?.oneLiner?.trim() || item.subtitle?.trim() || ''
+    return oneLiner && oneLiner !== title ? oneLiner : ''
   }
   const subtitle = item.subtitle?.trim() ?? ''
   return subtitle && subtitle !== title ? subtitle : ''
@@ -326,9 +344,12 @@ export function initialFieldValues(tab: ResourceTab, details: Record<string, str
 
 export function toResourcePayload(tab: ResourceTab, title: string, values: Record<string, string>): Omit<Resource, 'id'> {
   const resolvedTitle = resolveResourceTitle(tab, title, values)
-  const subtitle = [values.item, values.institution, values.subject, values.category, values.issuer, values.level]
-    .map((value) => value?.trim() ?? '')
-    .find((value) => value && value !== resolvedTitle) ?? ''
+  const subtitle =
+    tab === 'project'
+      ? values.oneLiner?.trim() ?? ''
+      : [values.item, values.institution, values.subject, values.category, values.issuer, values.level]
+          .map((value) => value?.trim() ?? '')
+          .find((value) => value && value !== resolvedTitle) ?? ''
   const details = { ...values }
   if (tab === 'certificate') {
     const expires = expiresAtFrom(values.acquiredAt, values.validity)
@@ -343,7 +364,7 @@ export function toResourcePayload(tab: ResourceTab, title: string, values: Recor
     tab,
     title: resolvedTitle,
     subtitle,
-    body: values.essay || values.content || values.responsibilities || values.description || '',
+    body: values.essay || values.content || values.responsibilities || values.description || values.work || '',
     details,
     tags: [],
     date:
@@ -365,6 +386,7 @@ export function filledDetails(item: Resource) {
   return (fieldsByTab[item.tab] ?? [])
     .filter((field) => field.key !== titleFieldByTab[item.tab])
     .filter((field) => !((item.tab === 'applications' || item.tab === 'training') && field.key === 'institution'))
+    .filter((field) => !(item.tab === 'project' && field.key === 'oneLiner'))
     .map((field) => {
       if (field.type === 'daterange') return { label: field.label, value: periodDisplay(details), countChars: false }
       return { label: field.label, value: details[field.key]?.trim() ?? '', countChars: Boolean(field.countChars) }

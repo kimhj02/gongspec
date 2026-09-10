@@ -4,6 +4,7 @@ import { ChevronDown, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
 import { characterCountLabel, filledDetails, resourceCardSubtitle, resourceCardTitle } from '@/lib/resource-fields'
 import { tabLabel } from '@/lib/tabs'
+import { SortableHandle, type SortableHandleBind } from '@/components/sortable-list'
 
 export default function ResourceCard({
   item,
@@ -14,6 +15,7 @@ export default function ResourceCard({
   onToggleCollapsed,
   onWriteEssay,
   onOpenEssay,
+  dragHandle,
 }: {
   item: Resource
   collapsed: boolean
@@ -23,6 +25,7 @@ export default function ResourceCard({
   onToggleCollapsed: () => void
   onWriteEssay?: () => void
   onOpenEssay?: () => void
+  dragHandle?: SortableHandleBind | null
 }) {
   const details = filledDetails(item)
   const title = resourceCardTitle(item)
@@ -32,7 +35,10 @@ export default function ResourceCard({
   return (
     <article className={`resource-card ${item.pinned ? 'is-pinned' : ''}`}>
       <div className="card-topline">
-        <span className="card-category">{tabLabel(item.tab)}</span>
+        <div className="card-topline-start">
+          <SortableHandle bind={dragHandle ?? null} />
+          <span className="card-category">{tabLabel(item.tab)}</span>
+        </div>
         <div className="card-actions">
           <button onClick={onTogglePin} aria-label={item.pinned ? '고정 해제' : '고정'}>
             {item.pinned ? <Pin size={15} /> : <PinOff size={15} />}

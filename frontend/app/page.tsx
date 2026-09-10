@@ -538,24 +538,28 @@ export default function Page() {
                     getId={(item) => item.id}
                     disabled={Boolean(debouncedQuery)}
                     onReorder={(next) => void saveResourceOrder(next)}
-                    renderItem={(item, bind) => (
-                      <div {...bind}>
-                        <ResourceCard
-                          item={item}
-                          collapsed={Boolean(collapsed[item.id])}
-                          onEdit={() => {
-                            setDraftTitle('')
-                            setEditing(item)
-                            setShowForm(true)
-                          }}
-                          onDelete={() => setPendingDelete({ kind: 'resource', id: item.id, title: item.title })}
-                          onTogglePin={() => void togglePin(item)}
-                          onToggleCollapsed={() => setCollapsed((current) => ({ ...current, [item.id]: !current[item.id] }))}
-                          onWriteEssay={resourceTab === 'applications' ? () => openEssayCreate(applicationPostingName(item)) : undefined}
-                          onOpenEssay={resourceTab === 'applications' ? () => void goToEssayEdit(applicationPostingName(item)) : undefined}
-                        />
-                      </div>
-                    )}
+                    renderItem={(item, bind) => {
+                      const { handle, ...itemBind } = bind
+                      return (
+                        <div {...itemBind}>
+                          <ResourceCard
+                            dragHandle={handle}
+                            item={item}
+                            collapsed={Boolean(collapsed[item.id])}
+                            onEdit={() => {
+                              setDraftTitle('')
+                              setEditing(item)
+                              setShowForm(true)
+                            }}
+                            onDelete={() => setPendingDelete({ kind: 'resource', id: item.id, title: item.title })}
+                            onTogglePin={() => void togglePin(item)}
+                            onToggleCollapsed={() => setCollapsed((current) => ({ ...current, [item.id]: !current[item.id] }))}
+                            onWriteEssay={resourceTab === 'applications' ? () => openEssayCreate(applicationPostingName(item)) : undefined}
+                            onOpenEssay={resourceTab === 'applications' ? () => void goToEssayEdit(applicationPostingName(item)) : undefined}
+                          />
+                        </div>
+                      )
+                    }}
                   />
                 )
               ) : (

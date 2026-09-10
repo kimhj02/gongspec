@@ -1,4 +1,4 @@
-import { Archive, Award, BriefcaseBusiness, CalendarDays, ClipboardList, FileText, GraduationCap, Landmark, PenLine, Sparkles, Users } from 'lucide-react'
+import { Archive, Award, BriefcaseBusiness, CalendarDays, ClipboardList, FileText, FolderKanban, GraduationCap, Landmark, PenLine, Sparkles, Users } from 'lucide-react'
 import type { NavId, ResourceTab } from '@/lib/api'
 
 export const calendarNav = { id: 'calendar' as const, label: '캘린더', icon: CalendarDays }
@@ -10,6 +10,7 @@ export const resourceTabs: { id: ResourceTab; label: string; icon: typeof Archiv
   { id: 'education', label: '학교교육', icon: GraduationCap },
   { id: 'training', label: '직업교육', icon: ClipboardList },
   { id: 'career', label: '경력사항', icon: BriefcaseBusiness },
+  { id: 'project', label: '프로젝트', icon: FolderKanban },
   { id: 'applications', label: '지원 현황', icon: FileText },
   { id: 'essays', label: '자기소개서', icon: PenLine },
   { id: 'memo', label: '메모', icon: Archive },
@@ -88,6 +89,15 @@ export const tabCopy: Record<
     createLabel: '경력 추가',
     editLabel: '경력 수정',
     countLabel: '경력',
+  },
+  project: {
+    eyebrow: 'PROJECT',
+    intro: '포트폴리오 프로젝트를 자소서에 꺼내 쓰기 좋게 한 장씩 정리해 두세요.',
+    emptyTitle: '프로젝트가 없어요',
+    emptyDescription: '프로젝트명, 한 줄 소개, 맡은 일과 문제 해결을 추가해 보세요.',
+    createLabel: '프로젝트 추가',
+    editLabel: '프로젝트 수정',
+    countLabel: '프로젝트',
   },
   applications: {
     eyebrow: 'APPLICATION',

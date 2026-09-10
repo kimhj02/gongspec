@@ -76,6 +76,26 @@ describe('resource form', () => {
     expect(screen.getByText('(공백 포함 5자 · 공백 제외 4자)')).toBeTruthy()
   })
 
+  it('saves a project from the name field without a separate title', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="project" onClose={() => undefined} onSave={onSave} />)
+
+    expect(screen.queryByPlaceholderText('자료 제목')).toBeNull()
+    await user.type(screen.getByPlaceholderText('예: MediCheck'), 'MediCheck')
+    await user.type(screen.getByPlaceholderText('무엇을 한 프로젝트인지 한 줄로 적어 주세요.'), '근처 병원 탐색')
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tab: 'project',
+        title: 'MediCheck',
+        subtitle: '근처 병원 탐색',
+        details: expect.objectContaining({ name: 'MediCheck', oneLiner: '근처 병원 탐색' }),
+      }),
+    )
+  })
+
   it('lets the user pick an education period on the calendar', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-09-08T00:00:00'))
@@ -214,6 +234,33 @@ describe('resource card', () => {
     expect(screen.getByText('발급기관')).toBeTruthy()
     expect(screen.getByText('한국산업인력공단')).toBeTruthy()
     expect(screen.getByText('취득일')).toBeTruthy()
+  })
+
+  it('shows the project name as the heading and the one-liner below it', () => {
+    render(
+      <ResourceCard
+        item={{
+          id: '1',
+          tab: 'project',
+          title: 'MediCheck',
+          details: {
+            name: 'MediCheck',
+            oneLiner: '공공데이터로 근처 병원을 찾는 서비스',
+            role: '1인 풀스택',
+          },
+        }}
+        collapsed={false}
+        onEdit={() => undefined}
+        onDelete={() => undefined}
+        onTogglePin={() => undefined}
+        onToggleCollapsed={() => undefined}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { level: 2, name: 'MediCheck' })).toBeTruthy()
+    expect(screen.getByText('공공데이터로 근처 병원을 찾는 서비스')).toBeTruthy()
+    expect(screen.getByText('역할')).toBeTruthy()
+    expect(screen.queryByText('한 줄 소개')).toBeNull()
   })
 
   it('shows the training course name as the heading and the institution below it', () => {

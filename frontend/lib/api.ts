@@ -1,4 +1,4 @@
-export type ResourceTab = 'certificate' | 'education' | 'training' | 'career' | 'applications' | 'essays' | 'memo' | 'sites'
+export type ResourceTab = 'certificate' | 'education' | 'training' | 'career' | 'project' | 'applications' | 'essays' | 'memo' | 'sites'
 export type NavId = 'calendar' | 'recruits' | 'study' | ResourceTab
 export type StudyPurpose = 'NCS' | '면접' | '기타'
 export type StudyMode = '온라인' | '오프라인' | '혼합'
