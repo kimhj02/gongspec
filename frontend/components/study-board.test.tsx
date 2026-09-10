@@ -22,7 +22,7 @@ const post: StudyPost = {
   institution: '한국전력공사',
   recruitId: null,
   recruitTitle: null,
-  purpose: '필기',
+  purpose: 'NCS',
   mode: '온라인',
   region: '서울',
   capacity: 4,
@@ -48,6 +48,6 @@ describe('study board', () => {
 
     await user.click(screen.getAllByRole('button', { name: '모집글 쓰기' })[0])
     expect(screen.getByRole('heading', { name: '모집글 쓰기' })).toBeTruthy()
-    expect(screen.getByText('기관명')).toBeTruthy()
+    expect(screen.getByLabelText('기관명 (선택)').tagName).toBe('INPUT')
   })
 })

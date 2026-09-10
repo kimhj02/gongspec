@@ -18,7 +18,7 @@ import {
 } from '@/lib/api'
 import { tabCopy } from '@/lib/tabs'
 
-export const studyPurposes: StudyPurpose[] = ['필기', '면접', 'NCS', '자소서 첨삭', '기타']
+export const studyPurposes: StudyPurpose[] = ['NCS', '면접', '기타']
 export const studyModes: StudyMode[] = ['온라인', '오프라인', '혼합']
 
 type StudyBoardProps = {
@@ -147,9 +147,7 @@ export default function StudyBoard({ onNotice }: StudyBoardProps) {
                 </div>
                 <h2>{item.title}</h2>
                 <p>
-                  {item.institution}
-                  {item.region ? ` · ${item.region}` : ''}
-                  {item.capacity ? ` · ${item.capacity}명` : ''}
+                  {[item.institution, item.region, item.capacity ? `${item.capacity}명` : ''].filter(Boolean).join(' · ')}
                 </p>
                 <span>
                   {item.authorNickname || '닉네임 없음'} · 댓글 {item.commentCount}
@@ -278,9 +276,7 @@ function StudyDetail({
         </button>
       </div>
       <p className="study-detail-meta">
-        {post.institution} · {post.purpose} · {post.mode}
-        {post.region ? ` · ${post.region}` : ''}
-        {post.capacity ? ` · ${post.capacity}명` : ''}
+        {[post.institution, post.purpose, post.mode, post.region, post.capacity ? `${post.capacity}명` : ''].filter(Boolean).join(' · ')}
       </p>
       <p className="study-detail-author">{post.authorNickname || '닉네임 없음'}</p>
       {post.recruitTitle ? <p className="study-detail-recruit">연결 공고: {post.recruitTitle}</p> : null}
@@ -365,7 +361,7 @@ function StudyForm({
 }) {
   const [title, setTitle] = useState(initial?.title ?? '')
   const [institution, setInstitution] = useState(initial?.institution ?? '')
-  const [purpose, setPurpose] = useState<StudyPurpose>(initial?.purpose ?? '필기')
+  const [purpose, setPurpose] = useState<StudyPurpose>(initial?.purpose ?? 'NCS')
   const [mode, setMode] = useState<StudyMode>(initial?.mode ?? '온라인')
   const [region, setRegion] = useState(initial?.region ?? '')
   const [capacity, setCapacity] = useState(initial?.capacity ? String(initial.capacity) : '')
@@ -423,8 +419,8 @@ function StudyForm({
             <input value={title} onChange={(event) => setTitle(event.target.value)} required maxLength={120} />
           </label>
           <label>
-            기관명
-            <input value={institution} onChange={(event) => setInstitution(event.target.value)} required maxLength={120} />
+            기관명 (선택)
+            <input value={institution} onChange={(event) => setInstitution(event.target.value)} maxLength={120} placeholder="예: 한국전력공사" />
           </label>
           <label>
             목적
@@ -478,6 +474,7 @@ function StudyForm({
                   type="button"
                   onClick={() => {
                     setRecruitId(item.id)
+                    setInstitution(item.instNm)
                     setRecruitQuery(`${item.instNm} ${item.title}`)
                   }}
                 >

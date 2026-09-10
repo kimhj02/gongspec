@@ -57,7 +57,7 @@ class StudyControllerTest {
                                 {
                                   "title":"한전 필기 스터디",
                                   "institution":"한국전력공사",
-                                  "purpose":"필기",
+                                  "purpose":"NCS",
                                   "mode":"온라인",
                                   "region":"서울",
                                   "capacity":4,
@@ -96,6 +96,26 @@ class StudyControllerTest {
     }
 
     @Test
+    void createsWithoutInstitution() throws Exception {
+        Cookie token = nicknamedCookie("kakao-study-optional", "선택닉");
+
+        mockMvc.perform(post("/api/study/posts")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                """
+                                {
+                                  "title":"면접 스터디",
+                                  "purpose":"면접",
+                                  "mode":"온라인"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("면접 스터디"))
+                .andExpect(jsonPath("$.institution").isEmpty());
+    }
+
+    @Test
     void rejectsPhoneNumberInPost() throws Exception {
         Cookie token = nicknamedCookie("kakao-study-phone", "공스펙이");
 
@@ -107,7 +127,7 @@ class StudyControllerTest {
                                 {
                                   "title":"연락주세요 010-1234-5678",
                                   "institution":"한국전력공사",
-                                  "purpose":"필기",
+                                  "purpose":"NCS",
                                   "mode":"온라인"
                                 }
                                 """))

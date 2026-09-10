@@ -6,10 +6,8 @@ import com.gongspec.common.exception.ApiException;
 import java.util.Arrays;
 
 public enum StudyPurpose {
-    WRITTEN("필기"),
-    INTERVIEW("면접"),
     NCS("NCS"),
-    ESSAY("자소서 첨삭"),
+    INTERVIEW("면접"),
     OTHER("기타");
 
     private final String label;

@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 
 public record StudyPostRequest(
         @NotBlank @Size(max = 120) String title,
-        @NotBlank @Size(max = 120) String institution,
+        @Size(max = 120) String institution,
         String recruitId,
         @NotNull StudyPurpose purpose,
         @NotNull StudyMode mode,

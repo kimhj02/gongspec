@@ -23,7 +23,7 @@ public class StudyPost extends BaseEntity {
     @Column(nullable = false, length = 120)
     private String title;
 
-    @Column(nullable = false, length = 120)
+    @Column(length = 120)
     private String institution;
 
     private UUID recruitId;
@@ -73,7 +73,7 @@ public class StudyPost extends BaseEntity {
             String scheduleText,
             String body) {
         this.title = title;
-        this.institution = institution;
+        this.institution = blankToNull(institution);
         this.recruitId = recruitId;
         this.purpose = purpose;
         this.mode = mode;

@@ -48,7 +48,7 @@ export const tabCopy: Record<
     eyebrow: 'STUDY',
     intro: '개인 자료와는 따로 모이는 공간입니다. 같은 기관을 준비하는 사람과 스터디를 모으고, 연락은 사이트 안 댓글로만 주세요.',
     emptyTitle: '모집글이 없어요',
-    emptyDescription: '기관명과 목적을 적고 스터디 모집글을 올려 보세요.',
+    emptyDescription: '목적과 소개를 적고 스터디 모집글을 올려 보세요.',
     createLabel: '모집글 쓰기',
     editLabel: '모집글 수정',
     countLabel: '모집글',

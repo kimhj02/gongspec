@@ -1,12 +1,12 @@
 export type ResourceTab = 'certificate' | 'education' | 'training' | 'career' | 'applications' | 'essays' | 'memo' | 'sites'
 export type NavId = 'calendar' | 'recruits' | 'study' | ResourceTab
-export type StudyPurpose = '필기' | '면접' | 'NCS' | '자소서 첨삭' | '기타'
+export type StudyPurpose = 'NCS' | '면접' | '기타'
 export type StudyMode = '온라인' | '오프라인' | '혼합'
 export type StudyStatus = '모집 중' | '마감'
 export type StudyPost = {
   id: string
   title: string
-  institution: string
+  institution: string | null
   recruitId: string | null
   recruitTitle: string | null
   purpose: StudyPurpose
@@ -24,7 +24,7 @@ export type StudyPost = {
 }
 export type StudyPostDraft = {
   title: string
-  institution: string
+  institution?: string
   recruitId?: string | null
   purpose: StudyPurpose
   mode: StudyMode

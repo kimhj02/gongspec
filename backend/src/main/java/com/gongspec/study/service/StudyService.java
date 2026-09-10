@@ -182,7 +182,7 @@ public class StudyService {
         }
         post.replace(
                 request.title().trim(),
-                request.institution().trim(),
+                request.institution(),
                 parseRecruitId(request.recruitId()),
                 request.purpose(),
                 request.mode(),
