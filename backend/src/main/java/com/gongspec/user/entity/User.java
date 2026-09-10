@@ -21,7 +21,7 @@ public class User extends BaseEntity {
     @Column(length = 255)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "is_admin", nullable = false, columnDefinition = "boolean not null default false")
     private boolean admin;
 
     protected User() {}
