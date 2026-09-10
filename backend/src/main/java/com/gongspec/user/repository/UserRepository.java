@@ -10,4 +10,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByKakaoId(String kakaoId);
 
     boolean existsByKakaoId(String kakaoId);
+
+    boolean existsBySiteNicknameIgnoreCase(String siteNickname);
+
+    boolean existsBySiteNicknameIgnoreCaseAndIdNot(String siteNickname, UUID id);
 }

@@ -43,7 +43,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/kakao/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                         .requestMatchers("/api/auth/me").authenticated()
-                        .requestMatchers("/api/resources/**", "/api/schedules/**", "/api/recruits/**").authenticated()
+                        .requestMatchers(
+                                "/api/resources/**",
+                                "/api/schedules/**",
+                                "/api/recruits/**",
+                                "/api/users/**",
+                                "/api/study/**",
+                                "/api/admin/**")
+                        .authenticated()
                         .anyRequest().permitAll())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

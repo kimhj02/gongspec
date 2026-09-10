@@ -21,6 +21,8 @@ export type AuthUser = {
   nickname: string
   email: string | null
   createdAt: string
+  needsNickname: boolean
+  admin: boolean
 }
 export type PublicRecruit = {
   id: string
@@ -108,6 +110,10 @@ export const api = {
       request<AuthUser>('/api/auth/kakao/callback', { method: 'POST', body: JSON.stringify(body) }),
     me: () => request<AuthUser>('/api/auth/me'),
     logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
+  },
+  users: {
+    setNickname: (nickname: string) =>
+      request<AuthUser>('/api/users/me/nickname', { method: 'PUT', body: JSON.stringify({ nickname }) }),
   },
   resources: {
     list: (params?: { tab?: ResourceTab; query?: string }, init?: RequestInit) => {

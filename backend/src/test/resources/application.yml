@@ -23,6 +23,8 @@ app:
     origins: http://localhost:13001
   cookie:
     secure: false
+  admin:
+    kakao-ids: admin-kakao
 
 alio:
   service-key: test-alio-key

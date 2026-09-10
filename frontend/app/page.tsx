@@ -74,6 +74,10 @@ export default function Page() {
   const today = dateKey(new Date())
 
   useEffect(() => {
+    if (user?.needsNickname) window.location.replace('/nickname')
+  }, [user])
+
+  useEffect(() => {
     if (!notice) return
     const timer = window.setTimeout(() => setNotice(null), 4000)
     return () => window.clearTimeout(timer)
@@ -313,7 +317,12 @@ export default function Page() {
           <div className="top-actions">
             {user ? (
               <>
-                <span className="user-chip">{user.nickname}</span>
+                <span className="user-chip">{user.nickname || '닉네임 없음'}</span>
+                {user.admin ? (
+                  <a className="auth-action" href="/admin">
+                    관리자
+                  </a>
+                ) : null}
                 <button className="auth-action" onClick={() => void startLogout()} disabled={authPending}>
                   로그아웃
                 </button>

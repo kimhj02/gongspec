@@ -31,9 +31,11 @@ describe('kakao callback page', () => {
     vi.spyOn(api.auth, 'callback').mockResolvedValue({
       id: '1',
       kakaoId: 'k',
-      nickname: '현진',
+      nickname: '',
       email: null,
       createdAt: '2026-01-01T00:00:00Z',
+      needsNickname: true,
+      admin: false,
     })
     const replace = vi.fn()
     vi.stubGlobal('location', { search: '?code=auth-code&state=csrf-state', replace })
@@ -41,16 +43,18 @@ describe('kakao callback page', () => {
     render(<KakaoCallbackPage />)
 
     await vi.waitFor(() => expect(api.auth.callback).toHaveBeenCalledWith({ code: 'auth-code', state: 'csrf-state' }))
-    expect(replace).toHaveBeenCalledWith('/')
+    expect(replace).toHaveBeenCalledWith('/nickname')
   })
 
   it('exchanges the code only once in strict mode', async () => {
     vi.spyOn(api.auth, 'callback').mockResolvedValue({
       id: '1',
       kakaoId: 'k',
-      nickname: '현진',
+      nickname: '공스펙',
       email: null,
       createdAt: '2026-01-01T00:00:00Z',
+      needsNickname: false,
+      admin: false,
     })
     const replace = vi.fn()
     vi.stubGlobal('location', { search: '?code=auth-code&state=csrf-state', replace })

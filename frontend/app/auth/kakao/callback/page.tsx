@@ -30,8 +30,8 @@ export default function KakaoCallbackPage() {
 
     api.auth
       .callback({ code, state })
-      .then(() => {
-        window.location.replace('/')
+      .then((user) => {
+        window.location.replace(user.needsNickname ? '/nickname' : '/')
       })
       .catch((requestError) => {
         sessionStorage.removeItem(lockKey)

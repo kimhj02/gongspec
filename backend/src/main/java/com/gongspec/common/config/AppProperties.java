@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "app")
-public record AppProperties(Cors cors, Cookie cookie) {
+public record AppProperties(Cors cors, Cookie cookie, Admin admin) {
 
     public AppProperties {
         if (cors == null) {
@@ -13,6 +13,9 @@ public record AppProperties(Cors cors, Cookie cookie) {
         }
         if (cookie == null) {
             cookie = new Cookie(false);
+        }
+        if (admin == null) {
+            admin = new Admin("");
         }
     }
 
@@ -26,4 +29,15 @@ public record AppProperties(Cors cors, Cookie cookie) {
     }
 
     public record Cookie(boolean secure) {}
+
+    public record Admin(String kakaoIds) {
+        public boolean includes(String kakaoId) {
+            if (kakaoIds == null || kakaoIds.isBlank() || kakaoId == null || kakaoId.isBlank()) {
+                return false;
+            }
+            return Arrays.stream(kakaoIds.split(","))
+                    .map(String::trim)
+                    .anyMatch(kakaoId::equals);
+        }
+    }
 }
