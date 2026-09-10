@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
-import { Archive, CalendarDays, Landmark, Moon, PenLine, Plus, RefreshCw, Search, Sun, X } from 'lucide-react'
+import { Archive, CalendarDays, Landmark, Moon, PenLine, Plus, RefreshCw, Search, Sun, Users, X } from 'lucide-react'
 import AppNotice, { type Notice } from '@/components/app-notice'
 import CalendarBoard from '@/components/calendar-board'
 import ConfirmDialog from '@/components/confirm-dialog'
@@ -10,6 +10,7 @@ import DdayCard from '@/components/dday-card'
 import EssayBoard from '@/components/essay-board'
 import LoginGate from '@/components/login-gate'
 import RecruitBoard from '@/components/recruit-board'
+import StudyBoard from '@/components/study-board'
 import HireFilters from '@/components/hire-filters'
 import ResourceCard from '@/components/resource-card'
 import ResourceForm from '@/components/resource-form'
@@ -23,7 +24,7 @@ import { api, applicationsKey, getApiError, recruitsKey, resourceKey, schedulesK
 import { mergeCalendarEvents, type CalendarEvent } from '@/lib/calendar-events'
 import { dateKey, monthDays } from '@/lib/dates'
 import { overlayApplication, parseEssayEntries, applicationPostingName, applicationCompanyName, mergeEssayResources, toEssayPayload } from '@/lib/resource-fields'
-import { calendarNav, recruitsNav, resourceTabs, tabCopy, tabLabel } from '@/lib/tabs'
+import { calendarNav, recruitsNav, resourceTabs, studyNav, tabCopy, tabLabel } from '@/lib/tabs'
 
 type PendingDelete =
   | { kind: 'resource'; id: string; title: string; extraIds?: string[] }
@@ -51,7 +52,8 @@ export default function Page() {
   const [syncing, setSyncing] = useState(false)
   const isCalendar = activeTab === 'calendar'
   const isRecruits = activeTab === 'recruits'
-  const resourceTab = isCalendar || isRecruits ? null : activeTab
+  const isStudy = activeTab === 'study'
+  const resourceTab = isCalendar || isRecruits || isStudy ? null : activeTab
 
   const resources = useSWR(
     user && resourceTab ? resourceKey(resourceTab, debouncedQuery) : null,
@@ -355,6 +357,15 @@ export default function Page() {
             </button>
           </nav>
           <div className="sidebar-heading">
+            <span>커뮤니티</span>
+          </div>
+          <nav className="tabs-nav" aria-label="커뮤니티">
+            <button className={`nav-item ${isStudy ? 'active' : ''}`} onClick={() => setActiveTab('study')}>
+              <Users size={17} />
+              <span>{studyNav.label}</span>
+            </button>
+          </nav>
+          <div className="sidebar-heading">
             <span>자료실</span>
           </div>
           <nav className="tabs-nav" aria-label="자료 분류">
@@ -391,7 +402,7 @@ export default function Page() {
                   <RefreshCw size={17} /> {syncing ? '불러오는 중' : tabCopy.recruits.createLabel}
                 </button>
               </div>
-            ) : !isCalendar ? (
+            ) : !isCalendar && !isStudy ? (
               <div className="page-intro-actions">
                 {activeTab === 'applications' ? (
                   <>
@@ -471,6 +482,8 @@ export default function Page() {
                 />
               )}
             </>
+          ) : isStudy ? (
+            <StudyBoard onNotice={setNotice} />
           ) : (
             <>
               <div className="toolbar">

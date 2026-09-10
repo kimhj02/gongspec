@@ -38,6 +38,14 @@ public class UserService {
         return user;
     }
 
+    public User requireNickname(UUID id) {
+        User user = getById(id);
+        if (user.needsNickname()) {
+            throw ApiException.badRequest("닉네임을 먼저 정해 주세요.");
+        }
+        return user;
+    }
+
     @Transactional
     public User upsertFromKakao(String kakaoId, String nickname, String email) {
         User user = userRepository

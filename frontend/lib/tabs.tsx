@@ -1,8 +1,9 @@
-import { Archive, Award, BriefcaseBusiness, CalendarDays, ClipboardList, FileText, GraduationCap, Landmark, PenLine, Sparkles } from 'lucide-react'
+import { Archive, Award, BriefcaseBusiness, CalendarDays, ClipboardList, FileText, GraduationCap, Landmark, PenLine, Sparkles, Users } from 'lucide-react'
 import type { NavId, ResourceTab } from '@/lib/api'
 
 export const calendarNav = { id: 'calendar' as const, label: '캘린더', icon: CalendarDays }
 export const recruitsNav = { id: 'recruits' as const, label: '채용 공고', icon: Landmark }
+export const studyNav = { id: 'study' as const, label: '스터디', icon: Users }
 
 export const resourceTabs: { id: ResourceTab; label: string; icon: typeof Archive }[] = [
   { id: 'certificate', label: '자격증', icon: Award },
@@ -15,7 +16,7 @@ export const resourceTabs: { id: ResourceTab; label: string; icon: typeof Archiv
   { id: 'sites', label: '사이트', icon: Sparkles },
 ]
 
-export const navItems: { id: NavId; label: string; icon: typeof Archive }[] = [calendarNav, recruitsNav, ...resourceTabs]
+export const navItems: { id: NavId; label: string; icon: typeof Archive }[] = [calendarNav, recruitsNav, studyNav, ...resourceTabs]
 
 export function tabLabel(id: string) {
   return navItems.find((tab) => tab.id === id)?.label ?? id
@@ -42,6 +43,15 @@ export const tabCopy: Record<
     createLabel: '지금 불러오기',
     editLabel: '채용 공고',
     countLabel: '공고',
+  },
+  study: {
+    eyebrow: 'STUDY',
+    intro: '개인 자료와는 따로 모이는 공간입니다. 같은 기관을 준비하는 사람과 스터디를 모으고, 연락은 사이트 안 댓글로만 주세요.',
+    emptyTitle: '모집글이 없어요',
+    emptyDescription: '기관명과 목적을 적고 스터디 모집글을 올려 보세요.',
+    createLabel: '모집글 쓰기',
+    editLabel: '모집글 수정',
+    countLabel: '모집글',
   },
   certificate: {
     eyebrow: 'CERTIFICATE',

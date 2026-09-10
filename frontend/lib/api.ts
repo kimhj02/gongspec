@@ -1,5 +1,57 @@
 export type ResourceTab = 'certificate' | 'education' | 'training' | 'career' | 'applications' | 'essays' | 'memo' | 'sites'
-export type NavId = 'calendar' | 'recruits' | ResourceTab
+export type NavId = 'calendar' | 'recruits' | 'study' | ResourceTab
+export type StudyPurpose = '필기' | '면접' | 'NCS' | '자소서 첨삭' | '기타'
+export type StudyMode = '온라인' | '오프라인' | '혼합'
+export type StudyStatus = '모집 중' | '마감'
+export type StudyPost = {
+  id: string
+  title: string
+  institution: string
+  recruitId: string | null
+  recruitTitle: string | null
+  purpose: StudyPurpose
+  mode: StudyMode
+  region: string | null
+  capacity: number | null
+  scheduleText: string | null
+  body: string | null
+  status: StudyStatus
+  authorId: string
+  authorNickname: string
+  mine: boolean
+  commentCount: number
+  createdAt: string
+}
+export type StudyPostDraft = {
+  title: string
+  institution: string
+  recruitId?: string | null
+  purpose: StudyPurpose
+  mode: StudyMode
+  region?: string
+  capacity?: number | null
+  scheduleText?: string
+  body?: string
+}
+export type StudyComment = {
+  id: string
+  body: string
+  authorId: string
+  authorNickname: string
+  mine: boolean
+  createdAt: string
+}
+export type CommunityReport = {
+  id: string
+  targetType: 'POST' | 'COMMENT'
+  targetId: string
+  reason: string
+  reporterNickname: string
+  postTitle: string
+  commentBody: string | null
+  hidden: boolean
+  createdAt: string
+}
 export type HireTypeFilter = '정규직' | '계약직' | '인턴'
 export type ScheduleType = '개인' | '서류' | '필기' | '면접' | '지원'
 export type Resource = {
@@ -142,6 +194,35 @@ export const api = {
     },
     sync: () => request<RecruitSyncResult>('/api/recruits/sync', { method: 'POST', timeoutMs: SYNC_TIMEOUT_MS }),
   },
+  study: {
+    list: (params?: { query?: string; purpose?: StudyPurpose | '' }, init?: RequestInit) => {
+      const search = new URLSearchParams()
+      if (params?.query) search.set('query', params.query)
+      if (params?.purpose) search.set('purpose', params.purpose)
+      return request<StudyPost[]>(`/api/study/posts${search.size ? `?${search}` : ''}`, init)
+    },
+    create: (body: StudyPostDraft) => request<StudyPost>('/api/study/posts', { method: 'POST', body: JSON.stringify(body) }),
+    update: (id: string, body: StudyPostDraft) =>
+      request<StudyPost>(`/api/study/posts/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
+    close: (id: string) => request<StudyPost>(`/api/study/posts/${id}/close`, { method: 'POST' }),
+    open: (id: string) => request<StudyPost>(`/api/study/posts/${id}/open`, { method: 'POST' }),
+    remove: (id: string) => request<void>(`/api/study/posts/${id}`, { method: 'DELETE' }),
+    comments: (id: string, init?: RequestInit) => request<StudyComment[]>(`/api/study/posts/${id}/comments`, init),
+    addComment: (id: string, body: string) =>
+      request<StudyComment>(`/api/study/posts/${id}/comments`, { method: 'POST', body: JSON.stringify({ body }) }),
+    removeComment: (id: string) => request<void>(`/api/study/comments/${id}`, { method: 'DELETE' }),
+    reportPost: (id: string, reason: string) =>
+      request<void>(`/api/study/posts/${id}/reports`, { method: 'POST', body: JSON.stringify({ reason }) }),
+    reportComment: (id: string, reason: string) =>
+      request<void>(`/api/study/comments/${id}/reports`, { method: 'POST', body: JSON.stringify({ reason }) }),
+  },
+  admin: {
+    reports: () => request<CommunityReport[]>('/api/admin/reports'),
+    hidePost: (id: string) => request<void>(`/api/admin/posts/${id}/hide`, { method: 'POST' }),
+    unhidePost: (id: string) => request<void>(`/api/admin/posts/${id}/unhide`, { method: 'POST' }),
+    hideComment: (id: string) => request<void>(`/api/admin/comments/${id}/hide`, { method: 'POST' }),
+    unhideComment: (id: string) => request<void>(`/api/admin/comments/${id}/unhide`, { method: 'POST' }),
+  },
 }
 
 export function getApiError(error: unknown) {
@@ -153,3 +234,6 @@ export const resourceKey = (tab: ResourceTab, query: string) => ['/api/resources
 export const applicationsKey = ['/api/resources', 'applications', 'calendar'] as const
 export const schedulesKey = ['/api/schedules'] as const
 export const recruitsKey = (query: string, hireType: HireTypeFilter | '') => ['/api/recruits', query, hireType] as const
+export const studyKey = (query: string, purpose: StudyPurpose | '') => ['/api/study/posts', query, purpose] as const
+export const studyCommentsKey = (id: string) => ['/api/study/posts', id, 'comments'] as const
+export const adminReportsKey = ['/api/admin/reports'] as const
