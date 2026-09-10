@@ -76,6 +76,26 @@ describe('resource form', () => {
     expect(screen.getByText('(공백 포함 5자 · 공백 제외 4자)')).toBeTruthy()
   })
 
+  it('saves a project from the name field without a separate title', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="project" onClose={() => undefined} onSave={onSave} />)
+
+    expect(screen.queryByPlaceholderText('자료 제목')).toBeNull()
+    await user.type(screen.getByPlaceholderText('예: MediCheck'), 'MediCheck')
+    await user.type(screen.getByPlaceholderText('무엇을 한 프로젝트인지 한 줄로 적어 주세요.'), '근처 병원 탐색')
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tab: 'project',
+        title: 'MediCheck',
+        subtitle: '근처 병원 탐색',
+        details: expect.objectContaining({ name: 'MediCheck', oneLiner: '근처 병원 탐색' }),
+      }),
+    )
+  })
+
   it('lets the user pick an education period on the calendar', async () => {
     vi.useFakeTimers({ toFake: ['Date'] })
     vi.setSystemTime(new Date('2026-09-08T00:00:00'))
@@ -129,6 +149,51 @@ describe('application form', () => {
       }),
     )
     expect(onSave.mock.calls[0][0].details.documentAt).toBeUndefined()
+  })
+
+  it('prefills company, posting, homepage, and document deadline from a recruit', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(
+      <ResourceForm
+        initial={null}
+        activeTab="applications"
+        defaultTitle="사무직 채용"
+        defaultDetails={{
+          institution: '한국전력공사',
+          posting: '사무직 채용',
+          homepage: 'https://example.com/notice',
+          documentAt: '2026-09-16',
+          category: '정규직',
+        }}
+        onClose={() => undefined}
+        onSave={onSave}
+      />,
+    )
+
+    expect((screen.getByPlaceholderText('예: 서울교통공사') as HTMLInputElement).value).toBe('한국전력공사')
+    expect((screen.getByPlaceholderText('예: 2026년 9급 행정직') as HTMLInputElement).value).toBe('사무직 채용')
+    expect((screen.getByPlaceholderText('채용 사이트 주소 (선택)') as HTMLInputElement).value).toBe('https://example.com/notice')
+    expect((screen.getByLabelText('서류 마감일') as HTMLInputElement).value).toBe('2026-09-16')
+    expect((screen.getByLabelText('서류 발표일') as HTMLInputElement).value).toBe('')
+    expect(screen.getByRole('tab', { name: '서류' }).getAttribute('aria-selected')).toBe('true')
+
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tab: 'applications',
+        title: '사무직 채용',
+        subtitle: '한국전력공사',
+        details: expect.objectContaining({
+          institution: '한국전력공사',
+          posting: '사무직 채용',
+          homepage: 'https://example.com/notice',
+          documentAt: '2026-09-16',
+          category: '정규직',
+        }),
+      }),
+    )
+    expect(onSave.mock.calls[0][0].details.documentAnnouncementAt).toBeUndefined()
   })
 
   it('lets the user pick a first, second, or third interview under 면접', async () => {
@@ -216,6 +281,33 @@ describe('resource card', () => {
     expect(screen.getByText('취득일')).toBeTruthy()
   })
 
+  it('shows the project name as the heading and the one-liner below it', () => {
+    render(
+      <ResourceCard
+        item={{
+          id: '1',
+          tab: 'project',
+          title: 'MediCheck',
+          details: {
+            name: 'MediCheck',
+            oneLiner: '공공데이터로 근처 병원을 찾는 서비스',
+            role: '1인 풀스택',
+          },
+        }}
+        collapsed={false}
+        onEdit={() => undefined}
+        onDelete={() => undefined}
+        onTogglePin={() => undefined}
+        onToggleCollapsed={() => undefined}
+      />,
+    )
+
+    expect(screen.getByRole('heading', { level: 2, name: 'MediCheck' })).toBeTruthy()
+    expect(screen.getByText('공공데이터로 근처 병원을 찾는 서비스')).toBeTruthy()
+    expect(screen.getByText('역할')).toBeTruthy()
+    expect(screen.queryByText('한 줄 소개')).toBeNull()
+  })
+
   it('shows the training course name as the heading and the institution below it', () => {
     render(
       <ResourceCard
@@ -244,6 +336,49 @@ describe('resource card', () => {
     expect(screen.queryByText('과목명')).toBeNull()
     expect(screen.queryByText('교육기관명')).toBeNull()
     expect(screen.getByText('NCS분류')).toBeTruthy()
+  })
+
+  it('hides character counts on education and career cards', () => {
+    const { rerender } = render(
+      <ResourceCard
+        item={{
+          id: '1',
+          tab: 'education',
+          title: '운영체제',
+          details: { credits: '3', grade: 'A+', content: '미국가나' },
+        }}
+        collapsed={false}
+        onEdit={() => undefined}
+        onDelete={() => undefined}
+        onTogglePin={() => undefined}
+        onToggleCollapsed={() => undefined}
+      />,
+    )
+
+    expect(screen.getByText('학점')).toBeTruthy()
+    expect(screen.getByText('내용')).toBeTruthy()
+    expect(screen.getByText('미국가나')).toBeTruthy()
+    expect(screen.queryByText(/공백 포함/)).toBeNull()
+
+    rerender(
+      <ResourceCard
+        item={{
+          id: '2',
+          tab: 'career',
+          title: '서울시',
+          details: { institution: '서울시', responsibilities: '민원 응대' },
+        }}
+        collapsed={false}
+        onEdit={() => undefined}
+        onDelete={() => undefined}
+        onTogglePin={() => undefined}
+        onToggleCollapsed={() => undefined}
+      />,
+    )
+
+    expect(screen.getByText('담당업무')).toBeTruthy()
+    expect(screen.getByText('민원 응대')).toBeTruthy()
+    expect(screen.queryByText(/공백 포함/)).toBeNull()
   })
 
   it('lets an application open the essay editor or list', async () => {

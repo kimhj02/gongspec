@@ -5,6 +5,7 @@ public enum ResourceTab {
     education,
     training,
     career,
+    project,
     applications,
     essays,
     memo,

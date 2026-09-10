@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 
 import { cleanup, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import RecruitBoard from '@/components/recruit-board'
 import type { PublicRecruit } from '@/lib/api'
@@ -33,6 +34,7 @@ describe('recruit board', () => {
     vi.setSystemTime(new Date(2026, 8, 9))
     render(
       <RecruitBoard
+        onRegister={() => undefined}
         items={[
           { ...recruit, id: 'later', title: '나중 공고', pbancEndYmd: '2026-09-20' },
           recruit,
@@ -46,6 +48,7 @@ describe('recruit board', () => {
     expect(screen.getByRole('columnheader', { name: '채용인원' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: 'D-DAY' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: '채용공고 원본 주소' })).toBeTruthy()
+    expect(screen.getAllByRole('button', { name: '지원 현황 등록' })).toHaveLength(2)
     expect(screen.getByText('사무직 채용')).toBeTruthy()
     expect(screen.getByText('2026.09.01 ~ 2026.09.16')).toBeTruthy()
     expect(screen.getByText('D-7')).toBeTruthy()
@@ -57,5 +60,14 @@ describe('recruit board', () => {
     )
     const titles = screen.getAllByRole('row').slice(1).map((row) => row.querySelector('strong')?.textContent)
     expect(titles).toEqual(['사무직 채용', '나중 공고'])
+  })
+
+  it('registers a recruit into the application form', async () => {
+    const user = userEvent.setup()
+    const onRegister = vi.fn()
+    render(<RecruitBoard items={[recruit]} onRegister={onRegister} />)
+
+    await user.click(screen.getByRole('button', { name: '지원 현황 등록' }))
+    expect(onRegister).toHaveBeenCalledWith(recruit)
   })
 })

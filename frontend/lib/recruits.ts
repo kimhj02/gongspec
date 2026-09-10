@@ -50,3 +50,29 @@ export function hireTypeTags(hireTypes?: string) {
     .map((item) => item.trim())
     .filter(Boolean)
 }
+
+const applicationCategories = ['정규직', '계약직', '인턴'] as const
+
+function isApplicationCategory(value: string): value is (typeof applicationCategories)[number] {
+  return applicationCategories.includes(value as (typeof applicationCategories)[number])
+}
+
+function applicationCategoryFromRecruit(recruit: PublicRecruit) {
+  if (isApplicationCategory(recruit.hireType)) return recruit.hireType
+  return hireTypeTags(recruit.hireTypes).find(isApplicationCategory) ?? ''
+}
+
+export function applicationDraftFromRecruit(recruit: PublicRecruit) {
+  const details: Record<string, string> = {}
+  const institution = recruit.instNm?.trim() ?? ''
+  const posting = recruit.title?.trim() ?? ''
+  const homepage = recruit.srcUrl?.trim() ?? ''
+  const documentAt = alioDateKey(recruit.pbancEndYmd)
+  const category = applicationCategoryFromRecruit(recruit)
+  if (institution) details.institution = institution
+  if (posting) details.posting = posting
+  if (homepage) details.homepage = homepage
+  if (documentAt) details.documentAt = documentAt
+  if (category) details.category = category
+  return details
+}

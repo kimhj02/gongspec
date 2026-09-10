@@ -13,6 +13,8 @@ import com.gongspec.essay.entity.Essay;
 import com.gongspec.essay.repository.EssayRepository;
 import com.gongspec.memo.entity.Memo;
 import com.gongspec.memo.repository.MemoRepository;
+import com.gongspec.project.entity.Project;
+import com.gongspec.project.repository.ProjectRepository;
 import com.gongspec.resource.dto.ResourceCreateRequest;
 import com.gongspec.resource.dto.ResourceUpdateRequest;
 import com.gongspec.resource.entity.ResourceItem;
@@ -46,6 +48,7 @@ public class ResourceService {
     private final EducationRepository educationRepository;
     private final TrainingRepository trainingRepository;
     private final CareerRepository careerRepository;
+    private final ProjectRepository projectRepository;
     private final JobApplicationRepository jobApplicationRepository;
     private final EssayRepository essayRepository;
     private final MemoRepository memoRepository;
@@ -57,6 +60,7 @@ public class ResourceService {
             EducationRepository educationRepository,
             TrainingRepository trainingRepository,
             CareerRepository careerRepository,
+            ProjectRepository projectRepository,
             JobApplicationRepository jobApplicationRepository,
             EssayRepository essayRepository,
             MemoRepository memoRepository,
@@ -66,6 +70,7 @@ public class ResourceService {
         this.educationRepository = educationRepository;
         this.trainingRepository = trainingRepository;
         this.careerRepository = careerRepository;
+        this.projectRepository = projectRepository;
         this.jobApplicationRepository = jobApplicationRepository;
         this.essayRepository = essayRepository;
         this.memoRepository = memoRepository;
@@ -138,6 +143,7 @@ public class ResourceService {
         items.addAll(sorted(educationRepository.findByUserId(userId)));
         items.addAll(sorted(trainingRepository.findByUserId(userId)));
         items.addAll(sorted(careerRepository.findByUserId(userId)));
+        items.addAll(sorted(projectRepository.findByUserId(userId)));
         items.addAll(sorted(jobApplicationRepository.findByUserId(userId)));
         items.addAll(sorted(essayRepository.findByUserId(userId)));
         items.addAll(sorted(memoRepository.findByUserId(userId)));
@@ -151,6 +157,7 @@ public class ResourceService {
             case education -> educationRepository.findByUserId(userId);
             case training -> trainingRepository.findByUserId(userId);
             case career -> careerRepository.findByUserId(userId);
+            case project -> projectRepository.findByUserId(userId);
             case applications -> jobApplicationRepository.findByUserId(userId);
             case essays -> essayRepository.findByUserId(userId);
             case memo -> memoRepository.findByUserId(userId);
@@ -178,6 +185,7 @@ public class ResourceService {
             case education -> new Education(user, title);
             case training -> new Training(user, title);
             case career -> new Career(user, title);
+            case project -> new Project(user, title);
             case applications -> new JobApplication(user, title);
             case essays -> new Essay(user, title);
             case memo -> new Memo(user, title);
@@ -191,6 +199,7 @@ public class ResourceService {
             case education -> educationRepository.save((Education) item);
             case training -> trainingRepository.save((Training) item);
             case career -> careerRepository.save((Career) item);
+            case project -> projectRepository.save((Project) item);
             case applications -> jobApplicationRepository.save((JobApplication) item);
             case essays -> essayRepository.save((Essay) item);
             case memo -> memoRepository.save((Memo) item);
@@ -204,6 +213,7 @@ public class ResourceService {
             case education -> educationRepository.delete((Education) item);
             case training -> trainingRepository.delete((Training) item);
             case career -> careerRepository.delete((Career) item);
+            case project -> projectRepository.delete((Project) item);
             case applications -> jobApplicationRepository.delete((JobApplication) item);
             case essays -> essayRepository.delete((Essay) item);
             case memo -> memoRepository.delete((Memo) item);
@@ -221,6 +231,7 @@ public class ResourceService {
                 educationRepository.findByIdAndUserId(id, userId),
                 trainingRepository.findByIdAndUserId(id, userId),
                 careerRepository.findByIdAndUserId(id, userId),
+                projectRepository.findByIdAndUserId(id, userId),
                 jobApplicationRepository.findByIdAndUserId(id, userId),
                 essayRepository.findByIdAndUserId(id, userId),
                 memoRepository.findByIdAndUserId(id, userId),

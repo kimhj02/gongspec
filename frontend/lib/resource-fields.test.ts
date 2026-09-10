@@ -13,6 +13,21 @@ describe('resource fields', () => {
     expect(payload.subtitle).toBe('서울교통공사')
   })
 
+  it('prefills application fields from a recruit draft', () => {
+    const values = initialFieldValues('applications', {
+      institution: '한국전력공사',
+      posting: '사무직 채용',
+      homepage: 'https://example.com/notice',
+      documentAt: '2026-09-16',
+      category: '정규직',
+    })
+    expect(values.institution).toBe('한국전력공사')
+    expect(values.posting).toBe('사무직 채용')
+    expect(values.homepage).toBe('https://example.com/notice')
+    expect(values.documentAt).toBe('2026-09-16')
+    expect(values.documentAnnouncementAt).toBeUndefined()
+  })
+
   it('normalizes compact dates for date inputs', () => {
     expect(toDateInputValue('20260101')).toBe('2026-01-01')
     expect(toDateInputValue('2026.01.01')).toBe('2026-01-01')
@@ -163,7 +178,7 @@ describe('resource fields', () => {
       details: { issuer: '한국산업인력공단', credential: '' },
     })
     expect(rows).toEqual([
-      { label: '발급기관', value: '한국산업인력공단', countChars: false },
+      { label: '발급기관', value: '한국산업인력공단' },
     ])
   })
 
@@ -219,6 +234,39 @@ describe('resource fields', () => {
     expect(payload.details?.reasonForLeaving).toBeUndefined()
   })
 
+  it('keeps a project as one card with name, period, and essay-ready fields', () => {
+    expect(fieldsByTab.project.find((item) => item.key === 'period')?.type).toBe('daterange')
+    expect(fieldsByTab.project.every((item) => !item.countChars)).toBe(true)
+    const payload = toResourcePayload('project', '', {
+      name: 'MediCheck',
+      oneLiner: '공공데이터로 근처 병원을 찾는 서비스',
+      periodStart: '2026-02-09',
+      periodEnd: '2026-06-30',
+      role: '1인 풀스택',
+      work: 'Spring Boot API와 React 웹을 구현했다.',
+    })
+    expect(payload.title).toBe('MediCheck')
+    expect(payload.subtitle).toBe('공공데이터로 근처 병원을 찾는 서비스')
+    expect(payload.body).toBe('Spring Boot API와 React 웹을 구현했다.')
+    expect(payload.details?.period).toBe('2026.02.09 ~ 2026.06.30')
+    expect(payload.date).toBe('2026-02-09')
+    expect(
+      resourceCardSubtitle({
+        tab: 'project',
+        title: 'MediCheck',
+        details: { name: 'MediCheck', oneLiner: '공공데이터로 근처 병원을 찾는 서비스' },
+      }),
+    ).toBe('공공데이터로 근처 병원을 찾는 서비스')
+    expect(
+      filledDetails({
+        id: '1',
+        tab: 'project',
+        title: 'MediCheck',
+        details: { name: 'MediCheck', oneLiner: '공공데이터로 근처 병원을 찾는 서비스', role: '1인 풀스택' },
+      }),
+    ).toEqual([{ label: '역할', value: '1인 풀스택' }])
+  })
+
   it('does not collect a certificate homepage', () => {
     expect(fieldsByTab.certificate.some((field) => field.key === 'homepage')).toBe(false)
   })
@@ -243,10 +291,11 @@ describe('resource fields', () => {
     expect(fieldsByTab.education.find((field) => field.key === 'content')?.countChars).toBe(true)
     expect(fieldsByTab.training.find((field) => field.key === 'content')?.countChars).toBe(true)
     expect(fieldsByTab.career.find((field) => field.key === 'responsibilities')?.countChars).toBe(true)
+    expect(fieldsByTab.project.find((field) => field.key === 'background')?.countChars).toBeFalsy()
     expect(fieldsByTab.memo.find((field) => field.key === 'content')?.countChars).toBeFalsy()
   })
 
-  it('shows character counts on education content in filled details', () => {
+  it('keeps education content on the card without a character count', () => {
     expect(
       filledDetails({
         id: '1',
@@ -254,7 +303,7 @@ describe('resource fields', () => {
         title: '헌법',
         details: { content: '기본권 사례를 정리했다.' },
       }),
-    ).toEqual([{ label: '내용', value: '기본권 사례를 정리했다.', countChars: true }])
+    ).toEqual([{ label: '내용', value: '기본권 사례를 정리했다.' }])
   })
 
   it('saves a later interview round without wiping the first', () => {

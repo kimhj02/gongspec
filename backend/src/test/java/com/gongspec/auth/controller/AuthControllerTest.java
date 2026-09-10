@@ -69,7 +69,9 @@ class AuthControllerTest {
                         .content("{\"code\":\"auth-code\",\"state\":\"" + stateCookie.getValue() + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.kakaoId").value("kakao-99"))
-                .andExpect(jsonPath("$.nickname").value("현진"))
+                .andExpect(jsonPath("$.needsNickname").value(true))
+                .andExpect(jsonPath("$.nickname").value(""))
+                .andExpect(jsonPath("$.admin").value(false))
                 .andExpect(jsonPath("$.email").value("user@example.com"))
                 .andExpect(cookie().exists(AuthCookies.TOKEN))
                 .andExpect(cookie().httpOnly(AuthCookies.TOKEN, true))
@@ -105,7 +107,8 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/auth/me").cookie(new Cookie(AuthCookies.TOKEN, token)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(user.getId().toString()))
-                .andExpect(jsonPath("$.nickname").value("공스펙"));
+                .andExpect(jsonPath("$.needsNickname").value(true))
+                .andExpect(jsonPath("$.nickname").value(""));
     }
 
     @Test

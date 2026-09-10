@@ -81,7 +81,15 @@ describe('api client', () => {
   })
 
   it('posts kakao callback payload', async () => {
-    const user = { id: '1', kakaoId: 'k', nickname: '현진', email: null, createdAt: '2026-01-01T00:00:00Z' }
+    const user = {
+      id: '1',
+      kakaoId: 'k',
+      nickname: '현진',
+      email: null,
+      createdAt: '2026-01-01T00:00:00Z',
+      needsNickname: false,
+      admin: false,
+    }
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse(user))
     vi.stubGlobal('fetch', fetchMock)
 

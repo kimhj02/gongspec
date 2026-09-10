@@ -118,6 +118,28 @@ class ResourceControllerTest {
     }
 
     @Test
+    void savesProjectWithEssayReadyDetails() throws Exception {
+        Cookie token = tokenCookie();
+
+        mockMvc.perform(post("/api/resources")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"tab":"project","title":"MediCheck","subtitle":"공공데이터로 근처 병원을 찾는 서비스","details":{"name":"MediCheck","oneLiner":"공공데이터로 근처 병원을 찾는 서비스","role":"1인 풀스택","url":"https://medicheck.life","work":"Spring Boot API를 구현했다."}}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tab").value("project"))
+                .andExpect(jsonPath("$.title").value("MediCheck"))
+                .andExpect(jsonPath("$.details.name").value("MediCheck"))
+                .andExpect(jsonPath("$.details.role").value("1인 풀스택"))
+                .andExpect(jsonPath("$.details.url").value("https://medicheck.life"));
+
+        mockMvc.perform(get("/api/resources?tab=project&query=병원").cookie(token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("MediCheck"));
+    }
+
+    @Test
     void savesSecondInterviewRoundOnApplication() throws Exception {
         Cookie token = tokenCookie();
 

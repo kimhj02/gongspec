@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
-import { Archive, CalendarDays, Landmark, Moon, PenLine, Plus, RefreshCw, Search, Sun, X } from 'lucide-react'
+import { Archive, CalendarDays, Landmark, Moon, PenLine, Plus, RefreshCw, Search, Sun, Users, X } from 'lucide-react'
 import AppNotice, { type Notice } from '@/components/app-notice'
 import CalendarBoard from '@/components/calendar-board'
 import ConfirmDialog from '@/components/confirm-dialog'
@@ -10,6 +10,7 @@ import DdayCard from '@/components/dday-card'
 import EssayBoard from '@/components/essay-board'
 import LoginGate from '@/components/login-gate'
 import RecruitBoard from '@/components/recruit-board'
+import StudyBoard from '@/components/study-board'
 import HireFilters from '@/components/hire-filters'
 import ResourceCard from '@/components/resource-card'
 import ResourceForm from '@/components/resource-form'
@@ -19,11 +20,12 @@ import { useAuth } from '@/hooks/use-auth'
 import { useDebouncedValue } from '@/hooks/use-debounce'
 import { useTheme } from '@/hooks/use-theme'
 import { useKoreanHolidays } from '@/hooks/use-korean-holidays'
-import { api, applicationsKey, getApiError, recruitsKey, resourceKey, schedulesKey, type HireTypeFilter, type NavId, type Resource, type Schedule } from '@/lib/api'
+import { api, applicationsKey, getApiError, recruitsKey, resourceKey, schedulesKey, type HireTypeFilter, type NavId, type PublicRecruit, type Resource, type Schedule } from '@/lib/api'
 import { mergeCalendarEvents, type CalendarEvent } from '@/lib/calendar-events'
 import { dateKey, monthDays } from '@/lib/dates'
 import { overlayApplication, parseEssayEntries, applicationPostingName, applicationCompanyName, mergeEssayResources, toEssayPayload } from '@/lib/resource-fields'
-import { calendarNav, recruitsNav, resourceTabs, tabCopy, tabLabel } from '@/lib/tabs'
+import { applicationDraftFromRecruit } from '@/lib/recruits'
+import { calendarNav, recruitsNav, resourceTabs, studyNav, tabCopy, tabLabel } from '@/lib/tabs'
 
 type PendingDelete =
   | { kind: 'resource'; id: string; title: string; extraIds?: string[] }
@@ -39,6 +41,7 @@ export default function Page() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Resource | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
+  const [draftDetails, setDraftDetails] = useState<Record<string, string>>({})
   const [essayExtraIds, setEssayExtraIds] = useState<string[]>([])
   const [focusEssayTitle, setFocusEssayTitle] = useState('')
   const [month, setMonth] = useState(new Date())
@@ -51,7 +54,8 @@ export default function Page() {
   const [syncing, setSyncing] = useState(false)
   const isCalendar = activeTab === 'calendar'
   const isRecruits = activeTab === 'recruits'
-  const resourceTab = isCalendar || isRecruits ? null : activeTab
+  const isStudy = activeTab === 'study'
+  const resourceTab = isCalendar || isRecruits || isStudy ? null : activeTab
 
   const resources = useSWR(
     user && resourceTab ? resourceKey(resourceTab, debouncedQuery) : null,
@@ -72,6 +76,10 @@ export default function Page() {
     [applications.data, schedules.data],
   )
   const today = dateKey(new Date())
+
+  useEffect(() => {
+    if (user?.needsNickname) window.location.replace('/nickname')
+  }, [user])
 
   useEffect(() => {
     if (!notice) return
@@ -109,9 +117,23 @@ export default function Page() {
     }
   }
 
+  const resetDraft = () => {
+    setDraftTitle('')
+    setDraftDetails({})
+  }
+
   const openCreate = () => {
     setEditing(null)
-    setDraftTitle('')
+    resetDraft()
+    setEssayExtraIds([])
+    setShowForm(true)
+  }
+
+  const openApplicationFromRecruit = (item: PublicRecruit) => {
+    setActiveTab('applications')
+    setEditing(null)
+    setDraftTitle(item.title?.trim() ?? '')
+    setDraftDetails(applicationDraftFromRecruit(item))
     setEssayExtraIds([])
     setShowForm(true)
   }
@@ -121,6 +143,7 @@ export default function Page() {
     setFocusEssayTitle('')
     setEditing(null)
     setDraftTitle(title)
+    setDraftDetails({})
     setEssayExtraIds([])
     setShowForm(true)
   }
@@ -130,7 +153,7 @@ export default function Page() {
     setFocusEssayTitle(title)
     setShowForm(false)
     setEditing(null)
-    setDraftTitle('')
+    resetDraft()
     setEssayExtraIds([])
   }
 
@@ -143,13 +166,14 @@ export default function Page() {
       if (!group.length) {
         setEditing(null)
         setDraftTitle(postingName)
+        setDraftDetails({})
         setEssayExtraIds([])
         setShowForm(true)
         return
       }
       const posting = mergeEssayResources(group)
       setEditing(posting)
-      setDraftTitle('')
+      resetDraft()
       setEssayExtraIds(group.slice(1).map((item) => item.id))
       setShowForm(true)
     } catch (error) {
@@ -160,7 +184,7 @@ export default function Page() {
   const openEssayEditor = (posting: Resource) => {
     const group = (resources.data ?? []).filter((item) => item.title === posting.title)
     setEditing(posting)
-    setDraftTitle('')
+    resetDraft()
     setEssayExtraIds(group.slice(1).map((item) => item.id))
     setShowForm(true)
   }
@@ -178,7 +202,7 @@ export default function Page() {
         await api.resources.create(data)
       }
     } else if (data.tab === 'applications') {
-      const existing = (resources.data ?? []).find(
+      const existing = (applications.data ?? []).find(
         (item) =>
           applicationPostingName(item) === applicationPostingName(data) &&
           applicationCompanyName(item) === applicationCompanyName(data),
@@ -194,7 +218,7 @@ export default function Page() {
     await Promise.all([resources.mutate(), applications.mutate()])
     setShowForm(false)
     setEditing(null)
-    setDraftTitle('')
+    resetDraft()
     setEssayExtraIds([])
     setNotice({ type: 'success', message: editing ? '자료를 수정했습니다.' : '자료를 추가했습니다.' })
   }
@@ -248,6 +272,7 @@ export default function Page() {
     setSelectedDay(null)
     setSelectedEvent(null)
     setEditing(item)
+    resetDraft()
     setShowForm(true)
   }
 
@@ -313,7 +338,12 @@ export default function Page() {
           <div className="top-actions">
             {user ? (
               <>
-                <span className="user-chip">{user.nickname}</span>
+                <span className="user-chip">{user.nickname || '닉네임 없음'}</span>
+                {user.admin ? (
+                  <a className="auth-action" href="/admin">
+                    관리자
+                  </a>
+                ) : null}
                 <button className="auth-action" onClick={() => void startLogout()} disabled={authPending}>
                   로그아웃
                 </button>
@@ -343,6 +373,15 @@ export default function Page() {
             <button className={`nav-item ${isRecruits ? 'active' : ''}`} onClick={() => setActiveTab('recruits')}>
               <Landmark size={17} />
               <span>{recruitsNav.label}</span>
+            </button>
+          </nav>
+          <div className="sidebar-heading">
+            <span>커뮤니티</span>
+          </div>
+          <nav className="tabs-nav" aria-label="커뮤니티">
+            <button className={`nav-item ${isStudy ? 'active' : ''}`} onClick={() => setActiveTab('study')}>
+              <Users size={17} />
+              <span>{studyNav.label}</span>
             </button>
           </nav>
           <div className="sidebar-heading">
@@ -382,7 +421,7 @@ export default function Page() {
                   <RefreshCw size={17} /> {syncing ? '불러오는 중' : tabCopy.recruits.createLabel}
                 </button>
               </div>
-            ) : !isCalendar ? (
+            ) : !isCalendar && !isStudy ? (
               <div className="page-intro-actions">
                 {activeTab === 'applications' ? (
                   <>
@@ -451,7 +490,7 @@ export default function Page() {
               ) : recruits.isLoading && !recruits.data ? (
                 <LoadingState />
               ) : recruits.data?.length ? (
-                <RecruitBoard items={recruits.data} />
+                <RecruitBoard items={recruits.data} onRegister={openApplicationFromRecruit} />
               ) : (
                 <EmptyState
                   onAdd={() => void syncRecruits()}
@@ -462,6 +501,8 @@ export default function Page() {
                 />
               )}
             </>
+          ) : isStudy ? (
+            <StudyBoard onNotice={setNotice} />
           ) : (
             <>
               <div className="toolbar">
@@ -516,24 +557,28 @@ export default function Page() {
                     getId={(item) => item.id}
                     disabled={Boolean(debouncedQuery)}
                     onReorder={(next) => void saveResourceOrder(next)}
-                    renderItem={(item, bind) => (
-                      <div {...bind}>
-                        <ResourceCard
-                          item={item}
-                          collapsed={Boolean(collapsed[item.id])}
-                          onEdit={() => {
-                            setDraftTitle('')
-                            setEditing(item)
-                            setShowForm(true)
-                          }}
-                          onDelete={() => setPendingDelete({ kind: 'resource', id: item.id, title: item.title })}
-                          onTogglePin={() => void togglePin(item)}
-                          onToggleCollapsed={() => setCollapsed((current) => ({ ...current, [item.id]: !current[item.id] }))}
-                          onWriteEssay={resourceTab === 'applications' ? () => openEssayCreate(applicationPostingName(item)) : undefined}
-                          onOpenEssay={resourceTab === 'applications' ? () => void goToEssayEdit(applicationPostingName(item)) : undefined}
-                        />
-                      </div>
-                    )}
+                    renderItem={(item, bind) => {
+                      const { handle, ...itemBind } = bind
+                      return (
+                        <div {...itemBind}>
+                          <ResourceCard
+                            dragHandle={handle}
+                            item={item}
+                            collapsed={Boolean(collapsed[item.id])}
+                            onEdit={() => {
+                              resetDraft()
+                              setEditing(item)
+                              setShowForm(true)
+                            }}
+                            onDelete={() => setPendingDelete({ kind: 'resource', id: item.id, title: item.title })}
+                            onTogglePin={() => void togglePin(item)}
+                            onToggleCollapsed={() => setCollapsed((current) => ({ ...current, [item.id]: !current[item.id] }))}
+                            onWriteEssay={resourceTab === 'applications' ? () => openEssayCreate(applicationPostingName(item)) : undefined}
+                            onOpenEssay={resourceTab === 'applications' ? () => void goToEssayEdit(applicationPostingName(item)) : undefined}
+                          />
+                        </div>
+                      )
+                    }}
                   />
                 )
               ) : (
@@ -554,9 +599,11 @@ export default function Page() {
       {notice ? <AppNotice notice={notice} onClose={() => setNotice(null)} /> : null}
       {showForm && (editing || resourceTab) ? (
         <ResourceForm
+          key={editing?.id ?? `new:${resourceTab}:${draftTitle}:${draftDetails.posting ?? ''}:${draftDetails.documentAt ?? ''}`}
           initial={editing}
           activeTab={editing?.tab ?? resourceTab ?? 'memo'}
           defaultTitle={draftTitle}
+          defaultDetails={draftDetails}
           postingNames={[
             ...new Set([
               ...(applications.data ?? []).map(applicationPostingName),
@@ -566,7 +613,7 @@ export default function Page() {
           onClose={() => {
             setShowForm(false)
             setEditing(null)
-            setDraftTitle('')
+            resetDraft()
             setEssayExtraIds([])
           }}
           onSave={saveResource}

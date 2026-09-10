@@ -1,21 +1,23 @@
-import { Archive, Award, BriefcaseBusiness, CalendarDays, ClipboardList, FileText, GraduationCap, Landmark, PenLine, Sparkles } from 'lucide-react'
+import { Archive, Award, BriefcaseBusiness, CalendarDays, ClipboardList, FileText, FolderKanban, GraduationCap, Landmark, PenLine, Sparkles, Users } from 'lucide-react'
 import type { NavId, ResourceTab } from '@/lib/api'
 
 export const calendarNav = { id: 'calendar' as const, label: '캘린더', icon: CalendarDays }
 export const recruitsNav = { id: 'recruits' as const, label: '채용 공고', icon: Landmark }
+export const studyNav = { id: 'study' as const, label: '스터디', icon: Users }
 
 export const resourceTabs: { id: ResourceTab; label: string; icon: typeof Archive }[] = [
   { id: 'certificate', label: '자격증', icon: Award },
   { id: 'education', label: '학교교육', icon: GraduationCap },
   { id: 'training', label: '직업교육', icon: ClipboardList },
   { id: 'career', label: '경력사항', icon: BriefcaseBusiness },
+  { id: 'project', label: '프로젝트', icon: FolderKanban },
   { id: 'applications', label: '지원 현황', icon: FileText },
   { id: 'essays', label: '자기소개서', icon: PenLine },
   { id: 'memo', label: '메모', icon: Archive },
   { id: 'sites', label: '사이트', icon: Sparkles },
 ]
 
-export const navItems: { id: NavId; label: string; icon: typeof Archive }[] = [calendarNav, recruitsNav, ...resourceTabs]
+export const navItems: { id: NavId; label: string; icon: typeof Archive }[] = [calendarNav, recruitsNav, studyNav, ...resourceTabs]
 
 export function tabLabel(id: string) {
   return navItems.find((tab) => tab.id === id)?.label ?? id
@@ -42,6 +44,15 @@ export const tabCopy: Record<
     createLabel: '지금 불러오기',
     editLabel: '채용 공고',
     countLabel: '공고',
+  },
+  study: {
+    eyebrow: 'STUDY',
+    intro: '개인 자료와는 따로 모이는 공간입니다. 같은 기관을 준비하는 사람과 스터디를 모으고, 연락은 사이트 안 댓글로만 주세요.',
+    emptyTitle: '모집글이 없어요',
+    emptyDescription: '목적과 소개를 적고 스터디 모집글을 올려 보세요.',
+    createLabel: '모집글 쓰기',
+    editLabel: '모집글 수정',
+    countLabel: '모집글',
   },
   certificate: {
     eyebrow: 'CERTIFICATE',
@@ -78,6 +89,15 @@ export const tabCopy: Record<
     createLabel: '경력 추가',
     editLabel: '경력 수정',
     countLabel: '경력',
+  },
+  project: {
+    eyebrow: 'PROJECT',
+    intro: '포트폴리오 프로젝트를 자소서에 꺼내 쓰기 좋게 한 장씩 정리해 두세요.',
+    emptyTitle: '프로젝트가 없어요',
+    emptyDescription: '프로젝트명, 한 줄 소개, 맡은 일과 문제 해결을 추가해 보세요.',
+    createLabel: '프로젝트 추가',
+    editLabel: '프로젝트 수정',
+    countLabel: '프로젝트',
   },
   applications: {
     eyebrow: 'APPLICATION',

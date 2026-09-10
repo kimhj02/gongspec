@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { alioDateKey, hireTypeTags, recruitDday, recruitPeriodCompact, recruitPeriodLabel, sortRecruitsByDeadline } from './recruits'
+import { alioDateKey, hireTypeTags, recruitDday, recruitPeriodCompact, recruitPeriodLabel, sortRecruitsByDeadline, applicationDraftFromRecruit } from './recruits'
 import type { PublicRecruit } from './api'
 
 function recruit(partial: Partial<PublicRecruit>): PublicRecruit {
@@ -50,5 +50,46 @@ describe('recruit display', () => {
 
   it('splits hire type tags', () => {
     expect(hireTypeTags('정규직,계약직')).toEqual(['정규직', '계약직'])
+  })
+
+  it('fills an application draft from a recruit notice', () => {
+    expect(
+      applicationDraftFromRecruit(
+        recruit({
+          instNm: '한국전력공사',
+          title: '사무직 채용',
+          hireType: '정규직',
+          srcUrl: 'https://example.com/notice',
+          pbancEndYmd: '20260916',
+        }),
+      ),
+    ).toEqual({
+      institution: '한국전력공사',
+      posting: '사무직 채용',
+      homepage: 'https://example.com/notice',
+      documentAt: '2026-09-16',
+      category: '정규직',
+    })
+    expect(
+      applicationDraftFromRecruit(
+        recruit({
+          instNm: '한국전력공사',
+          title: '사무직 채용',
+          hireType: '',
+          hireTypes: '계약직,인턴',
+          srcUrl: 'https://example.com/notice',
+          pbancEndYmd: '20260916',
+        }),
+      ),
+    ).toMatchObject({ category: '계약직' })
+    expect(
+      applicationDraftFromRecruit(
+        recruit({
+          instNm: '한국전력공사',
+          title: '사무직 채용',
+          pbancEndYmd: '20260916',
+        }),
+      ),
+    ).not.toHaveProperty('documentAnnouncementAt')
   })
 })

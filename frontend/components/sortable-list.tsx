@@ -1,6 +1,7 @@
 'use client'
 
 import { Fragment, useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
+import { GripVertical } from 'lucide-react'
 import { moveItem } from '@/lib/reorder'
 
 export default function SortableList<T>({
@@ -42,27 +43,6 @@ export default function SortableList<T>({
         const id = getId(item)
         const bind: SortableBind = {
           className: `sortable-item${draggingId === id ? ' is-dragging' : ''}${overId === id && draggingId !== id ? ' is-over' : ''}${disabled ? '' : ' is-sortable'}`,
-          draggable: !disabled,
-          tabIndex: disabled ? -1 : 0,
-          'aria-label': '순서 변경. 위아래 화살표로 이동합니다.',
-          onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
-            const target = event.target as HTMLElement
-            if (disabled || target.closest('button, a, input, textarea, select, label')) return
-            if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
-            event.preventDefault()
-            moveByKey(id, event.key === 'ArrowUp' ? -1 : 1)
-          },
-          onDragStart: (event: DragEvent<HTMLElement>) => {
-            const target = event.target as HTMLElement
-            if (disabled || target.closest('button, a, input, textarea, select, label')) {
-              event.preventDefault()
-              return
-            }
-            event.dataTransfer.effectAllowed = 'move'
-            event.dataTransfer.setData('text/plain', id)
-            draggingIdRef.current = id
-            setDraggingId(id)
-          },
           onDragOver: (event: DragEvent<HTMLElement>) => {
             const fromId = draggingIdRef.current
             if (disabled || !fromId || fromId === id) return
@@ -83,6 +63,34 @@ export default function SortableList<T>({
             setDraggingId(null)
             setOverId(null)
           },
+          handle: disabled
+            ? null
+            : {
+                className: 'sortable-handle',
+                draggable: true,
+                tabIndex: 0,
+                'aria-label': '끌어 순서를 바꿉니다. 위아래 화살표로도 이동합니다.',
+                onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+                  if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') return
+                  event.preventDefault()
+                  moveByKey(id, event.key === 'ArrowUp' ? -1 : 1)
+                },
+                onDragStart: (event: DragEvent<HTMLElement>) => {
+                  event.dataTransfer.effectAllowed = 'move'
+                  event.dataTransfer.setData('text/plain', id)
+                  const card = event.currentTarget.closest('.sortable-item')
+                  if (card instanceof HTMLElement && typeof event.dataTransfer.setDragImage === 'function') {
+                    event.dataTransfer.setDragImage(card, 24, 24)
+                  }
+                  draggingIdRef.current = id
+                  setDraggingId(id)
+                },
+                onDragEnd: () => {
+                  draggingIdRef.current = null
+                  setDraggingId(null)
+                  setOverId(null)
+                },
+              },
         }
         return <Fragment key={id}>{renderItem(item, bind)}</Fragment>
       })}
@@ -90,14 +98,29 @@ export default function SortableList<T>({
   )
 }
 
-export type SortableBind = {
+export function SortableHandle({ bind }: { bind: SortableHandleBind | null }) {
+  if (!bind) return null
+  return (
+    <span {...bind}>
+      <GripVertical size={15} aria-hidden />
+    </span>
+  )
+}
+
+export type SortableHandleBind = {
   className: string
   draggable: boolean
   tabIndex: number
   'aria-label': string
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void
   onDragStart: (event: DragEvent<HTMLElement>) => void
+  onDragEnd: () => void
+}
+
+export type SortableBind = {
+  className: string
   onDragOver: (event: DragEvent<HTMLElement>) => void
   onDrop: (event: DragEvent<HTMLElement>) => void
   onDragEnd: () => void
+  handle: SortableHandleBind | null
 }
