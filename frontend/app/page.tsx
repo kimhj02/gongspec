@@ -20,10 +20,11 @@ import { useAuth } from '@/hooks/use-auth'
 import { useDebouncedValue } from '@/hooks/use-debounce'
 import { useTheme } from '@/hooks/use-theme'
 import { useKoreanHolidays } from '@/hooks/use-korean-holidays'
-import { api, applicationsKey, getApiError, recruitsKey, resourceKey, schedulesKey, type HireTypeFilter, type NavId, type Resource, type Schedule } from '@/lib/api'
+import { api, applicationsKey, getApiError, recruitsKey, resourceKey, schedulesKey, type HireTypeFilter, type NavId, type PublicRecruit, type Resource, type Schedule } from '@/lib/api'
 import { mergeCalendarEvents, type CalendarEvent } from '@/lib/calendar-events'
 import { dateKey, monthDays } from '@/lib/dates'
 import { overlayApplication, parseEssayEntries, applicationPostingName, applicationCompanyName, mergeEssayResources, toEssayPayload } from '@/lib/resource-fields'
+import { applicationDraftFromRecruit } from '@/lib/recruits'
 import { calendarNav, recruitsNav, resourceTabs, studyNav, tabCopy, tabLabel } from '@/lib/tabs'
 
 type PendingDelete =
@@ -40,6 +41,7 @@ export default function Page() {
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<Resource | null>(null)
   const [draftTitle, setDraftTitle] = useState('')
+  const [draftDetails, setDraftDetails] = useState<Record<string, string>>({})
   const [essayExtraIds, setEssayExtraIds] = useState<string[]>([])
   const [focusEssayTitle, setFocusEssayTitle] = useState('')
   const [month, setMonth] = useState(new Date())
@@ -115,9 +117,23 @@ export default function Page() {
     }
   }
 
+  const resetDraft = () => {
+    setDraftTitle('')
+    setDraftDetails({})
+  }
+
   const openCreate = () => {
     setEditing(null)
-    setDraftTitle('')
+    resetDraft()
+    setEssayExtraIds([])
+    setShowForm(true)
+  }
+
+  const openApplicationFromRecruit = (item: PublicRecruit) => {
+    setActiveTab('applications')
+    setEditing(null)
+    setDraftTitle(item.title?.trim() ?? '')
+    setDraftDetails(applicationDraftFromRecruit(item))
     setEssayExtraIds([])
     setShowForm(true)
   }
@@ -127,6 +143,7 @@ export default function Page() {
     setFocusEssayTitle('')
     setEditing(null)
     setDraftTitle(title)
+    setDraftDetails({})
     setEssayExtraIds([])
     setShowForm(true)
   }
@@ -136,7 +153,7 @@ export default function Page() {
     setFocusEssayTitle(title)
     setShowForm(false)
     setEditing(null)
-    setDraftTitle('')
+    resetDraft()
     setEssayExtraIds([])
   }
 
@@ -149,13 +166,14 @@ export default function Page() {
       if (!group.length) {
         setEditing(null)
         setDraftTitle(postingName)
+        setDraftDetails({})
         setEssayExtraIds([])
         setShowForm(true)
         return
       }
       const posting = mergeEssayResources(group)
       setEditing(posting)
-      setDraftTitle('')
+      resetDraft()
       setEssayExtraIds(group.slice(1).map((item) => item.id))
       setShowForm(true)
     } catch (error) {
@@ -166,7 +184,7 @@ export default function Page() {
   const openEssayEditor = (posting: Resource) => {
     const group = (resources.data ?? []).filter((item) => item.title === posting.title)
     setEditing(posting)
-    setDraftTitle('')
+    resetDraft()
     setEssayExtraIds(group.slice(1).map((item) => item.id))
     setShowForm(true)
   }
@@ -184,7 +202,7 @@ export default function Page() {
         await api.resources.create(data)
       }
     } else if (data.tab === 'applications') {
-      const existing = (resources.data ?? []).find(
+      const existing = (applications.data ?? []).find(
         (item) =>
           applicationPostingName(item) === applicationPostingName(data) &&
           applicationCompanyName(item) === applicationCompanyName(data),
@@ -200,7 +218,7 @@ export default function Page() {
     await Promise.all([resources.mutate(), applications.mutate()])
     setShowForm(false)
     setEditing(null)
-    setDraftTitle('')
+    resetDraft()
     setEssayExtraIds([])
     setNotice({ type: 'success', message: editing ? '자료를 수정했습니다.' : '자료를 추가했습니다.' })
   }
@@ -254,6 +272,7 @@ export default function Page() {
     setSelectedDay(null)
     setSelectedEvent(null)
     setEditing(item)
+    resetDraft()
     setShowForm(true)
   }
 
@@ -471,7 +490,7 @@ export default function Page() {
               ) : recruits.isLoading && !recruits.data ? (
                 <LoadingState />
               ) : recruits.data?.length ? (
-                <RecruitBoard items={recruits.data} />
+                <RecruitBoard items={recruits.data} onRegister={openApplicationFromRecruit} />
               ) : (
                 <EmptyState
                   onAdd={() => void syncRecruits()}
@@ -547,7 +566,7 @@ export default function Page() {
                             item={item}
                             collapsed={Boolean(collapsed[item.id])}
                             onEdit={() => {
-                              setDraftTitle('')
+                              resetDraft()
                               setEditing(item)
                               setShowForm(true)
                             }}
@@ -580,9 +599,11 @@ export default function Page() {
       {notice ? <AppNotice notice={notice} onClose={() => setNotice(null)} /> : null}
       {showForm && (editing || resourceTab) ? (
         <ResourceForm
+          key={editing?.id ?? `new:${resourceTab}:${draftTitle}:${draftDetails.posting ?? ''}:${draftDetails.documentAt ?? ''}`}
           initial={editing}
           activeTab={editing?.tab ?? resourceTab ?? 'memo'}
           defaultTitle={draftTitle}
+          defaultDetails={draftDetails}
           postingNames={[
             ...new Set([
               ...(applications.data ?? []).map(applicationPostingName),
@@ -592,7 +613,7 @@ export default function Page() {
           onClose={() => {
             setShowForm(false)
             setEditing(null)
-            setDraftTitle('')
+            resetDraft()
             setEssayExtraIds([])
           }}
           onSave={saveResource}

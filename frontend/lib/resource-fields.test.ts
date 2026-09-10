@@ -13,6 +13,21 @@ describe('resource fields', () => {
     expect(payload.subtitle).toBe('서울교통공사')
   })
 
+  it('prefills application fields from a recruit draft', () => {
+    const values = initialFieldValues('applications', {
+      institution: '한국전력공사',
+      posting: '사무직 채용',
+      homepage: 'https://example.com/notice',
+      documentAt: '2026-09-16',
+      category: '정규직',
+    })
+    expect(values.institution).toBe('한국전력공사')
+    expect(values.posting).toBe('사무직 채용')
+    expect(values.homepage).toBe('https://example.com/notice')
+    expect(values.documentAt).toBe('2026-09-16')
+    expect(values.documentAnnouncementAt).toBeUndefined()
+  })
+
   it('normalizes compact dates for date inputs', () => {
     expect(toDateInputValue('20260101')).toBe('2026-01-01')
     expect(toDateInputValue('2026.01.01')).toBe('2026-01-01')

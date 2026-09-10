@@ -151,6 +151,51 @@ describe('application form', () => {
     expect(onSave.mock.calls[0][0].details.documentAt).toBeUndefined()
   })
 
+  it('prefills company, posting, homepage, and document deadline from a recruit', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(
+      <ResourceForm
+        initial={null}
+        activeTab="applications"
+        defaultTitle="사무직 채용"
+        defaultDetails={{
+          institution: '한국전력공사',
+          posting: '사무직 채용',
+          homepage: 'https://example.com/notice',
+          documentAt: '2026-09-16',
+          category: '정규직',
+        }}
+        onClose={() => undefined}
+        onSave={onSave}
+      />,
+    )
+
+    expect((screen.getByPlaceholderText('예: 서울교통공사') as HTMLInputElement).value).toBe('한국전력공사')
+    expect((screen.getByPlaceholderText('예: 2026년 9급 행정직') as HTMLInputElement).value).toBe('사무직 채용')
+    expect((screen.getByPlaceholderText('채용 사이트 주소 (선택)') as HTMLInputElement).value).toBe('https://example.com/notice')
+    expect((screen.getByLabelText('서류 마감일') as HTMLInputElement).value).toBe('2026-09-16')
+    expect((screen.getByLabelText('서류 발표일') as HTMLInputElement).value).toBe('')
+    expect(screen.getByRole('tab', { name: '서류' }).getAttribute('aria-selected')).toBe('true')
+
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tab: 'applications',
+        title: '사무직 채용',
+        subtitle: '한국전력공사',
+        details: expect.objectContaining({
+          institution: '한국전력공사',
+          posting: '사무직 채용',
+          homepage: 'https://example.com/notice',
+          documentAt: '2026-09-16',
+          category: '정규직',
+        }),
+      }),
+    )
+    expect(onSave.mock.calls[0][0].details.documentAnnouncementAt).toBeUndefined()
+  })
+
   it('lets the user pick a first, second, or third interview under 면접', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn().mockResolvedValue(undefined)

@@ -3,7 +3,13 @@
 import type { PublicRecruit } from '@/lib/api'
 import { recruitDday, recruitPeriodCompact, sortRecruitsByDeadline } from '@/lib/recruits'
 
-export default function RecruitBoard({ items }: { items: PublicRecruit[] }) {
+export default function RecruitBoard({
+  items,
+  onRegister,
+}: {
+  items: PublicRecruit[]
+  onRegister: (item: PublicRecruit) => void
+}) {
   const rows = sortRecruitsByDeadline(items)
 
   return (
@@ -17,6 +23,7 @@ export default function RecruitBoard({ items }: { items: PublicRecruit[] }) {
             <th>채용인원</th>
             <th>D-DAY</th>
             <th>채용공고 원본 주소</th>
+            <th>지원</th>
           </tr>
         </thead>
         <tbody>
@@ -46,6 +53,11 @@ export default function RecruitBoard({ items }: { items: PublicRecruit[] }) {
                   ) : (
                     '-'
                   )}
+                </td>
+                <td>
+                  <button type="button" className="secondary-button recruit-apply-button" onClick={() => onRegister(item)}>
+                    지원 현황 등록
+                  </button>
                 </td>
               </tr>
             )

@@ -34,6 +34,7 @@ export default function ResourceForm({
   initial,
   activeTab,
   defaultTitle = '',
+  defaultDetails = {},
   appendEmptyEntry = false,
   postingNames = [],
   onClose,
@@ -42,6 +43,7 @@ export default function ResourceForm({
   initial: Resource | null
   activeTab: ResourceTab
   defaultTitle?: string
+  defaultDetails?: Record<string, string>
   appendEmptyEntry?: boolean
   postingNames?: string[]
   onClose: () => void
@@ -54,9 +56,11 @@ export default function ResourceForm({
   const titleKey = titleFieldByTab[tab]
   const hideTitle = Boolean(titleKey)
   const [title, setTitle] = useState(initial?.title ?? defaultTitle)
-  const [values, setValues] = useState<Record<string, string>>(() => initialFieldValues(tab, initial?.details, initial?.title ?? defaultTitle))
-  const [stageId, setStageId] = useState<ApplicationStageId>(() => defaultApplicationStage(initial?.details))
-  const [roundId, setRoundId] = useState<InterviewRoundId>(() => defaultInterviewRound(initial?.details))
+  const [values, setValues] = useState<Record<string, string>>(() =>
+    initialFieldValues(tab, initial?.details ?? defaultDetails, initial?.title ?? defaultTitle),
+  )
+  const [stageId, setStageId] = useState<ApplicationStageId>(() => defaultApplicationStage(initial?.details ?? defaultDetails))
+  const [roundId, setRoundId] = useState<InterviewRoundId>(() => defaultInterviewRound(initial?.details ?? defaultDetails))
   const [entries, setEntries] = useState<EssayEntry[]>(() => {
     const parsed = initial ? parseEssayEntries(initial) : []
     const rows = parsed.length ? parsed : [emptyEssayEntry()]
