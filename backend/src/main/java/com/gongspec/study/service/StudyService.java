@@ -21,11 +21,14 @@ import com.gongspec.study.repository.StudyCommentRepository;
 import com.gongspec.study.repository.StudyPostRepository;
 import com.gongspec.user.entity.User;
 import com.gongspec.user.service.UserService;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,8 +56,26 @@ public class StudyService {
     }
 
     public List<StudyPostResponse> list(UUID viewerId, String query, StudyPurpose purpose, StudyStatus status) {
-        return postRepository.searchVisible(blankToNull(query), purpose, status).stream()
-                .map(post -> toResponse(post, viewerId))
+        List<StudyPost> posts = postRepository.searchVisible(blankToNull(query), purpose, status);
+        if (posts.isEmpty()) {
+            return List.of();
+        }
+        List<UUID> postIds = posts.stream().map(StudyPost::getId).toList();
+        Map<UUID, Long> commentCounts = new HashMap<>();
+        for (StudyCommentRepository.CommentCount row : commentRepository.countVisibleByPostIds(postIds)) {
+            commentCounts.put(row.getPostId(), row.getCommentCount());
+        }
+        List<UUID> recruitIds = posts.stream().map(StudyPost::getRecruitId).filter(Objects::nonNull).distinct().toList();
+        Map<UUID, PublicRecruit> recruits = recruitIds.isEmpty()
+                ? Map.of()
+                : recruitRepository.findAllById(recruitIds).stream()
+                        .collect(Collectors.toMap(PublicRecruit::getId, Function.identity()));
+        return posts.stream()
+                .map(post -> StudyPostResponse.from(
+                        post,
+                        viewerId,
+                        commentCounts.getOrDefault(post.getId(), 0L),
+                        post.getRecruitId() == null ? null : recruits.get(post.getRecruitId())))
                 .toList();
     }
 
@@ -145,9 +166,14 @@ public class StudyService {
         List<CommunityReport> reports = reportRepository.findAllWithReporter();
         Map<UUID, StudyPost> posts = postRepository.findAllById(reportIds(reports, ReportTargetType.POST)).stream()
                 .collect(Collectors.toMap(StudyPost::getId, Function.identity()));
-        Map<UUID, StudyComment> comments =
-                commentRepository.findAllById(reportIds(reports, ReportTargetType.COMMENT)).stream()
-                        .collect(Collectors.toMap(StudyComment::getId, Function.identity()));
+        Map<UUID, StudyComment> comments;
+        List<UUID> commentIds = reportIds(reports, ReportTargetType.COMMENT);
+        if (commentIds.isEmpty()) {
+            comments = Map.of();
+        } else {
+            comments = commentRepository.findAllWithPostByIdIn(commentIds).stream()
+                    .collect(Collectors.toMap(StudyComment::getId, Function.identity()));
+        }
         return reports.stream()
                 .map(report -> toReportResponse(report, posts, comments))
                 .toList();
@@ -238,7 +264,11 @@ public class StudyService {
         if (reportRepository.existsByReporterIdAndTargetTypeAndTargetId(userId, type, targetId)) {
             throw ApiException.badRequest("이미 신고한 내용입니다.");
         }
-        reportRepository.save(new CommunityReport(reporter, type, targetId, reason.trim()));
+        try {
+            reportRepository.saveAndFlush(new CommunityReport(reporter, type, targetId, reason.trim()));
+        } catch (DataIntegrityViolationException exception) {
+            throw ApiException.badRequest("이미 신고한 내용입니다.");
+        }
     }
 
     private static List<UUID> reportIds(List<CommunityReport> reports, ReportTargetType type) {

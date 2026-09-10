@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 
 public final class ContactGuard {
 
-    private static final Pattern PHONE = Pattern.compile("01[016789]-?\\d{3,4}-?\\d{4}");
+    private static final Pattern PHONE = Pattern.compile("01[016789][\\s.-]?\\d{3,4}[\\s.-]?\\d{4}");
     private static final Pattern OPEN_CHAT = Pattern.compile("open\\.kakao\\.com|openchat", Pattern.CASE_INSENSITIVE);
 
     private ContactGuard() {}

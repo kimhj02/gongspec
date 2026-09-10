@@ -157,6 +157,37 @@ class StudyControllerTest {
         mockMvc.perform(get("/api/study/posts/{id}", id).cookie(token)).andExpect(status().isNotFound());
     }
 
+    @Test
+    void rejectsDuplicateReport() throws Exception {
+        Cookie token = nicknamedCookie("kakao-study-report", "신고닉");
+        MvcResult created = mockMvc.perform(post("/api/study/posts")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(
+                                """
+                                {
+                                  "title":"신고할 글",
+                                  "purpose":"NCS",
+                                  "mode":"온라인"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn();
+        String id = objectMapper.readTree(created.getResponse().getContentAsString()).get("id").asText();
+
+        mockMvc.perform(post("/api/study/posts/{id}/reports", id)
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"광고 같아요\"}"))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(post("/api/study/posts/{id}/reports", id)
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"광고 같아요\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("이미 신고한 내용입니다."));
+    }
+
     private Cookie nicknamedCookie(String kakaoId, String nickname) {
         User user = userService.upsertFromKakao(kakaoId, "카카오이름", null);
         userService.setSiteNickname(user.getId(), nickname);

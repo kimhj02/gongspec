@@ -10,10 +10,16 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.util.UUID;
 
 @Entity
-@Table(name = "community_reports")
+@Table(
+        name = "community_reports",
+        uniqueConstraints =
+                @UniqueConstraint(
+                        name = "uk_community_reports_reporter_target",
+                        columnNames = {"reporter_id", "target_type", "target_id"}))
 public class CommunityReport extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

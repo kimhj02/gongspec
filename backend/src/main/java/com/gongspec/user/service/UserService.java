@@ -7,6 +7,7 @@ import com.gongspec.user.repository.UserRepository;
 import com.gongspec.user.support.SiteNickname;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,6 +71,11 @@ public class UserService {
             throw ApiException.badRequest("이미 쓰는 닉네임입니다.");
         }
         user.setSiteNickname(nickname);
+        try {
+            userRepository.flush();
+        } catch (DataIntegrityViolationException exception) {
+            throw ApiException.badRequest("이미 쓰는 닉네임입니다.");
+        }
         return user;
     }
 }

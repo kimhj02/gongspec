@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import useSWR from 'swr'
 import { Moon, Sun } from 'lucide-react'
 import LoginGate from '@/components/login-gate'
@@ -12,18 +12,28 @@ export default function AdminPage() {
   const { theme, toggleTheme } = useTheme()
   const { user, isLoading, pending, login, error } = useAuth()
   const reports = useSWR(user?.admin ? adminReportsKey : null, () => api.admin.reports(), { revalidateOnFocus: false })
+  const [actionError, setActionError] = useState('')
+  const [pendingId, setPendingId] = useState<string | null>(null)
 
   useEffect(() => {
     if (user?.needsNickname) window.location.replace('/nickname')
   }, [user])
 
   const toggleHidden = async (item: CommunityReport) => {
-    if (item.targetType === 'POST') {
-      await (item.hidden ? api.admin.unhidePost(item.targetId) : api.admin.hidePost(item.targetId))
-    } else {
-      await (item.hidden ? api.admin.unhideComment(item.targetId) : api.admin.hideComment(item.targetId))
+    setActionError('')
+    setPendingId(item.id)
+    try {
+      if (item.targetType === 'POST') {
+        await (item.hidden ? api.admin.unhidePost(item.targetId) : api.admin.hidePost(item.targetId))
+      } else {
+        await (item.hidden ? api.admin.unhideComment(item.targetId) : api.admin.hideComment(item.targetId))
+      }
+      await reports.mutate()
+    } catch (caught) {
+      setActionError(getApiError(caught))
+    } finally {
+      setPendingId(null)
     }
-    await reports.mutate()
   }
 
   return (
@@ -76,7 +86,9 @@ export default function AdminPage() {
             <div className="loading-spinner" aria-label="불러오는 중" />
           </div>
         ) : reports.data?.length ? (
-          <div className="admin-table-wrap">
+          <>
+            {actionError ? <p className="admin-action-error">{actionError}</p> : null}
+            <div className="admin-table-wrap">
             <table className="admin-table">
               <thead>
                 <tr>
@@ -98,7 +110,12 @@ export default function AdminPage() {
                     <td>{item.reason}</td>
                     <td>{item.reporterNickname || '닉네임 없음'}</td>
                     <td>
-                      <button type="button" className="secondary-button" onClick={() => void toggleHidden(item)}>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        disabled={pendingId === item.id}
+                        onClick={() => void toggleHidden(item)}
+                      >
                         {item.hidden ? '숨김 해제' : '숨기기'}
                       </button>
                     </td>
@@ -107,6 +124,7 @@ export default function AdminPage() {
               </tbody>
             </table>
           </div>
+          </>
         ) : (
           <div className="empty-state">
             <h2>신고가 없습니다</h2>

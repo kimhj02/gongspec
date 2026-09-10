@@ -54,4 +54,16 @@ describe('admin page', () => {
     await user.click(screen.getByRole('button', { name: '숨기기' }))
     expect(api.admin.hidePost).toHaveBeenCalledWith('post-1')
   })
+
+  it('shows hide errors and keeps the button usable after failure', async () => {
+    const user = userEvent.setup()
+    vi.spyOn(api.admin, 'reports').mockResolvedValue([report])
+    vi.spyOn(api.admin, 'hidePost').mockRejectedValue(new Error('서버 오류가 발생했습니다.'))
+
+    render(<AdminPage />)
+
+    await user.click(await screen.findByRole('button', { name: '숨기기' }))
+    expect(await screen.findByText('서버 오류가 발생했습니다.')).toBeTruthy()
+    expect((screen.getByRole('button', { name: '숨기기' }) as HTMLButtonElement).disabled).toBe(false)
+  })
 })
