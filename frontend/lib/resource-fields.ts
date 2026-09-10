@@ -388,8 +388,8 @@ export function filledDetails(item: Resource) {
     .filter((field) => !((item.tab === 'applications' || item.tab === 'training') && field.key === 'institution'))
     .filter((field) => !(item.tab === 'project' && field.key === 'oneLiner'))
     .map((field) => {
-      if (field.type === 'daterange') return { label: field.label, value: periodDisplay(details), countChars: false }
-      return { label: field.label, value: details[field.key]?.trim() ?? '', countChars: Boolean(field.countChars) }
+      if (field.type === 'daterange') return { label: field.label, value: periodDisplay(details) }
+      return { label: field.label, value: details[field.key]?.trim() ?? '' }
     })
     .filter((row) => row.value && row.label !== '자기소개서' && row.label !== '자기소개서 항목')
 }

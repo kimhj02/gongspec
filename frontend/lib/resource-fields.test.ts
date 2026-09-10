@@ -178,7 +178,7 @@ describe('resource fields', () => {
       details: { issuer: '한국산업인력공단', credential: '' },
     })
     expect(rows).toEqual([
-      { label: '발급기관', value: '한국산업인력공단', countChars: false },
+      { label: '발급기관', value: '한국산업인력공단' },
     ])
   })
 
@@ -264,7 +264,7 @@ describe('resource fields', () => {
         title: 'MediCheck',
         details: { name: 'MediCheck', oneLiner: '공공데이터로 근처 병원을 찾는 서비스', role: '1인 풀스택' },
       }),
-    ).toEqual([{ label: '역할', value: '1인 풀스택', countChars: false }])
+    ).toEqual([{ label: '역할', value: '1인 풀스택' }])
   })
 
   it('does not collect a certificate homepage', () => {
@@ -295,7 +295,7 @@ describe('resource fields', () => {
     expect(fieldsByTab.memo.find((field) => field.key === 'content')?.countChars).toBeFalsy()
   })
 
-  it('shows character counts on education content in filled details', () => {
+  it('keeps education content on the card without a character count', () => {
     expect(
       filledDetails({
         id: '1',
@@ -303,7 +303,7 @@ describe('resource fields', () => {
         title: '헌법',
         details: { content: '기본권 사례를 정리했다.' },
       }),
-    ).toEqual([{ label: '내용', value: '기본권 사례를 정리했다.', countChars: true }])
+    ).toEqual([{ label: '내용', value: '기본권 사례를 정리했다.' }])
   })
 
   it('saves a later interview round without wiping the first', () => {

@@ -338,6 +338,49 @@ describe('resource card', () => {
     expect(screen.getByText('NCS분류')).toBeTruthy()
   })
 
+  it('hides character counts on education and career cards', () => {
+    const { rerender } = render(
+      <ResourceCard
+        item={{
+          id: '1',
+          tab: 'education',
+          title: '운영체제',
+          details: { credits: '3', grade: 'A+', content: '미국가나' },
+        }}
+        collapsed={false}
+        onEdit={() => undefined}
+        onDelete={() => undefined}
+        onTogglePin={() => undefined}
+        onToggleCollapsed={() => undefined}
+      />,
+    )
+
+    expect(screen.getByText('학점')).toBeTruthy()
+    expect(screen.getByText('내용')).toBeTruthy()
+    expect(screen.getByText('미국가나')).toBeTruthy()
+    expect(screen.queryByText(/공백 포함/)).toBeNull()
+
+    rerender(
+      <ResourceCard
+        item={{
+          id: '2',
+          tab: 'career',
+          title: '서울시',
+          details: { institution: '서울시', responsibilities: '민원 응대' },
+        }}
+        collapsed={false}
+        onEdit={() => undefined}
+        onDelete={() => undefined}
+        onTogglePin={() => undefined}
+        onToggleCollapsed={() => undefined}
+      />,
+    )
+
+    expect(screen.getByText('담당업무')).toBeTruthy()
+    expect(screen.getByText('민원 응대')).toBeTruthy()
+    expect(screen.queryByText(/공백 포함/)).toBeNull()
+  })
+
   it('lets an application open the essay editor or list', async () => {
     const user = userEvent.setup()
     const onWriteEssay = vi.fn()
