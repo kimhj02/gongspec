@@ -131,6 +131,27 @@ describe('calendar board', () => {
     expect(bars).toHaveLength(1)
     expect(bars[0].style.gridColumn).toBe('5 / 8')
   })
+
+  it('keeps a Wednesday exam on the first row when Chuseok starts Thursday', () => {
+    render(
+      <CalendarBoard
+        month={new Date(2026, 8, 1)}
+        setMonth={() => undefined}
+        days={monthDays(new Date(2026, 8, 1))}
+        today="2026-09-11"
+        selectedDay={null}
+        holidays={{ '2026-09-24': '추석', '2026-09-25': '추석', '2026-09-26': '추석' }}
+        onSelectDay={() => undefined}
+        onSelectEvent={() => undefined}
+        events={[{ id: 'exam', title: '하반기 4직급', date: '2026-09-23', type: '서류', source: 'application' }]}
+      />,
+    )
+
+    const exam = screen.getByRole('button', { name: '하반기 4직급' }) as HTMLElement
+    const holiday = screen.getByText('추석') as HTMLElement
+    expect(exam.style.gridRow).toBe('1')
+    expect(holiday.style.gridRow).toBe('1')
+  })
 })
 
 describe('schedule modal', () => {

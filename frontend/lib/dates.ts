@@ -84,7 +84,7 @@ export function ddayLabel(days: number) {
   return `D+${Math.abs(days)}`
 }
 
-export function upcomingSchedules(schedules: Schedule[], today = dateKey(new Date()), limit = 5) {
+export function upcomingSchedules<T extends Schedule>(schedules: T[], today = dateKey(new Date()), limit = 5) {
   return schedules
     .filter((item) => scheduleSpan(item).end >= today)
     .sort((a, b) => a.date.localeCompare(b.date) || a.title.localeCompare(b.title))

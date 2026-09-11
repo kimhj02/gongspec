@@ -102,19 +102,19 @@ class ResourceControllerTest {
 
         mockMvc.perform(get("/api/resources?tab=memo").cookie(token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(second))
-                .andExpect(jsonPath("$[1].id").value(first));
+                .andExpect(jsonPath("$[0].id").value(first))
+                .andExpect(jsonPath("$[1].id").value(second));
 
         mockMvc.perform(put("/api/resources/order")
                         .cookie(token)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"ids\":[\"" + first + "\",\"" + second + "\"]}"))
+                        .content("{\"ids\":[\"" + second + "\",\"" + first + "\"]}"))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/resources?tab=memo").cookie(token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(first))
-                .andExpect(jsonPath("$[1].id").value(second));
+                .andExpect(jsonPath("$[0].id").value(second))
+                .andExpect(jsonPath("$[1].id").value(first));
     }
 
     @Test

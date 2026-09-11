@@ -106,10 +106,10 @@ docker compose up --build -d
 
 ```bash
 docker compose ps
-curl -s http://127.0.0.1:8080/api/health
+docker compose exec backend wget -qO- http://127.0.0.1:8080/api/health
 ```
 
-`{"status":"ok"}`가 나오면 백엔드는 준비된 것입니다. 프론트는 브라우저에서 `http://192.168.0.20:13001` 을 엽니다.
+`{"status":"ok"}`가 나오면 백엔드는 준비된 것입니다. 프론트는 브라우저에서 `http://192.168.0.20:13001` 을 엽니다. 도메인은 아래 HTTPS 절을 따릅니다.
 
 로그가 필요하면:
 
@@ -162,21 +162,52 @@ docker compose down
 |---|---|
 | 맥 미니 자체 | http://localhost:13001 |
 | 같은 네트워크의 다른 기기 | http://192.168.0.20:13001 |
-| 백엔드 직접 | http://192.168.0.20:8080/api/health |
+| 공개 HTTPS | https://gongspec.cloud |
 
 프론트 `/api`는 컨테이너 안에서 백엔드로 전달됩니다. 브라우저에서 백엔드 8080을 직접 호출하지 않아도 됩니다.
 
-## HTTPS 도메인을 쓸 때
+## HTTPS 도메인 (Cloudflare Tunnel)
 
-공인 도메인과 인증서가 있으면 `.env`를 이렇게 바꿉니다.
+MediCheck와 같은 `cloudflared` 터널을 재사용합니다. 새 터널을 만들거나 포트포워딩을 할 필요는 없습니다.
+
+터널은 이미 맥 미니 LaunchAgent로 떠 있고, 공개 호스트는 아래처럼 나눕니다.
+
+| 도메인 | 맥 미니 목적지 |
+|---|---|
+| medicheck.life | `http://127.0.0.1:80` (Caddy) |
+| gongspec.cloud / www | `http://127.0.0.1:13001` (GongSpec 프론트) |
+
+백엔드 8080은 호스트에 올리지 않습니다. MediCheck 프론트가 같은 포트를 쓰고, 외부에는 프론트 `/api` 만 열립니다.
+
+### 1. 가비아 네임서버
+
+`gongspec.cloud` 존이 Cloudflare에 들어가 있어도 상태가 pending이면, 가비아에서 네임서버를 Cloudflare 값으로 바꿉니다.
+
+- `junade.ns.cloudflare.com`
+- `naomi.ns.cloudflare.com`
+
+반영까지 수분~수시간이 걸릴 수 있습니다.
+
+### 2. `.env`
 
 ```
-KAKAO_REDIRECT_URI=https://도메인/auth/kakao/callback
-CORS_ORIGINS=https://도메인
+KAKAO_REDIRECT_URI=https://gongspec.cloud/auth/kakao/callback
+CORS_ORIGINS=https://gongspec.cloud,https://www.gongspec.cloud
 COOKIE_SECURE=true
 ```
 
-카카오 Redirect URI도 같은 HTTPS 주소로 다시 등록합니다. 리버스 프록시(Caddy, nginx 등)는 이 문서 범위 밖입니다.
+카카오 Redirect URI에도 `https://gongspec.cloud/auth/kakao/callback` 을 그대로 넣습니다.
+
+### 3. 컨테이너
+
+```bash
+cd ~/Project/gongspec
+docker compose up --build -d
+docker compose ps
+docker compose exec backend wget -qO- http://127.0.0.1:8080/api/health
+```
+
+브라우저에서는 `https://gongspec.cloud` 로 접속합니다. 인증서는 Cloudflare가 붙입니다.
 
 ## 자주 막히는 곳
 
