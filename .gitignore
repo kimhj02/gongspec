@@ -8,4 +8,4 @@ backend/.tools/
 .idea/
 .idea/
 *.iml
-
+frontend/package-lock.json

@@ -47,26 +47,28 @@ class RecruitControllerTest {
     private AlioRecruitClient alioRecruitClient;
 
     @Test
-    void requiresLogin() throws Exception {
+    void listsWithoutLoginButSyncRequiresLogin() throws Exception {
+        repository.save(recruit(1L, "한국전력", "정규직 채용", "정규직", "정규직"));
+
         mockMvc.perform(get("/api/recruits"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].title").value("정규직 채용"));
+        mockMvc.perform(post("/api/recruits/sync"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.message").value("로그인이 필요합니다."));
-        mockMvc.perform(post("/api/recruits/sync"))
-                .andExpect(status().isUnauthorized());
     }
 
     @Test
     void listsOngoingRecruitsAndFiltersHireType() throws Exception {
-        Cookie token = tokenCookie();
         repository.save(recruit(1L, "한국전력", "정규직 채용", "정규직", "정규직"));
         repository.save(recruit(2L, "한국마사회", "계약직 채용", "계약직", "계약직"));
 
-        mockMvc.perform(get("/api/recruits?query=한국전력").cookie(token))
+        mockMvc.perform(get("/api/recruits?query=한국전력"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("정규직 채용"))
                 .andExpect(jsonPath("$[0].instNm").value("한국전력"));
 
-        mockMvc.perform(get("/api/recruits?hireType=계약직").cookie(token))
+        mockMvc.perform(get("/api/recruits?hireType=계약직"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].hireType").value("계약직"));

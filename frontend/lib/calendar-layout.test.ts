@@ -38,4 +38,15 @@ describe('calendar layout', () => {
     expect(segments.find((item) => item.event.id === '1')?.lane).toBe(0)
     expect(segments.find((item) => item.event.id === '2')?.lane).toBe(1)
   })
+
+  it('keeps a midweek event on the first lane beside a later holiday bar', () => {
+    const week = monthDays(new Date(2026, 8, 1)).slice(21, 28)
+    const { segments } = layoutWeekEvents(week, [
+      { id: 'holiday-1', title: '추석', date: '2026-09-24', endDate: '2026-09-26', type: '개인', source: 'holiday' },
+      { id: 'exam', title: '하반기 4직급', date: '2026-09-23', type: '서류', source: 'application' },
+    ])
+
+    expect(segments.find((item) => item.event.id === 'exam')).toMatchObject({ startCol: 3, lane: 0 })
+    expect(segments.find((item) => item.event.id === 'holiday-1')).toMatchObject({ startCol: 4, endCol: 6, lane: 0 })
+  })
 })

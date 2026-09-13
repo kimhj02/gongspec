@@ -176,7 +176,7 @@ public class ResourceService {
     }
 
     private static int nextSortOrder(List<? extends ResourceItem> items) {
-        return items.stream().mapToInt(ResourceItem::getSortOrder).min().orElse(1) - 1;
+        return items.stream().mapToInt(ResourceItem::getSortOrder).max().orElse(-1) + 1;
     }
 
     private ResourceItem newItem(User user, ResourceTab tab, String title) {

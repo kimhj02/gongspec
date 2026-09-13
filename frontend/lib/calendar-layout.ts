@@ -29,6 +29,9 @@ export function layoutWeekEvents(week: (Date | null)[], events: CalendarEvent[],
     .sort((a, b) => {
       if (a.startCol !== b.startCol) return a.startCol - b.startCol
       if (a.endCol !== b.endCol) return b.endCol - a.endCol
+      const holidayA = a.event.source === 'holiday' ? 0 : 1
+      const holidayB = b.event.source === 'holiday' ? 0 : 1
+      if (holidayA !== holidayB) return holidayA - holidayB
       return a.event.title.localeCompare(b.event.title)
     })
 

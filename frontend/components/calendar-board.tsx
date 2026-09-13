@@ -66,12 +66,12 @@ export default function CalendarBoard({
       </div>
       <div className="calendar-month">
         {chunkWeeks(days).map((week, weekIndex) => {
-          const holidayLayout = layoutWeekEvents(week, holidayEvents, 2)
-          const { segments, overflowByCol } = layoutWeekEvents(week, events)
-          const holidayLanes = holidayLayout.segments.reduce((max, item) => Math.max(max, item.lane + 1), 0)
+          const { segments, overflowByCol } = layoutWeekEvents(week, [...holidayEvents, ...events])
+          const holidaySegments = segments.filter((item) => item.event.source === 'holiday')
+          const eventSegments = segments.filter((item) => item.event.source !== 'holiday')
           const laneCount = segments.reduce((max, item) => Math.max(max, item.lane + 1), 0)
           const overflowRows = overflowByCol.some(Boolean) ? 1 : 0
-          const rows = holidayLanes + laneCount + overflowRows
+          const rows = laneCount + overflowRows
           return (
             <div className="calendar-week" key={weekIndex}>
               <div className="calendar-week-days">
@@ -96,7 +96,7 @@ export default function CalendarBoard({
               </div>
               {rows ? (
                 <div className="calendar-week-events" style={{ gridTemplateRows: `repeat(${rows}, 18px)` }}>
-                  {holidayLayout.segments.map((segment) => (
+                  {holidaySegments.map((segment) => (
                     <span
                       key={`${weekIndex}-${segment.event.id}`}
                       className={`event-bar holiday ${segment.continuesLeft ? 'is-continue-left' : ''} ${segment.continuesRight ? 'is-continue-right' : ''}`}
@@ -105,14 +105,14 @@ export default function CalendarBoard({
                       {segment.event.title}
                     </span>
                   ))}
-                  {segments.map((segment) => (
+                  {eventSegments.map((segment) => (
                     <button
                       type="button"
                       key={`${weekIndex}-${segment.event.id}`}
                       className={`event-bar ${eventTypeClass(segment.event.type, segment.event.source)} ${segment.continuesLeft ? 'is-continue-left' : ''} ${segment.continuesRight ? 'is-continue-right' : ''}`}
                       style={{
                         gridColumn: `${segment.startCol + 1} / ${segment.endCol + 2}`,
-                        gridRow: holidayLanes + segment.lane + 1,
+                        gridRow: segment.lane + 1,
                       }}
                       aria-label={segment.event.title}
                       onClick={() => onSelectEvent(segment.event)}
@@ -129,7 +129,7 @@ export default function CalendarBoard({
                         type="button"
                         key={`${weekIndex}-more-${key}`}
                         className="event-more"
-                        style={{ gridColumn: col + 1, gridRow: holidayLanes + laneCount + 1 }}
+                        style={{ gridColumn: col + 1, gridRow: laneCount + 1 }}
                         aria-label={`${day.getMonth() + 1}월 ${day.getDate()}일 일정 더보기`}
                         onClick={() => onSelectDay(key)}
                       >

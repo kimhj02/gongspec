@@ -65,7 +65,7 @@ export default function Page() {
   const applications = useSWR(user ? applicationsKey : null, () => api.resources.list({ tab: 'applications' }), { revalidateOnFocus: false })
   const schedules = useSWR(user ? schedulesKey : null, () => api.schedules.list(), { revalidateOnFocus: false })
   const recruits = useSWR(
-    user && isRecruits ? recruitsKey(debouncedQuery, hireFilter) : null,
+    isRecruits ? recruitsKey(debouncedQuery, hireFilter) : null,
     ([, nextQuery, hireType]) => api.recruits.list({ query: nextQuery, hireType }),
     { revalidateOnFocus: false, keepPreviousData: true },
   )
@@ -80,6 +80,11 @@ export default function Page() {
   useEffect(() => {
     if (user?.needsNickname) window.location.replace('/nickname')
   }, [user])
+
+  useEffect(() => {
+    if (authLoading || user || authError) return
+    setActiveTab((current) => (current === 'calendar' ? 'recruits' : current))
+  }, [authError, authLoading, user])
 
   useEffect(() => {
     if (!notice) return
@@ -130,6 +135,10 @@ export default function Page() {
   }
 
   const openApplicationFromRecruit = (item: PublicRecruit) => {
+    if (!user) {
+      void startLogin()
+      return
+    }
     setActiveTab('applications')
     setEditing(null)
     setDraftTitle(item.title?.trim() ?? '')
@@ -405,7 +414,7 @@ export default function Page() {
             <LoadingState />
           ) : authError ? (
             <InlineError message={getApiError(authError)} onRetry={() => void mutateAuth()} />
-          ) : !user ? (
+          ) : !user && !isRecruits ? (
             <LoginGate onLogin={() => void startLogin()} pending={authPending} />
           ) : (
             <>
@@ -415,13 +424,13 @@ export default function Page() {
               <h1>{tabLabel(activeTab)}</h1>
               <p>{tabCopy[activeTab].intro}</p>
             </div>
-            {isRecruits ? (
+            {isRecruits && user ? (
               <div className="page-intro-actions">
                 <button type="button" className="primary-button" onClick={() => void syncRecruits()} disabled={syncing}>
                   <RefreshCw size={17} /> {syncing ? '불러오는 중' : tabCopy.recruits.createLabel}
                 </button>
               </div>
-            ) : !isCalendar && !isStudy ? (
+            ) : !isCalendar && !isStudy && !isRecruits ? (
               <div className="page-intro-actions">
                 {activeTab === 'applications' ? (
                   <>
@@ -493,11 +502,11 @@ export default function Page() {
                 <RecruitBoard items={recruits.data} onRegister={openApplicationFromRecruit} />
               ) : (
                 <EmptyState
-                  onAdd={() => void syncRecruits()}
+                  onAdd={user ? () => void syncRecruits() : () => void startLogin()}
                   title={tabCopy.recruits.emptyTitle}
-                  description={tabCopy.recruits.emptyDescription}
-                  actionLabel={syncing ? '불러오는 중' : tabCopy.recruits.createLabel}
-                  disabled={syncing}
+                  description={user ? tabCopy.recruits.emptyDescription : '로그인하면 지원 현황에 바로 담을 수 있습니다.'}
+                  actionLabel={user ? (syncing ? '불러오는 중' : tabCopy.recruits.createLabel) : '카카오로 시작하기'}
+                  disabled={Boolean(user) && syncing}
                 />
               )}
             </>

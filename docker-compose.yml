@@ -7,6 +7,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-gongspec}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: unless-stopped
     volumes:
       - gongspec-mysql:/var/lib/mysql
     healthcheck:
@@ -35,14 +36,16 @@ services:
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
       ALIO_SERVICE_KEY: ${ALIO_SERVICE_KEY:-}
       APP_ADMIN_KAKAO_IDS: ${APP_ADMIN_KAKAO_IDS:-}
-    ports:
-      - "8080:8080"
+    restart: unless-stopped
+    # MediCheck 프론트가 맥 미니 8080을 쓰므로 호스트에는 올리지 않습니다.
+    # 프론트 컨테이너가 같은 네트워크의 backend:8080 으로 API를 넘깁니다.
 
   frontend:
     build:
       context: ./frontend
       args:
         API_BASE_URL: http://backend:8080
+    restart: unless-stopped
     depends_on:
       backend:
         condition: service_healthy
