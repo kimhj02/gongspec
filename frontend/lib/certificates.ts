@@ -5,6 +5,7 @@ export type CertificatePreset = {
   issuer: string
   group: CertificateGroup
   level?: string
+  scoreInput?: boolean
 }
 
 export const certificateLevelOptions = ['1급', '2급', '3급', '단일등급', '기타']
@@ -13,9 +14,9 @@ export const certificatePresets: CertificatePreset[] = [
   { name: '한국사능력검정시험', issuer: '국사편찬위원회', group: '공통' },
   { name: '컴퓨터활용능력', issuer: '대한상공회의소', group: '공통' },
   { name: '워드프로세서', issuer: '대한상공회의소', group: '공통' },
-  { name: '토익 (TOEIC)', issuer: 'YBM', group: '공통', level: '단일등급' },
-  { name: '토익스피킹', issuer: 'YBM', group: '공통', level: '단일등급' },
-  { name: '오픽 (OPIC)', issuer: '멀티캠퍼스', group: '공통', level: '단일등급' },
+  { name: '토익 (TOEIC)', issuer: 'YBM', group: '공통', scoreInput: true },
+  { name: '토익스피킹', issuer: 'YBM', group: '공통', scoreInput: true },
+  { name: '오픽 (OPIC)', issuer: 'ACTFL', group: '공통', scoreInput: true },
   { name: '한국실용글쓰기검정', issuer: '(사)한국국어능력평가협회', group: '공통' },
   { name: 'KBS한국어능력시험', issuer: 'KBS', group: '공통' },
   { name: '사회조사분석사', issuer: '한국산업인력공단', group: '행정·경영' },
@@ -56,6 +57,19 @@ export const certificateGroups: CertificateGroup[] = ['공통', '행정·경영'
 export function certificatePresetFor(name: string) {
   const value = name.trim()
   return certificatePresets.find((preset) => preset.name === value)
+}
+
+export function isLanguageCertificate(name = '') {
+  const value = name.trim()
+  if (certificatePresetFor(value)?.scoreInput) return true
+  return /(토익|오픽|토플|아이엘츠|텝스|toeic|opic|toefl|ielts|teps)/i.test(value)
+}
+
+export function languageScorePlaceholder(name = '') {
+  if (/오픽|opic/i.test(name)) return '예: IH'
+  if (/토익스피킹|speaking/i.test(name)) return '예: 160'
+  if (/토익|toeic/i.test(name)) return '예: 850'
+  return '예: 점수 또는 등급'
 }
 
 export function applyCertificatePreset(preset: CertificatePreset) {

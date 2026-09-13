@@ -42,12 +42,33 @@ describe('resource form', () => {
     render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={async () => undefined} />)
 
     await user.click(screen.getByRole('button', { name: '오픽 (OPIC)' }))
-    expect(screen.getByDisplayValue('멀티캠퍼스')).toBeTruthy()
-    expect((screen.getByLabelText('급수') as HTMLSelectElement).value).toBe('단일등급')
+    expect(screen.getByDisplayValue('ACTFL')).toBeTruthy()
+    expect(screen.getByLabelText('점수')).toBeTruthy()
+    expect(screen.getByPlaceholderText('예: IH')).toBeTruthy()
 
     await user.click(screen.getByRole('button', { name: '한국실용글쓰기검정' }))
     expect(screen.getByDisplayValue('(사)한국국어능력평가협회')).toBeTruthy()
     expect((screen.getByLabelText('급수') as HTMLSelectElement).value).toBe('')
+  })
+
+  it('lets language tests take a typed score', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
+
+    await user.click(screen.getByRole('button', { name: '토익 (TOEIC)' }))
+    await user.type(screen.getByPlaceholderText('예: 850'), '850')
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '토익 (TOEIC)',
+        details: expect.objectContaining({
+          credential: '토익 (TOEIC)',
+          issuer: 'YBM',
+          level: '850',
+        }),
+      }),
+    )
   })
 
   it('still accepts a certificate typed by hand', async () => {

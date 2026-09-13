@@ -6,6 +6,7 @@ import PeriodField from '@/components/period-field'
 import ModalShell from '@/components/modal-shell'
 import { getApiError, type Resource, type ResourceTab } from '@/lib/api'
 import {
+  certificateFieldsFor,
   applicationCommonFields,
   applicationStages,
   characterCountLabel,
@@ -51,7 +52,6 @@ export default function ResourceForm({
   onSave: (data: Omit<Resource, 'id'>) => Promise<void>
 }) {
   const tab = initial?.tab ?? activeTab
-  const fields = fieldsByTab[tab]
   const isEssay = tab === 'essays'
   const isApplication = tab === 'applications'
   const titleKey = titleFieldByTab[tab]
@@ -60,6 +60,7 @@ export default function ResourceForm({
   const [values, setValues] = useState<Record<string, string>>(() =>
     initialFieldValues(tab, initial?.details ?? defaultDetails, initial?.title ?? defaultTitle),
   )
+  const fields = tab === 'certificate' ? certificateFieldsFor(values.credential) : fieldsByTab[tab]
   const [stageId, setStageId] = useState<ApplicationStageId>(() => defaultApplicationStage(initial?.details ?? defaultDetails))
   const [roundId, setRoundId] = useState<InterviewRoundId>(() => defaultInterviewRound(initial?.details ?? defaultDetails))
   const [entries, setEntries] = useState<EssayEntry[]>(() => {
@@ -263,7 +264,7 @@ export default function ResourceForm({
             <div className="detail-form-grid">
               {fields.map((field) => (
                 <FieldControl
-                  key={field.key}
+                  key={`${field.key}-${field.type ?? 'text'}-${field.label}`}
                   field={field}
                   values={tab === 'certificate' ? { ...values, expiresAt: expiresAtDisplay(values.acquiredAt, values.validity) } : values}
                   autoFocus={hideTitle && field.key === titleKey}
