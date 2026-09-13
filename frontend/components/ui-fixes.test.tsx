@@ -48,7 +48,7 @@ describe('resource form', () => {
 
     await user.click(screen.getByRole('button', { name: '한국실용글쓰기검정' }))
     expect(screen.getByDisplayValue('(사)한국국어능력평가협회')).toBeTruthy()
-    expect((screen.getByLabelText('급수') as HTMLSelectElement).value).toBe('')
+    expect((screen.getByLabelText('급수') as HTMLInputElement).value).toBe('')
   })
 
   it('lets language tests take a typed score', async () => {
@@ -93,13 +93,32 @@ describe('resource form', () => {
     )
   })
 
+  it('lets the grade be typed instead of only picked', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
+
+    await user.click(screen.getByRole('button', { name: '한국사능력검정시험' }))
+    await user.type(screen.getByPlaceholderText('선택하거나 직접 입력'), '심화')
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        details: expect.objectContaining({
+          credential: '한국사능력검정시험',
+          issuer: '국사편찬위원회',
+          level: '심화',
+        }),
+      }),
+    )
+  })
+
   it('still accepts a certificate typed by hand', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn().mockResolvedValue(undefined)
     render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
 
     await user.type(screen.getByPlaceholderText('예: 정보처리기사'), '나만의자격')
-    await user.selectOptions(screen.getByLabelText('급수'), '2급')
+    await user.type(screen.getByPlaceholderText('선택하거나 직접 입력'), '기사')
     await user.type(screen.getByPlaceholderText('예: 한국산업인력공단'), '직접입력기관')
     await user.click(screen.getByRole('button', { name: /추가/ }))
     expect(onSave).toHaveBeenCalledWith(
@@ -108,7 +127,7 @@ describe('resource form', () => {
         details: expect.objectContaining({
           credential: '나만의자격',
           issuer: '직접입력기관',
-          level: '2급',
+          level: '기사',
         }),
       }),
     )

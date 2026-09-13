@@ -353,14 +353,24 @@ function FieldControl({
           ))}
         </select>
       ) : (
-        <input
-          autoFocus={autoFocus}
-          type={field.type ?? 'text'}
-          value={values[field.key] ?? ''}
-          onChange={(event) => onChange(field.key, event.target.value)}
-          placeholder={field.placeholder}
-          required={field.required}
-        />
+        <>
+          <input
+            autoFocus={autoFocus}
+            type={field.type ?? 'text'}
+            list={options.length ? `${field.key}-suggestions` : undefined}
+            value={values[field.key] ?? ''}
+            onChange={(event) => onChange(field.key, event.target.value)}
+            placeholder={field.placeholder}
+            required={field.required}
+          />
+          {options.length ? (
+            <datalist id={`${field.key}-suggestions`}>
+              {options.map((option) => (
+                <option key={option} value={option} />
+              ))}
+            </datalist>
+          ) : null}
+        </>
       )}
     </label>
   )
