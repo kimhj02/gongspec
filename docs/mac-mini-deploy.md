@@ -223,11 +223,11 @@ docker compose exec backend wget -qO- http://127.0.0.1:8080/api/health
 `main`에 push되거나 PR이 병합되면 GitHub Actions가 맥 미니 self-hosted runner에서 아래를 실행합니다.
 
 - Actions checkout으로 `main`을 러너 작업 폴더에 받음
-- `~/Desktop/gongspec/.env`만 복사 (파일은 커밋하지 않음)
+- `~/actions-runner-gongspec/.env`만 복사 (파일은 커밋하지 않음. Desktop 경로는 쓰지 않음)
 - `docker compose up --build -d` (프로젝트 이름 `gongspec`으로 기존 MySQL 볼륨 유지)
 - 백엔드 `/api/health`와 프론트 `http://127.0.0.1:13001` 확인
 
 러너 라벨은 `self-hosted`, `macOS`, `gongspec`입니다. 수동으로 다시 올리려면 GitHub Actions에서 **Deploy Mac Mini** 워크플로를 실행합니다.
 
-`.env`는 `~/Desktop/gongspec/.env`에 둡니다. 배포 코드는 러너 workspace를 쓰므로, Desktop clone에서 `git fetch`가 멈춰도 배포는 진행됩니다.
+`.env`는 `~/actions-runner-gongspec/.env`에 둡니다. `~/Desktop/gongspec`는 iCloud/git 잠금으로 읽기가 멈출 수 있어 배포 경로로 쓰지 않습니다.
 

@@ -2,7 +2,7 @@
 #
 # 사전 조건 (맥 미니):
 # - GitHub Actions self-hosted runner 라벨: self-hosted, macOS, gongspec
-# - /Users/snowrabbit123/Desktop/gongspec/.env 가 있음 (코드는 runner workspace에서 받음)
+# - /Users/snowrabbit123/actions-runner-gongspec/.env 가 있음 (Desktop 경로는 쓰지 않음)
 # - Docker Desktop이 실행 가능
 #
 # .env는 gitignore라 checkout 해도 유지됩니다.
@@ -23,7 +23,7 @@ jobs:
     runs-on: [self-hosted, macOS, gongspec]
     timeout-minutes: 60
     env:
-      ENV_FILE: /Users/snowrabbit123/Desktop/gongspec/.env
+      ENV_FILE: /Users/snowrabbit123/actions-runner-gongspec/.env
       COMPOSE_PROJECT_NAME: gongspec
       PATH: /usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin:/Users/snowrabbit123/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
     steps:
@@ -50,10 +50,13 @@ jobs:
           persist-credentials: false
 
       - name: Verify env file
+        timeout-minutes: 1
         run: |
           set -euo pipefail
+          echo "looking for $ENV_FILE"
           test -f "$ENV_FILE" || { echo "::error::.env missing at $ENV_FILE"; exit 1; }
           cp "$ENV_FILE" .env
+          echo "copied env"
 
       - name: Rebuild stack
         run: |
