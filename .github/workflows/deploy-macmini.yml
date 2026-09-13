@@ -43,12 +43,17 @@ jobs:
           exit 1
 
       - name: Sync repository
+        timeout-minutes: 2
+        env:
+          GIT_TERMINAL_PROMPT: "0"
         run: |
           set -euo pipefail
           cd "$DEPLOY_PATH"
           test -d .git
           git remote get-url origin
-          git fetch --prune origin main
+          find .git -name '*.lock' -delete
+          pkill -f "git fetch --prune origin main" || true
+          git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 fetch --prune origin main
           git checkout main
           git reset --hard origin/main
           echo "HEAD=$(git rev-parse --short HEAD)"
