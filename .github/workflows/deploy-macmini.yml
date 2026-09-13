@@ -2,10 +2,10 @@
 #
 # 사전 조건 (맥 미니):
 # - GitHub Actions self-hosted runner 라벨: self-hosted, macOS, gongspec
-# - /Users/snowrabbit123/Desktop/gongspec 에 clone과 .env가 있음
+# - /Users/snowrabbit123/Desktop/gongspec/.env 가 있음 (코드는 runner workspace에서 받음)
 # - Docker Desktop이 실행 가능
 #
-# .env는 gitignore라 pull/reset 해도 유지됩니다.
+# .env는 gitignore라 checkout 해도 유지됩니다.
 
 name: Deploy Mac Mini
 
@@ -23,7 +23,8 @@ jobs:
     runs-on: [self-hosted, macOS, gongspec]
     timeout-minutes: 60
     env:
-      DEPLOY_PATH: /Users/snowrabbit123/Desktop/gongspec
+      ENV_FILE: /Users/snowrabbit123/Desktop/gongspec/.env
+      COMPOSE_PROJECT_NAME: gongspec
       PATH: /usr/local/bin:/opt/homebrew/bin:/Applications/Docker.app/Contents/Resources/bin:/Users/snowrabbit123/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin
     steps:
       - name: Wait for Docker
@@ -48,20 +49,11 @@ jobs:
           ref: main
           persist-credentials: false
 
-      - name: Sync repository
-        timeout-minutes: 2
-        run: |
-          set -euo pipefail
-          test -d "$DEPLOY_PATH"
-          test -f "$DEPLOY_PATH/.env" || { echo "::error::.env missing"; exit 1; }
-          rsync -a --delete --exclude .env --exclude .git ./ "$DEPLOY_PATH/"
-          echo "synced $(git rev-parse --short HEAD) -> $DEPLOY_PATH"
-
       - name: Verify env file
         run: |
           set -euo pipefail
-          cd "$DEPLOY_PATH"
-          test -f .env || { echo "::error::.env missing"; exit 1; }
+          test -f "$ENV_FILE" || { echo "::error::.env missing at $ENV_FILE"; exit 1; }
+          cp "$ENV_FILE" .env
 
       - name: Rebuild stack
         run: |
@@ -81,13 +73,11 @@ jobs:
           printf '%s\n' '{"credsStore":"medicheck-noop"}' > "$DOCKER_CONFIG_DIR/config.json"
           export DOCKER_CONFIG="$DOCKER_CONFIG_DIR"
           export PATH="$DOCKER_CONFIG_DIR:$PATH"
-          cd "$DEPLOY_PATH"
           docker compose --env-file .env up -d --build --remove-orphans
 
       - name: Health check
         run: |
           set -euo pipefail
-          cd "$DEPLOY_PATH"
           for i in $(seq 1 36); do
             if docker compose exec -T backend wget -qO- http://127.0.0.1:8080/api/health | grep -q ok; then
               echo "backend health OK"
