@@ -1,5 +1,5 @@
 import type { Resource, Schedule, ScheduleType } from '@/lib/api'
-import { applicationPostingName, toDateInputValue } from '@/lib/resource-fields'
+import { applicationCompanyName, applicationPostingName, toDateInputValue } from '@/lib/resource-fields'
 
 export type CalendarEvent = Schedule & {
   source: 'schedule' | 'application' | 'holiday'
@@ -8,16 +8,16 @@ export type CalendarEvent = Schedule & {
 }
 
 export const applicationDateFields: { key: string; type: ScheduleType; stage: string }[] = [
-  { key: 'documentAt', type: '서류', stage: '서류마감' },
+  { key: 'documentAt', type: '서류', stage: '접수마감' },
   { key: 'documentAnnouncementAt', type: '서류', stage: '서류발표' },
-  { key: 'writtenAt', type: '필기', stage: '필기' },
+  { key: 'writtenAt', type: '필기', stage: '필기시험' },
   { key: 'writtenAnnouncementAt', type: '필기', stage: '필기발표' },
-  { key: 'interviewAt', type: '면접', stage: '1차면접' },
-  { key: 'interviewAnnouncementAt', type: '면접', stage: '1차면접발표' },
-  { key: 'interview2At', type: '면접', stage: '2차면접' },
-  { key: 'interview2AnnouncementAt', type: '면접', stage: '2차면접발표' },
-  { key: 'interview3At', type: '면접', stage: '3차면접' },
-  { key: 'interview3AnnouncementAt', type: '면접', stage: '3차면접발표' },
+  { key: 'interviewAt', type: '면접', stage: '면접1차' },
+  { key: 'interviewAnnouncementAt', type: '면접', stage: '면접발표' },
+  { key: 'interview2At', type: '면접', stage: '면접2차' },
+  { key: 'interview2AnnouncementAt', type: '면접', stage: '면접2차발표' },
+  { key: 'interview3At', type: '면접', stage: '면접3차' },
+  { key: 'interview3AnnouncementAt', type: '면접', stage: '면접3차발표' },
 ]
 
 export function eventTypeClass(type: string, source?: CalendarEvent['source']) {
@@ -31,14 +31,14 @@ export function eventTypeClass(type: string, source?: CalendarEvent['source']) {
 export function eventsFromApplication(resource: Resource): CalendarEvent[] {
   if (resource.tab !== 'applications') return []
   const details = resource.details ?? {}
-  const name = applicationPostingName(resource)
+  const name = applicationCompanyName(resource) || applicationPostingName(resource)
   return applicationDateFields.flatMap((field) => {
     const date = toDateInputValue(details[field.key])
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return []
     return [
       {
         id: `app-${resource.id}-${field.key}`,
-        title: `${name} ${field.stage}`,
+        title: name ? `(${field.stage}) ${name}` : `(${field.stage})`,
         date,
         type: field.type,
         source: 'application' as const,
