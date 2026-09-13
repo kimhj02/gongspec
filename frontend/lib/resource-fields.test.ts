@@ -295,7 +295,7 @@ describe('resource fields', () => {
   it('keeps certificate grade empty until the user picks or types one', () => {
     const level = fieldsByTab.certificate.find((field) => field.key === 'level')
     expect(level?.type).toBeUndefined()
-    expect(level?.options).toEqual(['1급', '2급', '3급', '단일등급', '기타'])
+    expect(level?.options).toEqual(['1급', '2급', '3급', '기사', '단일등급', '기타'])
     expect(level?.placeholder).toBe('선택하거나 직접 입력')
     expect(initialFieldValues('certificate').level).toBeFalsy()
   })

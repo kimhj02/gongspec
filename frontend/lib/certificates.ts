@@ -8,7 +8,7 @@ export type CertificatePreset = {
   scoreInput?: boolean
 }
 
-export const certificateLevelOptions = ['1급', '2급', '3급', '단일등급', '기타']
+export const certificateLevelOptions = ['1급', '2급', '3급', '기사', '단일등급', '기타']
 
 export const certificatePresets: CertificatePreset[] = [
   { name: '한국사능력검정시험', issuer: '국사편찬위원회', group: '공통' },
