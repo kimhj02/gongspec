@@ -276,6 +276,14 @@ describe('resource fields', () => {
     expect(initialFieldValues('certificate').validity).toBe('영구')
   })
 
+  it('keeps certificate grade empty until the user picks one', () => {
+    const level = fieldsByTab.certificate.find((field) => field.key === 'level')
+    expect(level?.type).toBe('select')
+    expect(level?.options).toEqual(['1급', '2급', '3급', '단일등급', '기타'])
+    expect(level?.emptyOption).toBe('선택')
+    expect(initialFieldValues('certificate').level).toBeFalsy()
+  })
+
   it('lets essays follow the application posting name', () => {
     expect(
       applicationPostingName({

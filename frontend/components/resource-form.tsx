@@ -27,6 +27,7 @@ import {
   type Field,
   type InterviewRoundId,
 } from '@/lib/resource-fields'
+import { applyCertificatePreset, certificateGroups, certificatePresetFor, certificatePresets } from '@/lib/certificates'
 import { expiresAtDisplay } from '@/lib/dates'
 import { tabCopy } from '@/lib/tabs'
 
@@ -96,7 +97,7 @@ export default function ResourceForm({
   }
 
   return (
-    <ModalShell onClose={onClose} labelledBy="resource-form-title" className={`resource-form-card ${isEssay ? 'essay-form-card' : ''}`}>
+    <ModalShell onClose={onClose} labelledBy="resource-form-title" className={`resource-form-card ${isEssay ? 'essay-form-card' : ''} ${tab === 'certificate' ? 'certificate-form-card' : ''}`}>
       <div className="modal-header">
         <div className="page-intro-copy">
           <div className="eyebrow">{initial ? 'EDIT RESOURCE' : 'NEW RESOURCE'}</div>
@@ -230,18 +231,57 @@ export default function ResourceForm({
             </div>
           </>
         ) : (
-          <div className="detail-form-grid">
-            {fields.map((field) => (
-              <FieldControl
-                key={field.key}
-                field={field}
-                values={tab === 'certificate' ? { ...values, expiresAt: expiresAtDisplay(values.acquiredAt, values.validity) } : values}
-                autoFocus={hideTitle && field.key === titleKey}
-                onChange={setValue}
-                onPatch={patchValues}
-              />
-            ))}
-          </div>
+          <>
+            {tab === 'certificate' ? (
+              <div className="certificate-presets">
+                <p>목록에 없는 자격증은 아래에서 직접 입력하세요.</p>
+                {certificateGroups.map((group) => (
+                  <section key={group}>
+                    <span>{group}</span>
+                    <div className="certificate-preset-tags">
+                      {certificatePresets
+                        .filter((preset) => preset.group === group)
+                        .map((preset) => {
+                          const active = values.credential === preset.name
+                          return (
+                            <button
+                              key={preset.name}
+                              type="button"
+                              className={active ? 'active' : undefined}
+                              aria-pressed={active}
+                              onClick={() => patchValues(applyCertificatePreset(preset))}
+                            >
+                              {preset.name}
+                            </button>
+                          )
+                        })}
+                    </div>
+                  </section>
+                ))}
+              </div>
+            ) : null}
+            <div className="detail-form-grid">
+              {fields.map((field) => (
+                <FieldControl
+                  key={field.key}
+                  field={field}
+                  values={tab === 'certificate' ? { ...values, expiresAt: expiresAtDisplay(values.acquiredAt, values.validity) } : values}
+                  autoFocus={hideTitle && field.key === titleKey}
+                  onChange={(key, value) => {
+                    if (tab === 'certificate' && key === 'credential') {
+                      const preset = certificatePresetFor(value)
+                      if (preset) {
+                        patchValues(applyCertificatePreset(preset))
+                        return
+                      }
+                    }
+                    setValue(key, value)
+                  }}
+                  onPatch={patchValues}
+                />
+              ))}
+            </div>
+          </>
         )}
         {error ? <p className="form-error">{error}</p> : null}
         <div className="form-actions">
@@ -271,7 +311,7 @@ function FieldControl({
   onPatch?: (patch: Record<string, string>) => void
 }) {
   const options = field.options ?? []
-  const current = values[field.key] ?? options[0] ?? ''
+  const current = values[field.key] ?? (field.emptyOption ? '' : options[0] ?? '')
   const selectOptions = current && !options.includes(current) ? [current, ...options] : options
 
   if (field.type === 'daterange') {
@@ -307,8 +347,11 @@ function FieldControl({
         />
       ) : field.type === 'select' ? (
         <select value={current} onChange={(event) => onChange(field.key, event.target.value)} required={field.required}>
+          {field.emptyOption ? <option value="">{field.emptyOption}</option> : null}
           {selectOptions.map((option) => (
-            <option key={option}>{option}</option>
+            <option key={option} value={option}>
+              {option}
+            </option>
           ))}
         </select>
       ) : (
