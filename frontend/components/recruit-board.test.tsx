@@ -15,6 +15,8 @@ const recruit: PublicRecruit = {
   id: '1',
   recrutPblntSn: 11,
   instNm: '한국전력공사',
+  instType: '공기업',
+  instTypeNm: '시장형 공기업',
   title: '사무직 채용',
   hireType: '정규직',
   hireTypes: '정규직,계약직',
@@ -43,6 +45,7 @@ describe('recruit board', () => {
     )
 
     expect(screen.getByRole('columnheader', { name: '공고명' })).toBeTruthy()
+    expect(screen.getByRole('columnheader', { name: '기관유형' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: '접수기간' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: '채용구분' })).toBeTruthy()
     expect(screen.getByRole('columnheader', { name: '채용인원' })).toBeTruthy()
@@ -53,6 +56,7 @@ describe('recruit board', () => {
     expect(screen.getByText('2026.09.01 ~ 2026.09.16')).toBeTruthy()
     expect(screen.getByText('D-7')).toBeTruthy()
     expect(screen.getAllByText('한국전력공사')).toHaveLength(2)
+    expect(screen.getAllByText('시장형 공기업')).toHaveLength(2)
     expect(screen.getAllByText('신입')).toHaveLength(2)
     expect(screen.getAllByText('3명')).toHaveLength(2)
     expect(screen.getAllByRole('link', { name: 'https://example.com/notice' })[0].getAttribute('href')).toBe(

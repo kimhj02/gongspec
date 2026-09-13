@@ -13,6 +13,7 @@ import RecruitBoard from '@/components/recruit-board'
 import { AppLayout, SidebarToggle } from '@/components/sidebar-toggle'
 import StudyBoard from '@/components/study-board'
 import HireFilters from '@/components/hire-filters'
+import InstTypeFilters from '@/components/inst-type-filters'
 import ResourceCard from '@/components/resource-card'
 import ResourceForm from '@/components/resource-form'
 import SortableList from '@/components/sortable-list'
@@ -22,7 +23,7 @@ import { useDebouncedValue } from '@/hooks/use-debounce'
 import { useSidebarOpen } from '@/hooks/use-sidebar-open'
 import { useTheme } from '@/hooks/use-theme'
 import { useKoreanHolidays } from '@/hooks/use-korean-holidays'
-import { api, applicationsKey, getApiError, recruitsKey, resourceKey, schedulesKey, type HireTypeFilter, type NavId, type PublicRecruit, type Resource, type Schedule } from '@/lib/api'
+import { api, applicationsKey, getApiError, recruitsKey, resourceKey, schedulesKey, type HireTypeFilter, type InstTypeFilter, type NavId, type PublicRecruit, type Resource, type Schedule } from '@/lib/api'
 import { mergeCalendarEvents, type CalendarEvent } from '@/lib/calendar-events'
 import { dateKey, monthDays } from '@/lib/dates'
 import { overlayApplication, parseEssayEntries, applicationPostingName, applicationCompanyName, mergeEssayResources, toEssayPayload } from '@/lib/resource-fields'
@@ -54,6 +55,7 @@ export default function Page() {
   const [notice, setNotice] = useState<Notice | null>(null)
   const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null)
   const [hireFilter, setHireFilter] = useState<HireTypeFilter | ''>('')
+  const [instTypeFilter, setInstTypeFilter] = useState<InstTypeFilter | ''>('')
   const [syncing, setSyncing] = useState(false)
   const isCalendar = activeTab === 'calendar'
   const isRecruits = activeTab === 'recruits'
@@ -68,8 +70,8 @@ export default function Page() {
   const applications = useSWR(user ? applicationsKey : null, () => api.resources.list({ tab: 'applications' }), { revalidateOnFocus: false })
   const schedules = useSWR(user ? schedulesKey : null, () => api.schedules.list(), { revalidateOnFocus: false })
   const recruits = useSWR(
-    isRecruits ? recruitsKey(debouncedQuery, hireFilter) : null,
-    ([, nextQuery, hireType]) => api.recruits.list({ query: nextQuery, hireType }),
+    isRecruits ? recruitsKey(debouncedQuery, hireFilter, instTypeFilter) : null,
+    ([, nextQuery, hireType, instType]) => api.recruits.list({ query: nextQuery, hireType, instType }),
     { revalidateOnFocus: false, keepPreviousData: true },
   )
   const days = useMemo(() => monthDays(month), [month])
@@ -497,7 +499,10 @@ export default function Page() {
                     </button>
                   ) : null}
                 </div>
-                <HireFilters value={hireFilter} onChange={setHireFilter} />
+                <div className="recruit-filters">
+                  <InstTypeFilters value={instTypeFilter} onChange={setInstTypeFilter} />
+                  <HireFilters value={hireFilter} onChange={setHireFilter} />
+                </div>
                 <div className="view-caption">
                   <span>{recruits.data?.length ?? 0}개의 {tabCopy.recruits.countLabel}</span>
                 </div>

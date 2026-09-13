@@ -53,6 +53,7 @@ export type CommunityReport = {
   createdAt: string
 }
 export type HireTypeFilter = '정규직' | '계약직' | '인턴'
+export type InstTypeFilter = '공기업' | '준정부' | '기타'
 export type ScheduleType = '개인' | '서류' | '필기' | '면접' | '지원'
 export type Resource = {
   id: string
@@ -80,6 +81,8 @@ export type PublicRecruit = {
   id: string
   recrutPblntSn: number
   instNm: string
+  instType: InstTypeFilter | string
+  instTypeNm: string
   title: string
   hireType: HireTypeFilter | string
   hireTypes: string
@@ -186,10 +189,11 @@ export const api = {
     remove: (id: string) => request<void>(`/api/schedules/${id}`, { method: 'DELETE' }),
   },
   recruits: {
-    list: (params?: { query?: string; hireType?: HireTypeFilter | '' }, init?: RequestInit) => {
+    list: (params?: { query?: string; hireType?: HireTypeFilter | ''; instType?: InstTypeFilter | '' }, init?: RequestInit) => {
       const search = new URLSearchParams()
       if (params?.query) search.set('query', params.query)
       if (params?.hireType) search.set('hireType', params.hireType)
+      if (params?.instType) search.set('instType', params.instType)
       return request<PublicRecruit[]>(`/api/recruits${search.size ? `?${search}` : ''}`, init)
     },
     sync: () => request<RecruitSyncResult>('/api/recruits/sync', { method: 'POST', timeoutMs: SYNC_TIMEOUT_MS }),
@@ -233,7 +237,8 @@ export const meKey = ['/api/auth/me'] as const
 export const resourceKey = (tab: ResourceTab, query: string) => ['/api/resources', tab, query] as const
 export const applicationsKey = ['/api/resources', 'applications', 'calendar'] as const
 export const schedulesKey = ['/api/schedules'] as const
-export const recruitsKey = (query: string, hireType: HireTypeFilter | '') => ['/api/recruits', query, hireType] as const
+export const recruitsKey = (query: string, hireType: HireTypeFilter | '', instType: InstTypeFilter | '' = '') =>
+  ['/api/recruits', query, hireType, instType] as const
 export const studyKey = (query: string, purpose: StudyPurpose | '') => ['/api/study/posts', query, purpose] as const
 export const studyCommentsKey = (id: string) => ['/api/study/posts', id, 'comments'] as const
 export const adminReportsKey = ['/api/admin/reports'] as const

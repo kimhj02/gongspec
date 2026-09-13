@@ -38,7 +38,7 @@ export const tabCopy: Record<
   },
   recruits: {
     eyebrow: 'RECRUIT',
-    intro: '공공기관에서 진행 중인 공고를 정규직·계약직·인턴으로 나눠 봅니다. 매일 오전 8시 10분, 오후 4시 10분에 새로 가져옵니다.',
+    intro: '공공기관에서 진행 중인 공고를 기재부 지정 유형과 고용형태로 나눠 봅니다. 매일 오전 8시 10분, 오후 4시 10분에 새로 가져옵니다.',
     emptyTitle: '진행 중인 공고가 없어요',
     emptyDescription: '지금 불러오기로 공공기관 채용공고를 받아 보세요.',
     createLabel: '지금 불러오기',
