@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
+import ComboField from '@/components/combo-field'
 import PeriodField from '@/components/period-field'
 import ModalShell from '@/components/modal-shell'
 import { getApiError, type Resource, type ResourceTab } from '@/lib/api'
@@ -312,6 +313,22 @@ function FieldControl({
   const current = values[field.key] ?? (field.emptyOption ? '' : options[0] ?? '')
   const selectOptions = current && !options.includes(current) ? [current, ...options] : options
 
+  if (options.length && (field.type === 'select' || !field.type)) {
+    const list = current && !options.includes(current) ? [current, ...options] : options
+    return (
+      <ComboField
+        label={field.required ? `${field.label} *` : field.label}
+        value={values[field.key] ?? current}
+        options={list}
+        placeholder={field.placeholder || field.emptyOption}
+        autoFocus={autoFocus}
+        required={field.required}
+        allowCustom={!field.type}
+        onChange={(value) => onChange(field.key, value)}
+      />
+    )
+  }
+
   if (field.type === 'daterange') {
     return (
       <PeriodField
@@ -343,15 +360,6 @@ function FieldControl({
           rows={field.rows ?? 4}
           required={field.required}
         />
-      ) : field.type === 'select' ? (
-        <select value={current} onChange={(event) => onChange(field.key, event.target.value)} required={field.required}>
-          {field.emptyOption ? <option value="">{field.emptyOption}</option> : null}
-          {selectOptions.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
       ) : (
         <input
           autoFocus={autoFocus}

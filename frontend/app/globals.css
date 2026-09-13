@@ -266,6 +266,27 @@ button { cursor: pointer; }
 .certificate-preset-tags button { padding: 6px 9px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-soft); background: var(--paper); font-size: 11px; font-weight: 700; }
 .certificate-preset-tags button:hover { color: var(--sage-deep); border-color: color-mix(in srgb, var(--sage) 40%, var(--line)); }
 .certificate-preset-tags button.active { color: #fff; background: var(--sage-deep); border-color: var(--sage-deep); }
+.combo-field { position: relative; display: flex; flex-direction: column; gap: 7px; color: var(--ink-soft); font-size: 11px; font-weight: 700; }
+.combo-trigger { width: 100%; display: flex; align-items: center; gap: 9px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--foreground); background: var(--background); font-size: 12px; font-weight: 400; text-align: left; }
+.combo-trigger.is-empty { color: var(--muted); }
+.combo-trigger-icon, .combo-trigger svg:last-child { flex: 0 0 auto; color: var(--muted); }
+.combo-trigger b { flex: 1; min-width: 0; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.combo-field.is-open .combo-trigger { border-color: var(--sage); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sage) 15%, transparent); }
+.combo-field.is-open .combo-trigger svg:last-child { transform: rotate(180deg); color: var(--sage-deep); }
+.combo-trigger svg:last-child { transition: transform .18s ease; }
+.combo-required { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.combo-panel { position: fixed; z-index: 40; overflow: hidden; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); box-shadow: var(--shadow); }
+.combo-search { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--line); color: var(--muted); }
+.modal-card .combo-search input, .combo-search input { padding: 0; border: 0; border-radius: 0; outline: none; color: var(--foreground); background: transparent; box-shadow: none; font-size: 12px; font-weight: 400; appearance: none; }
+.modal-card .combo-search input:focus, .combo-search input:focus { border: 0; outline: none; box-shadow: none; }
+.combo-menu { max-height: 196px; overflow: auto; margin: 0; padding: 6px; list-style: none; }
+.combo-menu li { margin: 0; }
+.combo-menu button { width: 100%; display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 0; border-radius: 8px; color: var(--ink-soft); background: transparent; text-align: left; font-size: 13px; font-weight: 600; }
+.combo-menu button:hover { color: var(--sage-deep); background: var(--paper-muted); }
+.combo-menu button.active { color: var(--sage-deep); background: color-mix(in srgb, var(--sage) 14%, transparent); font-weight: 700; }
+.combo-check { width: 16px; height: 16px; flex: 0 0 auto; border: 1.5px solid var(--line); border-radius: 4px; background: var(--paper); }
+.combo-check.is-on { border-color: var(--sage-deep); background: var(--sage-deep); box-shadow: inset 0 0 0 2px var(--paper); }
+.combo-empty { padding: 12px 10px; color: var(--muted); font-size: 12px; font-weight: 600; }
 .sortable-item.is-dragging { opacity: .55; }
 .sortable-item.is-over { outline: 2px solid color-mix(in srgb, var(--sage) 55%, var(--line)); outline-offset: -2px; border-radius: 12px; }
 .sortable-handle { width: 27px; height: 27px; display: inline-grid; place-items: center; flex: 0 0 auto; border-radius: 6px; color: var(--muted); cursor: grab; touch-action: none; }

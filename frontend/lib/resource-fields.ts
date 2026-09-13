@@ -93,7 +93,7 @@ export function certificateLevelField(credential = ''): Field {
   if (isLanguageCertificate(credential)) {
     return { key: 'level', label: '점수', placeholder: languageScorePlaceholder(credential) }
   }
-  return { key: 'level', label: '급수', type: 'select', options: certificateLevelOptions, emptyOption: '선택' }
+  return { key: 'level', label: '급수', placeholder: '선택하거나 직접 입력', options: certificateLevelOptions }
 }
 
 export function certificateFieldsFor(credential = '') {

@@ -24,6 +24,7 @@ describe('resource form', () => {
     expect(screen.getByText('목록에 없는 자격증은 아래에서 직접 입력하세요.')).toBeTruthy()
     await user.click(screen.getByRole('button', { name: '정보처리기사' }))
     expect(screen.getByDisplayValue('한국산업인력공단')).toBeTruthy()
+    expect(screen.getByLabelText('급수').textContent).toContain('기사')
     await user.click(screen.getByRole('button', { name: /추가/ }))
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -31,7 +32,7 @@ describe('resource form', () => {
         details: expect.objectContaining({
           credential: '정보처리기사',
           issuer: '한국산업인력공단',
-          level: '단일등급',
+          level: '기사',
         }),
       }),
     )
@@ -48,7 +49,7 @@ describe('resource form', () => {
 
     await user.click(screen.getByRole('button', { name: '한국실용글쓰기검정' }))
     expect(screen.getByDisplayValue('(사)한국국어능력평가협회')).toBeTruthy()
-    expect((screen.getByLabelText('급수') as HTMLSelectElement).value).toBe('')
+    expect(screen.getByLabelText('급수').textContent).toContain('선택하거나 직접 입력')
   })
 
   it('lets language tests take a typed score', async () => {
@@ -93,13 +94,54 @@ describe('resource form', () => {
     )
   })
 
+  it('lets the grade be picked from matching chips', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
+
+    await user.click(screen.getByRole('button', { name: '한국사능력검정시험' }))
+    await user.click(screen.getByLabelText('급수'))
+    await user.click(screen.getByRole('option', { name: '기사' }))
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        details: expect.objectContaining({
+          credential: '한국사능력검정시험',
+          issuer: '국사편찬위원회',
+          level: '기사',
+        }),
+      }),
+    )
+  })
+
+  it('lets the grade be typed instead of only picked', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
+
+    await user.click(screen.getByRole('button', { name: '한국사능력검정시험' }))
+    await user.click(screen.getByLabelText('급수'))
+    await user.type(screen.getByPlaceholderText('검색하거나 직접 입력'), '심화{Enter}')
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        details: expect.objectContaining({
+          credential: '한국사능력검정시험',
+          issuer: '국사편찬위원회',
+          level: '심화',
+        }),
+      }),
+    )
+  })
+
   it('still accepts a certificate typed by hand', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn().mockResolvedValue(undefined)
     render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
 
     await user.type(screen.getByPlaceholderText('예: 정보처리기사'), '나만의자격')
-    await user.selectOptions(screen.getByLabelText('급수'), '2급')
+    await user.click(screen.getByLabelText('급수'))
+    await user.type(screen.getByPlaceholderText('검색하거나 직접 입력'), '기사{Enter}')
     await user.type(screen.getByPlaceholderText('예: 한국산업인력공단'), '직접입력기관')
     await user.click(screen.getByRole('button', { name: /추가/ }))
     expect(onSave).toHaveBeenCalledWith(
@@ -108,7 +150,7 @@ describe('resource form', () => {
         details: expect.objectContaining({
           credential: '나만의자격',
           issuer: '직접입력기관',
-          level: '2급',
+          level: '기사',
         }),
       }),
     )
@@ -121,7 +163,8 @@ describe('resource form', () => {
 
     await user.click(screen.getByRole('button', { name: '정보처리기사' }))
     await user.type(screen.getByLabelText('취득일'), '2026-09-02')
-    await user.selectOptions(screen.getByLabelText('유효기간'), '5년')
+    await user.click(screen.getByLabelText('유효기간'))
+    await user.click(screen.getByRole('option', { name: '5년' }))
     expect(screen.getByDisplayValue('2031-09-02')).toBeTruthy()
     await user.click(screen.getByRole('button', { name: /추가/ }))
     expect(onSave).toHaveBeenCalledWith(
@@ -215,6 +258,11 @@ describe('application form', () => {
     expect(screen.queryByText('필기 시험일')).toBeNull()
     expect(screen.queryByText('서류일')).toBeNull()
 
+    await user.click(screen.getByLabelText('구분'))
+    expect(screen.getByRole('option', { name: '계약직' })).toBeTruthy()
+    expect(screen.queryByPlaceholderText('검색하거나 직접 입력')).toBeNull()
+    await user.click(screen.getByRole('option', { name: '계약직' }))
+
     await user.type(screen.getByPlaceholderText('예: 서울교통공사'), '서울교통공사')
     await user.type(screen.getByPlaceholderText('예: 2026년 9급 행정직'), '9급 행정직')
     await user.click(screen.getByRole('tab', { name: '필기' }))
@@ -229,7 +277,12 @@ describe('application form', () => {
         tab: 'applications',
         title: '9급 행정직',
         subtitle: '서울교통공사',
-        details: expect.objectContaining({ institution: '서울교통공사', posting: '9급 행정직', writtenAt: '2026-09-20' }),
+        details: expect.objectContaining({
+          institution: '서울교통공사',
+          posting: '9급 행정직',
+          writtenAt: '2026-09-20',
+          category: '계약직',
+        }),
       }),
     )
     expect(onSave.mock.calls[0][0].details.documentAt).toBeUndefined()
