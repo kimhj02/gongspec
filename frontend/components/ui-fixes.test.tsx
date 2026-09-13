@@ -71,6 +71,28 @@ describe('resource form', () => {
     )
   })
 
+  it('clears auto-filled values when a preset name is edited into a custom one', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
+
+    await user.click(screen.getByRole('button', { name: '정보처리기사' }))
+    expect(screen.getByDisplayValue('한국산업인력공단')).toBeTruthy()
+    await user.clear(screen.getByPlaceholderText('예: 정보처리기사'))
+    await user.type(screen.getByPlaceholderText('예: 정보처리기사'), '나만의자격')
+    expect(screen.queryByDisplayValue('한국산업인력공단')).toBeNull()
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '나만의자격',
+        details: expect.not.objectContaining({
+          issuer: '한국산업인력공단',
+          level: '단일등급',
+        }),
+      }),
+    )
+  })
+
   it('still accepts a certificate typed by hand', async () => {
     const user = userEvent.setup()
     const onSave = vi.fn().mockResolvedValue(undefined)

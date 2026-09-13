@@ -79,3 +79,12 @@ export function applyCertificatePreset(preset: CertificatePreset) {
     level: preset.level ?? '',
   }
 }
+
+export function applyCredentialName(name: string, current: Record<string, string> = {}) {
+  const preset = certificatePresetFor(name)
+  if (preset) return applyCertificatePreset(preset)
+  if (certificatePresetFor(current.credential ?? '')) {
+    return { credential: name, issuer: '', level: '' }
+  }
+  return { credential: name }
+}

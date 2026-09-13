@@ -28,7 +28,7 @@ import {
   type Field,
   type InterviewRoundId,
 } from '@/lib/resource-fields'
-import { applyCertificatePreset, certificateGroups, certificatePresetFor, certificatePresets } from '@/lib/certificates'
+import { applyCertificatePreset, applyCredentialName, certificateGroups, certificatePresets } from '@/lib/certificates'
 import { expiresAtDisplay } from '@/lib/dates'
 import { tabCopy } from '@/lib/tabs'
 
@@ -270,11 +270,8 @@ export default function ResourceForm({
                   autoFocus={hideTitle && field.key === titleKey}
                   onChange={(key, value) => {
                     if (tab === 'certificate' && key === 'credential') {
-                      const preset = certificatePresetFor(value)
-                      if (preset) {
-                        patchValues(applyCertificatePreset(preset))
-                        return
-                      }
+                      patchValues(applyCredentialName(value, values))
+                      return
                     }
                     setValue(key, value)
                   }}
