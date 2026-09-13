@@ -8,7 +8,7 @@ export type CertificatePreset = {
   scoreInput?: boolean
 }
 
-export const certificateLevelOptions = ['1급', '2급', '3급', '기사', '단일등급', '기타']
+export const certificateLevelOptions = ['1급', '2급', '3급', '기사', '산업기사', '단일등급', '기타']
 
 export const certificatePresets: CertificatePreset[] = [
   { name: '한국사능력검정시험', issuer: '국사편찬위원회', group: '공통' },
@@ -72,11 +72,17 @@ export function languageScorePlaceholder(name = '') {
   return '예: 점수 또는 등급'
 }
 
+export function certificateGradeFor(name: string, explicit?: string) {
+  if (/산업기사$/.test(name)) return '산업기사'
+  if (/기사$/.test(name)) return '기사'
+  return explicit ?? ''
+}
+
 export function applyCertificatePreset(preset: CertificatePreset) {
   return {
     credential: preset.name,
     issuer: preset.issuer,
-    level: preset.level ?? '',
+    level: preset.scoreInput ? '' : certificateGradeFor(preset.name, preset.level),
   }
 }
 

@@ -24,6 +24,7 @@ describe('resource form', () => {
     expect(screen.getByText('목록에 없는 자격증은 아래에서 직접 입력하세요.')).toBeTruthy()
     await user.click(screen.getByRole('button', { name: '정보처리기사' }))
     expect(screen.getByDisplayValue('한국산업인력공단')).toBeTruthy()
+    expect(screen.getByLabelText('급수').textContent).toContain('기사')
     await user.click(screen.getByRole('button', { name: /추가/ }))
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -31,7 +32,7 @@ describe('resource form', () => {
         details: expect.objectContaining({
           credential: '정보처리기사',
           issuer: '한국산업인력공단',
-          level: '단일등급',
+          level: '기사',
         }),
       }),
     )

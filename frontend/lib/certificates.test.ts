@@ -14,8 +14,11 @@ describe('certificate presets', () => {
     expect(applyCertificatePreset(certificatePresetFor('정보처리기사')!)).toEqual({
       credential: '정보처리기사',
       issuer: '한국산업인력공단',
-      level: '단일등급',
+      level: '기사',
     })
+    expect(applyCertificatePreset(certificatePresetFor('정보처리산업기사')!)).toEqual(
+      expect.objectContaining({ level: '산업기사' }),
+    )
     expect(applyCertificatePreset(certificatePresetFor('오픽 (OPIC)')!)).toEqual({
       credential: '오픽 (OPIC)',
       issuer: 'ACTFL',
