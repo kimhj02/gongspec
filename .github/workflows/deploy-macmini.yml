@@ -46,14 +46,16 @@ jobs:
         timeout-minutes: 2
         env:
           GIT_TERMINAL_PROMPT: "0"
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           cd "$DEPLOY_PATH"
           test -d .git
           git remote get-url origin
           find .git -name '*.lock' -delete
-          pkill -f "git fetch --prune origin main" || true
-          git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 fetch --prune origin main
+          git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=20 \
+            fetch --prune "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+            +main:refs/remotes/origin/main
           git checkout main
           git reset --hard origin/main
           echo "HEAD=$(git rev-parse --short HEAD)"
