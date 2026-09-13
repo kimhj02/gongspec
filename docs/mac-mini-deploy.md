@@ -215,3 +215,17 @@ docker compose exec backend wget -qO- http://127.0.0.1:8080/api/health
 - **페이지는 뜨는데 API만 실패:** `CORS_ORIGINS`에 지금 접속 중인 origin이 없습니다. `http`/`https`, 포트까지 맞춥니다.
 - **백엔드가 unhealthy:** `docker compose logs backend`로 MySQL 연결을 봅니다. `.env`의 DB 비밀번호를 바꾼 뒤에는 볼륨을 지우지 않는 한 예전 비밀번호가 남아 있을 수 있습니다.
 - **포트 충돌:** 맥 미니에서 13001, 8080을 쓰는 다른 프로그램이 있으면 끄거나 `docker-compose.yml`의 왼쪽 포트를 바꿉니다.
+
+## 11. main 병합 후 자동 배포
+
+`main`에 push되거나 PR이 병합되면 GitHub Actions가 맥 미니 self-hosted runner에서 아래를 실행합니다.
+
+- `git fetch` 후 `main`을 `origin/main`과 같게 맞춤
+- `.env`가 있는지 확인 (파일은 커밋하지 않음)
+- `docker compose up --build -d`
+- 백엔드 `/api/health`와 프론트 `http://127.0.0.1:13001` 확인
+
+러너 라벨은 `self-hosted`, `macOS`, `gongspec`입니다. 수동으로 다시 올리려면 GitHub Actions에서 **Deploy Mac Mini** 워크플로를 실행합니다.
+
+배포는 `~/Desktop/gongspec`을 `origin/main`에 맞추므로, 그 폴더에 커밋하지 않은 수정이 있으면 배포 때 사라집니다. 작업 중인 변경은 먼저 커밋하거나 다른 브랜치에 두세요.
+
