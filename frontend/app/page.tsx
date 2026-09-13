@@ -10,6 +10,7 @@ import DdayCard from '@/components/dday-card'
 import EssayBoard from '@/components/essay-board'
 import LoginGate from '@/components/login-gate'
 import RecruitBoard from '@/components/recruit-board'
+import { AppLayout, SidebarToggle } from '@/components/sidebar-toggle'
 import StudyBoard from '@/components/study-board'
 import HireFilters from '@/components/hire-filters'
 import ResourceCard from '@/components/resource-card'
@@ -18,6 +19,7 @@ import SortableList from '@/components/sortable-list'
 import ScheduleModal from '@/components/schedule-modal'
 import { useAuth } from '@/hooks/use-auth'
 import { useDebouncedValue } from '@/hooks/use-debounce'
+import { useSidebarOpen } from '@/hooks/use-sidebar-open'
 import { useTheme } from '@/hooks/use-theme'
 import { useKoreanHolidays } from '@/hooks/use-korean-holidays'
 import { api, applicationsKey, getApiError, recruitsKey, resourceKey, schedulesKey, type HireTypeFilter, type NavId, type PublicRecruit, type Resource, type Schedule } from '@/lib/api'
@@ -34,6 +36,7 @@ type PendingDelete =
 
 export default function Page() {
   const { theme, toggleTheme } = useTheme()
+  const { sidebarOpen, toggleSidebar } = useSidebarOpen()
   const { user, isLoading: authLoading, pending: authPending, error: authError, login, logout, mutate: mutateAuth } = useAuth()
   const [activeTab, setActiveTab] = useState<NavId>('calendar')
   const [query, setQuery] = useState('')
@@ -369,10 +372,14 @@ export default function Page() {
         </div>
       </header>
 
-      <div className="app-layout">
-        <aside className="sidebar">
+      <AppLayout
+        sidebarOpen={sidebarOpen}
+        onToggle={toggleSidebar}
+        sidebar={
+          <>
           <div className="sidebar-heading">
             <span>일정</span>
+            <SidebarToggle open={sidebarOpen} onToggle={toggleSidebar} />
           </div>
           <nav className="tabs-nav" aria-label="일정">
             <button className={`nav-item ${isCalendar ? 'active' : ''}`} onClick={() => setActiveTab('calendar')}>
@@ -407,8 +414,9 @@ export default function Page() {
               </button>
             ))}
           </nav>
-        </aside>
-
+          </>
+        }
+      >
         <main className="main-content">
           {authLoading ? (
             <LoadingState />
@@ -603,7 +611,7 @@ export default function Page() {
             </>
           )}
         </main>
-      </div>
+      </AppLayout>
 
       {notice ? <AppNotice notice={notice} onClose={() => setNotice(null)} /> : null}
       {showForm && (editing || resourceTab) ? (

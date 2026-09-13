@@ -62,8 +62,9 @@ jobs:
       - name: Rebuild stack
         run: |
           set -euo pipefail
-          HELPER="${HOME}/.local/bin/docker-credential-medicheck-noop"
-          mkdir -p "${HOME}/.local/bin"
+          DOCKER_CONFIG_DIR="$(mktemp -d)"
+          trap 'rm -rf "$DOCKER_CONFIG_DIR"' EXIT
+          HELPER="$DOCKER_CONFIG_DIR/docker-credential-medicheck-noop"
           printf '%s\n' \
             '#!/bin/sh' \
             'case "$1" in' \
@@ -73,17 +74,9 @@ jobs:
             '  *) exit 0 ;;' \
             'esac' > "$HELPER"
           chmod +x "$HELPER"
-          python3 - <<'PY'
-          import json
-          from pathlib import Path
-          p = Path.home() / ".docker" / "config.json"
-          cfg = json.loads(p.read_text()) if p.exists() else {}
-          cfg["credsStore"] = "medicheck-noop"
-          cfg.pop("credHelpers", None)
-          p.parent.mkdir(parents=True, exist_ok=True)
-          p.write_text(json.dumps(cfg, indent="\t") + "\n")
-          print("docker credsStore=medicheck-noop")
-          PY
+          printf '%s\n' '{"credsStore":"medicheck-noop"}' > "$DOCKER_CONFIG_DIR/config.json"
+          export DOCKER_CONFIG="$DOCKER_CONFIG_DIR"
+          export PATH="$DOCKER_CONFIG_DIR:$PATH"
           cd "$DEPLOY_PATH"
           docker compose --env-file .env up -d --build --remove-orphans
 
@@ -113,4 +106,14 @@ jobs:
               exit 1
             fi
           done
-          curl -fsS -o /dev/null -w "https:%{http_code}\n" https://gongspec.cloud/ || true
+          for i in $(seq 1 24); do
+            if code=$(curl -fsS -o /dev/null -w "%{http_code}" https://gongspec.cloud/); then
+              echo "https://gongspec.cloud ${code}"
+              break
+            fi
+            sleep 5
+            if [[ $i -eq 24 ]]; then
+              echo "::error::https://gongspec.cloud health check failed"
+              exit 1
+            fi
+          done
