@@ -43,6 +43,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/kakao/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                         .requestMatchers("/api/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/recruits").permitAll()
                         .requestMatchers(
                                 "/api/resources/**",
                                 "/api/schedules/**",
