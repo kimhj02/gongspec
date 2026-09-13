@@ -200,8 +200,10 @@ COOKIE_SECURE=true
 
 ### 3. 컨테이너
 
+자동 배포와 같은 체크아웃(`~/Desktop/gongspec`)에서 다시 올립니다. 수동으로 `~/Project/gongspec`에만 받아 둔 경우에는 그 경로를 씁니다.
+
 ```bash
-cd ~/Project/gongspec
+cd ~/Desktop/gongspec
 docker compose up --build -d
 docker compose ps
 docker compose exec backend wget -qO- http://127.0.0.1:8080/api/health
