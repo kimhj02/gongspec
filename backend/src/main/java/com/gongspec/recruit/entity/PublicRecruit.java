@@ -16,6 +16,12 @@ public class PublicRecruit extends BaseEntity {
     @Column(length = 255)
     private String instNm;
 
+    @Column(length = 20)
+    private String instType;
+
+    @Column(length = 40)
+    private String instTypeNm;
+
     @Column(nullable = false, length = 500)
     private String title;
 
@@ -62,6 +68,8 @@ public class PublicRecruit extends BaseEntity {
 
     public void replace(
             String instNm,
+            String instType,
+            String instTypeNm,
             String title,
             String hireType,
             String hireTypes,
@@ -76,6 +84,8 @@ public class PublicRecruit extends BaseEntity {
             String ncsCdNmLst,
             Instant fetchedAt) {
         this.instNm = instNm;
+        this.instType = instType;
+        this.instTypeNm = instTypeNm;
         this.title = title;
         this.hireType = hireType;
         this.hireTypes = hireTypes;
@@ -101,6 +111,14 @@ public class PublicRecruit extends BaseEntity {
 
     public String getInstNm() {
         return instNm;
+    }
+
+    public String getInstType() {
+        return instType;
+    }
+
+    public String getInstTypeNm() {
+        return instTypeNm;
     }
 
     public String getTitle() {

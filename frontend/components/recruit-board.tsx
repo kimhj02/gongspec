@@ -18,6 +18,7 @@ export default function RecruitBoard({
         <thead>
           <tr>
             <th>공고명</th>
+            <th>기관유형</th>
             <th>접수기간</th>
             <th>채용구분</th>
             <th>채용인원</th>
@@ -35,6 +36,7 @@ export default function RecruitBoard({
                   <strong>{item.title || '-'}</strong>
                   {item.instNm ? <span className="recruit-inst">{item.instNm}</span> : null}
                 </td>
+                <td>{item.instTypeNm || item.instType || '-'}</td>
                 <td>{recruitPeriodCompact(item.pbancBgngYmd, item.pbancEndYmd)}</td>
                 <td>{item.recrutSeNm || '-'}</td>
                 <td>{item.recrutNope != null ? `${item.recrutNope}명` : '-'}</td>

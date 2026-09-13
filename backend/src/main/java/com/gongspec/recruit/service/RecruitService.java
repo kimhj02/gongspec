@@ -10,6 +10,7 @@ import com.gongspec.recruit.repository.PublicRecruitRepository;
 import com.gongspec.recruit.support.AlioDates;
 import com.gongspec.recruit.support.AlioJson;
 import com.gongspec.recruit.support.HireTypeMapper;
+import com.gongspec.recruit.support.InstTypeMapper;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
@@ -34,13 +35,21 @@ public class RecruitService {
     }
 
     @Transactional(readOnly = true)
-    public List<PublicRecruit> list(String query, String hireType) {
+    public List<PublicRecruit> list(String query, String hireType, String instType) {
         String filter = hireType == null ? "" : hireType.trim();
         if (!filter.isEmpty() && !HireTypeMapper.FILTERS.contains(filter)) {
             throw ApiException.badRequest("고용형태가 올바르지 않습니다.");
         }
+        String instFilter = instType == null ? "" : instType.trim();
+        if (!instFilter.isEmpty() && !InstTypeMapper.FILTERS.contains(instFilter)) {
+            throw ApiException.badRequest("기관유형이 올바르지 않습니다.");
+        }
         String keyword = query == null ? "" : query.trim();
-        return repository.searchOngoing(filter, keyword);
+        List<PublicRecruit> recruits = repository.searchOngoing(filter, keyword);
+        if (instFilter.isEmpty()) {
+            return recruits;
+        }
+        return recruits.stream().filter(recruit -> instFilter.equals(InstTypeMapper.of(recruit).group())).toList();
     }
 
     @Transactional
@@ -95,12 +104,16 @@ public class RecruitService {
         seen.add(serial);
         String rawTitle = AlioJson.text(item, "recrutPbancTtl");
         String title = rawTitle.isBlank() ? "제목 없음" : rawTitle;
+        String instNm = AlioJson.text(item, "instNm");
+        InstTypeMapper.Classification instType = InstTypeMapper.fromName(instNm);
         int nope = AlioJson.intValue(item, "recrutNope");
         PublicRecruit recruit = repository
                 .findByRecrutPblntSn(serial)
                 .orElseGet(() -> new PublicRecruit(serial, title));
         recruit.replace(
-                AlioJson.text(item, "instNm"),
+                instNm,
+                instType.group(),
+                instType.label(),
                 title,
                 primary,
                 HireTypeMapper.join(categories),

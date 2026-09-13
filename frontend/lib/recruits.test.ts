@@ -7,6 +7,8 @@ function recruit(partial: Partial<PublicRecruit>): PublicRecruit {
     id: '1',
     recrutPblntSn: 1,
     instNm: '',
+    instType: '',
+    instTypeNm: '',
     title: '',
     hireType: '정규직',
     hireTypes: '정규직',

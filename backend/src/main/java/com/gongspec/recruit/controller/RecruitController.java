@@ -22,8 +22,10 @@ public class RecruitController {
 
     @GetMapping
     public List<RecruitResponse> list(
-            @RequestParam(required = false) String query, @RequestParam(required = false) String hireType) {
-        return recruitService.list(query, hireType).stream().map(RecruitResponse::from).toList();
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) String hireType,
+            @RequestParam(required = false) String instType) {
+        return recruitService.list(query, hireType, instType).stream().map(RecruitResponse::from).toList();
     }
 
     @PostMapping("/sync")

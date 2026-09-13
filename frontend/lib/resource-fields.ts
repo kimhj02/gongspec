@@ -1,4 +1,5 @@
 import type { Resource, ResourceTab } from '@/lib/api'
+import { certificateLevelOptions, isLanguageCertificate, languageScorePlaceholder } from '@/lib/certificates'
 import { expiresAtFrom, formatSchedulePeriod } from '@/lib/dates'
 
 export type Field = {
@@ -7,6 +8,7 @@ export type Field = {
   placeholder?: string
   type?: 'text' | 'date' | 'url' | 'textarea' | 'select' | 'daterange'
   options?: string[]
+  emptyOption?: string
   rows?: number
   required?: boolean
   computed?: boolean
@@ -87,10 +89,21 @@ export const applicationStages: { id: ApplicationStageId; label: string; fields:
 
 export const certificateValidityOptions = [...Array.from({ length: 10 }, (_, index) => `${index + 1}년`), '영구']
 
+export function certificateLevelField(credential = ''): Field {
+  if (isLanguageCertificate(credential)) {
+    return { key: 'level', label: '점수', placeholder: languageScorePlaceholder(credential) }
+  }
+  return { key: 'level', label: '급수', type: 'select', options: certificateLevelOptions, emptyOption: '선택' }
+}
+
+export function certificateFieldsFor(credential = '') {
+  return fieldsByTab.certificate.map((field) => (field.key === 'level' ? certificateLevelField(credential) : field))
+}
+
 export const fieldsByTab: Record<ResourceTab, Field[]> = {
   certificate: [
     { key: 'credential', label: '자격증명', placeholder: '예: 정보처리기사', required: true },
-    { key: 'level', label: '급수', placeholder: '예: 기사' },
+    certificateLevelField(),
     { key: 'issuer', label: '발급기관', placeholder: '예: 한국산업인력공단' },
     { key: 'acquiredAt', label: '취득일', type: 'date' },
     { key: 'validity', label: '유효기간', type: 'select', options: certificateValidityOptions },
@@ -328,6 +341,7 @@ export function initialFieldValues(tab: ResourceTab, details: Record<string, str
   }
   for (const field of fieldsByTab[tab]) {
     if (field.type === 'select' && !values[field.key] && !(tab === 'applications' && field.key !== 'category')) {
+      if (field.emptyOption) continue
       values[field.key] = field.key === 'validity' ? '영구' : (field.options?.[0] ?? '')
     }
     if (field.type === 'date' && values[field.key]) {
@@ -383,7 +397,8 @@ export function toResourcePayload(tab: ResourceTab, title: string, values: Recor
 
 export function filledDetails(item: Resource) {
   const details = item.details ?? {}
-  return (fieldsByTab[item.tab] ?? [])
+  const fields = item.tab === 'certificate' ? certificateFieldsFor(details.credential || item.title) : (fieldsByTab[item.tab] ?? [])
+  return fields
     .filter((field) => field.key !== titleFieldByTab[item.tab])
     .filter((field) => !((item.tab === 'applications' || item.tab === 'training') && field.key === 'institution'))
     .filter((field) => !(item.tab === 'project' && field.key === 'oneLiner'))

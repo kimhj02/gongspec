@@ -182,6 +182,22 @@ describe('resource fields', () => {
     ])
   })
 
+  it('shows language test scores as a score, not a grade', () => {
+    expect(
+      filledDetails({
+        id: '1',
+        tab: 'certificate',
+        title: '토익 (TOEIC)',
+        details: { credential: '토익 (TOEIC)', issuer: 'YBM', level: '850' },
+      }),
+    ).toEqual(
+      expect.arrayContaining([
+        { label: '점수', value: '850' },
+        { label: '발급기관', value: 'YBM' },
+      ]),
+    )
+  })
+
   it('keeps the training course name as the card title for older records', () => {
     const item = {
       id: '1',
@@ -274,6 +290,14 @@ describe('resource fields', () => {
   it('includes permanent as a certificate validity option', () => {
     expect(fieldsByTab.certificate.find((field) => field.key === 'validity')?.options).toContain('영구')
     expect(initialFieldValues('certificate').validity).toBe('영구')
+  })
+
+  it('keeps certificate grade empty until the user picks one', () => {
+    const level = fieldsByTab.certificate.find((field) => field.key === 'level')
+    expect(level?.type).toBe('select')
+    expect(level?.options).toEqual(['1급', '2급', '3급', '단일등급', '기타'])
+    expect(level?.emptyOption).toBe('선택')
+    expect(initialFieldValues('certificate').level).toBeFalsy()
   })
 
   it('lets essays follow the application posting name', () => {

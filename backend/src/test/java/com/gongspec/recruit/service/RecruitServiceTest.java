@@ -60,7 +60,7 @@ class RecruitServiceTest {
         when(repository.findByRecrutPblntSn(1L)).thenReturn(Optional.empty());
         when(repository.save(any(PublicRecruit.class))).thenAnswer(invocation -> invocation.getArgument(0));
         PublicRecruit stale = new PublicRecruit(99L, "지난 공고");
-        stale.replace("기관", "지난 공고", "정규직", "정규직", "R1010", "", "", "2026-01-01", "2026-01-31", true, "", null, "", null);
+        stale.replace("기관", "기타", "기타공공기관", "지난 공고", "정규직", "정규직", "R1010", "", "", "2026-01-01", "2026-01-31", true, "", null, "", null);
         when(repository.findByOngoingTrue()).thenReturn(List.of(stale));
 
         RecruitSyncResponse result = service.sync();
@@ -71,6 +71,8 @@ class RecruitServiceTest {
         assertThat(saved.getRecrutPblntSn()).isEqualTo(1L);
         assertThat(saved.getHireType()).isEqualTo("정규직");
         assertThat(saved.getHireTypes()).isEqualTo("정규직");
+        assertThat(saved.getInstType()).isEqualTo("공기업");
+        assertThat(saved.getInstTypeNm()).isEqualTo("시장형 공기업");
         assertThat(saved.getPbancEndYmd()).isEqualTo("2026-09-30");
         assertThat(saved.isOngoing()).isTrue();
         assertThat(stale.isOngoing()).isFalse();
@@ -84,7 +86,7 @@ class RecruitServiceTest {
     void doesNotCloseOngoingWhenTheFetchIsIncomplete() throws Exception {
         when(client.fetchOngoing(1)).thenReturn(new AlioRecruitClient.Page(List.of(), 250));
         PublicRecruit stale = new PublicRecruit(99L, "지난 공고");
-        stale.replace("기관", "지난 공고", "정규직", "정규직", "R1010", "", "", "2026-01-01", "2026-01-31", true, "", null, "", null);
+        stale.replace("기관", "기타", "기타공공기관", "지난 공고", "정규직", "정규직", "R1010", "", "", "2026-01-01", "2026-01-31", true, "", null, "", null);
 
         RecruitSyncResponse result = service.sync();
 
@@ -97,6 +99,6 @@ class RecruitServiceTest {
     @Test
     void listsOngoingByHireType() {
         when(repository.searchOngoing("인턴", "한국")).thenReturn(List.of());
-        assertThat(service.list(" 한국 ", "인턴")).isEmpty();
+        assertThat(service.list(" 한국 ", "인턴", "")).isEmpty();
     }
 }

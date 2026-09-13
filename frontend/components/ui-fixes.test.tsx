@@ -21,11 +21,95 @@ describe('resource form', () => {
     render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
 
     expect(screen.queryByPlaceholderText('자료 제목')).toBeNull()
-    await user.type(screen.getByPlaceholderText('예: 정보처리기사'), '정보처리기사')
+    expect(screen.getByText('목록에 없는 자격증은 아래에서 직접 입력하세요.')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: '정보처리기사' }))
+    expect(screen.getByDisplayValue('한국산업인력공단')).toBeTruthy()
     await user.click(screen.getByRole('button', { name: /추가/ }))
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         title: '정보처리기사',
+        details: expect.objectContaining({
+          credential: '정보처리기사',
+          issuer: '한국산업인력공단',
+          level: '단일등급',
+        }),
+      }),
+    )
+  })
+
+  it('fills the issuer when a preset certificate is picked', async () => {
+    const user = userEvent.setup()
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={async () => undefined} />)
+
+    await user.click(screen.getByRole('button', { name: '오픽 (OPIC)' }))
+    expect(screen.getByDisplayValue('ACTFL')).toBeTruthy()
+    expect(screen.getByLabelText('점수')).toBeTruthy()
+    expect(screen.getByPlaceholderText('예: IH')).toBeTruthy()
+
+    await user.click(screen.getByRole('button', { name: '한국실용글쓰기검정' }))
+    expect(screen.getByDisplayValue('(사)한국국어능력평가협회')).toBeTruthy()
+    expect((screen.getByLabelText('급수') as HTMLSelectElement).value).toBe('')
+  })
+
+  it('lets language tests take a typed score', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
+
+    await user.click(screen.getByRole('button', { name: '토익 (TOEIC)' }))
+    await user.type(screen.getByPlaceholderText('예: 850'), '850')
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '토익 (TOEIC)',
+        details: expect.objectContaining({
+          credential: '토익 (TOEIC)',
+          issuer: 'YBM',
+          level: '850',
+        }),
+      }),
+    )
+  })
+
+  it('clears auto-filled values when a preset name is edited into a custom one', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
+
+    await user.click(screen.getByRole('button', { name: '정보처리기사' }))
+    expect(screen.getByDisplayValue('한국산업인력공단')).toBeTruthy()
+    await user.clear(screen.getByPlaceholderText('예: 정보처리기사'))
+    await user.type(screen.getByPlaceholderText('예: 정보처리기사'), '나만의자격')
+    expect(screen.queryByDisplayValue('한국산업인력공단')).toBeNull()
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '나만의자격',
+        details: expect.not.objectContaining({
+          issuer: '한국산업인력공단',
+          level: '단일등급',
+        }),
+      }),
+    )
+  })
+
+  it('still accepts a certificate typed by hand', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn().mockResolvedValue(undefined)
+    render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
+
+    await user.type(screen.getByPlaceholderText('예: 정보처리기사'), '나만의자격')
+    await user.selectOptions(screen.getByLabelText('급수'), '2급')
+    await user.type(screen.getByPlaceholderText('예: 한국산업인력공단'), '직접입력기관')
+    await user.click(screen.getByRole('button', { name: /추가/ }))
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: '나만의자격',
+        details: expect.objectContaining({
+          credential: '나만의자격',
+          issuer: '직접입력기관',
+          level: '2급',
+        }),
       }),
     )
   })
@@ -35,7 +119,7 @@ describe('resource form', () => {
     const onSave = vi.fn().mockResolvedValue(undefined)
     render(<ResourceForm initial={null} activeTab="certificate" onClose={() => undefined} onSave={onSave} />)
 
-    await user.type(screen.getByPlaceholderText('예: 정보처리기사'), '정보처리기사')
+    await user.click(screen.getByRole('button', { name: '정보처리기사' }))
     await user.type(screen.getByLabelText('취득일'), '2026-09-02')
     await user.selectOptions(screen.getByLabelText('유효기간'), '5년')
     expect(screen.getByDisplayValue('2031-09-02')).toBeTruthy()

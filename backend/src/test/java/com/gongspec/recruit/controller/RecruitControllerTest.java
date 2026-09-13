@@ -61,7 +61,7 @@ class RecruitControllerTest {
     @Test
     void listsOngoingRecruitsAndFiltersHireType() throws Exception {
         repository.save(recruit(1L, "한국전력", "정규직 채용", "정규직", "정규직"));
-        repository.save(recruit(2L, "한국마사회", "계약직 채용", "계약직", "계약직"));
+        repository.save(recruit(2L, "대한적십자사", "계약직 채용", "계약직", "계약직"));
 
         mockMvc.perform(get("/api/recruits?query=한국전력"))
                 .andExpect(status().isOk())
@@ -72,6 +72,12 @@ class RecruitControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].hireType").value("계약직"));
+
+        mockMvc.perform(get("/api/recruits?instType=공기업"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].instType").value("공기업"))
+                .andExpect(jsonPath("$[0].instTypeNm").value("시장형 공기업"));
     }
 
     @Test
@@ -101,6 +107,8 @@ class RecruitControllerTest {
         PublicRecruit recruit = new PublicRecruit(serial, title);
         recruit.replace(
                 instNm,
+                "",
+                "",
                 title,
                 hireType,
                 hireTypes,

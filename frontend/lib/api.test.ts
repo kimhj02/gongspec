@@ -104,8 +104,8 @@ describe('api client', () => {
       .mockResolvedValueOnce(jsonResponse({ fetched: 1, saved: 1, closed: 0 }))
     vi.stubGlobal('fetch', fetchMock)
 
-    await api.recruits.list({ query: '한국전력', hireType: '정규직' })
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/recruits?query=%ED%95%9C%EA%B5%AD%EC%A0%84%EB%A0%A5&hireType=%EC%A0%95%EA%B7%9C%EC%A7%81')
+    await api.recruits.list({ query: '한국전력', hireType: '정규직', instType: '공기업' })
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/recruits?query=%ED%95%9C%EA%B5%AD%EC%A0%84%EB%A0%A5&hireType=%EC%A0%95%EA%B7%9C%EC%A7%81&instType=%EA%B3%B5%EA%B8%B0%EC%97%85')
 
     await api.recruits.sync()
     expect(fetchMock.mock.calls[1][0]).toBe('/api/recruits/sync')
