@@ -76,13 +76,29 @@ jobs:
           printf '%s\n' '{"credsStore":"medicheck-noop"}' > "$DOCKER_CONFIG_DIR/config.json"
           export DOCKER_CONFIG="$DOCKER_CONFIG_DIR"
           export PATH="$DOCKER_CONFIG_DIR:$PATH"
-          docker compose --env-file .env up -d --build --remove-orphans
+          if docker compose version >/dev/null 2>&1; then
+            docker compose up -d --build --remove-orphans
+          elif command -v docker-compose >/dev/null 2>&1; then
+            docker-compose up -d --build --remove-orphans
+          else
+            echo "::error::docker compose not found"
+            docker version || true
+            exit 1
+          fi
 
       - name: Health check
         run: |
           set -euo pipefail
+          if docker compose version >/dev/null 2>&1; then
+            compose() { docker compose "$@"; }
+          elif command -v docker-compose >/dev/null 2>&1; then
+            compose() { docker-compose "$@"; }
+          else
+            echo "::error::docker compose not found"
+            exit 1
+          fi
           for i in $(seq 1 36); do
-            if docker compose exec -T backend wget -qO- http://127.0.0.1:8080/api/health | grep -q ok; then
+            if compose exec -T backend wget -qO- http://127.0.0.1:8080/api/health | grep -q ok; then
               echo "backend health OK"
               break
             fi
