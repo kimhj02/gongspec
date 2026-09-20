@@ -14,12 +14,20 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+
 concurrency:
   group: deploy-macmini-gongspec
   cancel-in-progress: false
 
 jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   deploy:
+    needs: ci
+    if: github.ref == 'refs/heads/main'
     runs-on: [self-hosted, macOS, gongspec]
     timeout-minutes: 60
     env:
@@ -43,10 +51,10 @@ jobs:
           echo "::error::Docker engine not ready"
           exit 1
 
-      - name: Checkout main
+      - name: Checkout tested commit
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Verify env file

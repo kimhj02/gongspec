@@ -22,11 +22,10 @@ class JwtTokenProviderTest {
     }
 
     @Test
-    void rejectsExpiredToken() throws InterruptedException {
+    void rejectsExpiredToken() {
         JwtTokenProvider shortLived =
-                new JwtTokenProvider(new JwtProperties("gongspec-test-jwt-secret-key-32bytes", Duration.ofMillis(1)));
+                new JwtTokenProvider(new JwtProperties("gongspec-test-jwt-secret-key-32bytes", Duration.ofSeconds(-1)));
         String token = shortLived.create(UUID.randomUUID());
-        Thread.sleep(20);
 
         assertThat(shortLived.isValid(token)).isFalse();
     }
@@ -34,5 +33,13 @@ class JwtTokenProviderTest {
     @Test
     void rejectsGarbageToken() {
         assertThat(provider.isValid("not-a-jwt")).isFalse();
+    }
+
+    @Test
+    void rejectsTokenSignedWithAnotherKey() {
+        JwtTokenProvider otherProvider =
+                new JwtTokenProvider(new JwtProperties("another-test-jwt-secret-key-32bytes", Duration.ofHours(1)));
+
+        assertThat(provider.isValid(otherProvider.create(UUID.randomUUID()))).isFalse();
     }
 }

@@ -96,3 +96,29 @@ docker compose up --build
 cd backend && ./.tools/apache-maven-3.9.11/bin/mvn test
 cd frontend && npm test
 ```
+
+백엔드 테스트는 JUnit 5와 Spring Boot Test를 사용하며, 테스트 전용 H2 메모리 DB로 실행합니다. 실제 MySQL이나 카카오·ALIO 인증키는 필요하지 않습니다. 자료 9개 유형과 일정의 사용자 간 접근 차단, 일정 입력 검증, JWT 서명·만료 검증도 포함합니다.
+
+## GitHub CI
+
+`.github/workflows/ci.yml`에서 다음 검증을 실행합니다.
+
+- 백엔드: Java 21, `mvn --batch-mode --no-transfer-progress verify`로 JUnit 전체 테스트와 패키징
+- 프론트: Node.js 22, pnpm 9.15.9, lockfile 고정 설치 후 타입 검사·Vitest 테스트·프로덕션 빌드
+- JUnit 결과: 실행 성공 여부와 관계없이 `backend-junit-reports` 아티팩트로 14일 보관
+
+PR과 `main` 이외 브랜치의 push에서 CI가 실행됩니다. `main` push에서는 `Deploy Mac Mini`가 같은 CI를 호출하고, 두 검증 작업이 모두 성공한 경우에만 **검증한 커밋**을 배포합니다. 수동 배포도 CI를 거치며 `main`에서만 배포합니다. CI만 실행하려면 Actions의 `CI`에서 Run workflow를 사용합니다.
+
+로컬에서 같은 검증을 실행하려면:
+
+```bash
+cd backend
+mvn --batch-mode --no-transfer-progress verify
+cd ../frontend
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+PR 병합 자체를 막으려면 GitHub의 `main` 브랜치 보호 규칙 또는 Ruleset에서 `Backend JUnit`, `Frontend checks`를 필수 상태 검사로 지정해야 합니다. 이 저장소의 워크플로 파일만으로 브랜치 보호 규칙이 설정되지는 않습니다.
