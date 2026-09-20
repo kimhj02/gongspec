@@ -10,12 +10,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.gongspec.auth.config.AuthCookies;
 import com.gongspec.auth.jwt.JwtTokenProvider;
+import com.gongspec.resource.entity.ResourceTab;
 import com.gongspec.user.entity.User;
 import com.gongspec.user.service.UserService;
 import jakarta.servlet.http.Cookie;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -186,6 +189,39 @@ class ResourceControllerTest {
                 .andExpect(jsonPath("$.tab").value("applications"))
                 .andExpect(jsonPath("$.details.interview2At").value("2026-10-20"))
                 .andExpect(jsonPath("$.details.interview2Result").value("대기중"));
+    }
+
+    @ParameterizedTest
+    @EnumSource(ResourceTab.class)
+    void isolatesResourcesBetweenUsers(ResourceTab tab) throws Exception {
+        Cookie owner = tokenCookie();
+        User otherUser = userService.upsertFromKakao("other-resource-user", "다른 사용자", "other@example.com");
+        Cookie other = new Cookie(AuthCookies.TOKEN, jwtTokenProvider.create(otherUser.getId()));
+        String body = JsonMapper.builder().build().writeValueAsString(Map.of("tab", tab, "title", "비공개 자료"));
+        MvcResult created = mockMvc.perform(post("/api/resources").cookie(owner)
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated()).andReturn();
+        String id = JsonMapper.builder().build()
+                .readTree(created.getResponse().getContentAsString()).get("id").asText();
+
+        mockMvc.perform(get("/api/resources").param("tab", tab.name()).cookie(other))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        mockMvc.perform(get("/api/resources").cookie(other))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
+        mockMvc.perform(put("/api/resources/" + id).cookie(other)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"title\":\"변경 시도\"}"))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(put("/api/resources/order").cookie(other)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(JsonMapper.builder().build().writeValueAsString(Map.of("ids", List.of(id)))))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/resources/" + id).cookie(other))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/api/resources").param("tab", tab.name()).cookie(owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(id))
+                .andExpect(jsonPath("$[0].title").value("비공개 자료"));
     }
 
     private Cookie tokenCookie() {
