@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
-import { Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { ChevronDown, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
 import { characterCountLabel, groupEssaysByPosting, mergeEssayResources, parseEssayEntries } from '@/lib/resource-fields'
 import SortableList, { SortableHandle } from '@/components/sortable-list'
@@ -23,6 +23,7 @@ export default function EssayBoard({
   onTogglePin: (item: Resource) => void
   onReorder?: (items: Resource[]) => void
 }) {
+  const [collapsedPostings, setCollapsedPostings] = useState<Set<string>>(() => new Set())
   const groups = groupEssaysByPosting(items)
 
   useEffect(() => {
@@ -44,6 +45,7 @@ export default function EssayBoard({
         const posting = mergeEssayResources(essays)
         const entries = parseEssayEntries(posting)
         const focused = Boolean(focusTitle && postingName === focusTitle)
+        const collapsed = collapsedPostings.has(postingName)
         const { className, handle, ...rest } = bind
         return (
           <article
@@ -56,7 +58,23 @@ export default function EssayBoard({
                 <SortableHandle bind={handle} />
                 <div className="page-intro-copy">
                   <div className="eyebrow">POSTING</div>
-                  <h2>{postingName}</h2>
+                  <h2>
+                    <button
+                      type="button"
+                      className="essay-posting-toggle"
+                      aria-expanded={!collapsed}
+                      aria-label={`${postingName} 자기소개서 ${collapsed ? '펼치기' : '접기'}`}
+                      onClick={() => setCollapsedPostings((current) => {
+                        const next = new Set(current)
+                        if (next.has(postingName)) next.delete(postingName)
+                        else next.add(postingName)
+                        return next
+                      })}
+                    >
+                      {postingName}
+                      <ChevronDown className={collapsed ? 'rotate' : ''} size={17} aria-hidden="true" />
+                    </button>
+                  </h2>
                   <p>{entries.length}개의 자기소개서 항목</p>
                 </div>
               </div>
@@ -72,7 +90,7 @@ export default function EssayBoard({
                 </button>
               </div>
             </div>
-            <div className="essay-entry-cards">
+            {!collapsed && <div className="essay-entry-cards">
               {entries.length ? (
                 entries.map((entry, index) => (
                   <section className="essay-entry-card" key={`${entry.item}-${index}`}>
@@ -91,7 +109,7 @@ export default function EssayBoard({
               ) : (
                 <p className="dday-empty">아직 작성된 항목이 없습니다.</p>
               )}
-            </div>
+            </div>}
           </article>
         )
       }}
