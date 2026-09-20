@@ -18,8 +18,17 @@ export type Field = {
 export type ApplicationStageId = 'document' | 'written' | 'interview'
 export type InterviewRoundId = '1' | '2' | '3'
 
+export function byteCount(text = '') {
+  let bytes = 0
+  for (const char of text) {
+    bytes += (char.codePointAt(0) ?? 0) > 0x7f ? 2 : 1
+  }
+  return bytes
+}
+
 export function characterCountLabel(text = '') {
-  return `(공백 포함 ${text.length}자 · 공백 제외 ${text.replace(/\s/g, '').length}자)`
+  const withoutSpaces = text.replace(/\s/g, '')
+  return `(공백 포함 ${text.length}자 · ${byteCount(text)}byte · 공백 제외 ${withoutSpaces.length}자 · ${byteCount(withoutSpaces)}byte)`
 }
 
 const resultOptions = ['대기중', '합격', '불합격']

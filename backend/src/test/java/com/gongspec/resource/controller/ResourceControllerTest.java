@@ -13,6 +13,8 @@ import com.gongspec.auth.jwt.JwtTokenProvider;
 import com.gongspec.user.entity.User;
 import com.gongspec.user.service.UserService;
 import jakarta.servlet.http.Cookie;
+import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -137,6 +139,37 @@ class ResourceControllerTest {
         mockMvc.perform(get("/api/resources?tab=project&query=병원").cookie(token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].title").value("MediCheck"));
+    }
+
+    @Test
+    void savesEssayWhenJoinedQuestionTitlesExceed255() throws Exception {
+        Cookie token = tokenCookie();
+        String question =
+                "4. 국민건강보험공단이 추진하는 다양한 업무 중 향후 가장 중요해질 것이라고 생각하는 분야를 하나 선정하고, 그 이유와 해당 분야에서 본인이 기여할 수 있는 방안을 기술하시오.";
+        String subtitle = String.join(", ", question, question, question, question);
+        var mapper = JsonMapper.builder().build();
+        String entries = mapper.writeValueAsString(List.of(
+                Map.of("item", question, "essay", "답변 1"),
+                Map.of("item", question, "essay", "답변 2"),
+                Map.of("item", question, "essay", "답변 3"),
+                Map.of("item", question, "essay", "답변 4")));
+
+        mockMvc.perform(post("/api/resources")
+                        .cookie(token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of(
+                                "tab",
+                                "essays",
+                                "title",
+                                "2026년 국민건강보험공단",
+                                "subtitle",
+                                subtitle,
+                                "details",
+                                Map.of("entries", entries)))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tab").value("essays"))
+                .andExpect(jsonPath("$.subtitle").value(subtitle))
+                .andExpect(jsonPath("$.details.entries").value(entries));
     }
 
     @Test

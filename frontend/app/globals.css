@@ -252,7 +252,7 @@ button { cursor: pointer; }
 .essay-entry .field-label-row { align-items: center; min-height: 28px; }
 .essay-entry .field-label-row .icon-button { width: 28px; height: 28px; margin: -4px -6px -4px 0; }
 .field-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-.char-count { color: var(--muted); font-size: 11px; font-weight: 500; white-space: nowrap; }
+.char-count { color: var(--muted); font-size: 11px; font-weight: 500; text-align: right; }
 .recruit-filters { display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; gap: 8px; }.hire-filters { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 10px; background: var(--paper-muted); }
 .hire-filters button { min-width: 58px; padding: 8px 12px; border: 0; border-radius: 8px; color: var(--ink-soft); background: transparent; font-size: 12px; font-weight: 700; white-space: nowrap; }
 .hire-filters button:hover { color: var(--sage-deep); background: var(--paper); }
@@ -327,6 +327,7 @@ button { cursor: pointer; }
 .essay-entry-cards { display: grid; gap: 12px; }
 .essay-entry-card { padding: 14px 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--background); }
 .essay-entry-card h3 { margin: 0 0 8px; display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 13px; }
+.essay-entry-card h3 .char-count { flex: 0 1 auto; }
 .essay-entry-card p { margin: 0; color: var(--ink-soft); font-size: 12px; line-height: 1.8; white-space: pre-wrap; }
 .form-error { margin: 0; color: var(--rose); font-size: 12px; }
 .auth-action { text-decoration: none; }
