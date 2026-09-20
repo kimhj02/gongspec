@@ -296,6 +296,9 @@ button { cursor: pointer; }
 .card-topline-start { display: flex; align-items: center; gap: 4px; min-width: 0; }
 .essay-group-heading { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
 .essay-group-heading .sortable-handle { margin-top: 2px; }
+.essay-posting-toggle { display: flex; align-items: center; gap: 10px; max-width: 100%; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; }
+.essay-posting-toggle svg { flex: 0 0 auto; transition: transform .2s; }
+.essay-posting-toggle svg.rotate { transform: rotate(-90deg); }
 .resource-grid > .sortable-item { min-width: 0; display: flex; }
 .resource-grid > .sortable-item .resource-card { flex: 1; min-height: 100%; }
 .recruit-table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }

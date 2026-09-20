@@ -8,6 +8,7 @@ import DdayCard from '@/components/dday-card'
 import EssayBoard from '@/components/essay-board'
 import ResourceCard from '@/components/resource-card'
 import ConfirmDialog from '@/components/confirm-dialog'
+import type { Resource } from '@/lib/api'
 
 afterEach(() => {
   cleanup()
@@ -543,6 +544,41 @@ describe('resource card', () => {
 })
 
 describe('essay board', () => {
+  it('collapses postings independently and restores their entries with the keyboard', async () => {
+    const user = userEvent.setup()
+    const onEdit = vi.fn()
+    const noop = () => undefined
+    const items: Resource[] = [
+      { id: '1', tab: 'essays', title: '서울시', details: { entries: JSON.stringify([
+        { item: '지원동기', essay: '공공을 위해' },
+        { item: '성장과정', essay: '함께 성장했습니다.' },
+      ]) } },
+      { id: '2', tab: 'essays', title: '경기도', details: { item: '지원동기', essay: '경기도 지원 내용' } },
+    ]
+    const props = { items, onEdit, onDelete: noop, onDeleteEntry: noop, onTogglePin: noop }
+    const { rerender } = render(<EssayBoard {...props} />)
+
+    expect(screen.getByText('공공을 위해')).toBeTruthy()
+    expect(screen.getByText('함께 성장했습니다.')).toBeTruthy()
+    await user.click(screen.getByRole('button', { name: '서울시 자기소개서 접기' }))
+
+    expect(screen.getByRole('button', { name: '서울시 자기소개서 펼치기' }).getAttribute('aria-expanded')).toBe('false')
+    expect(screen.queryByText('공공을 위해')).toBeNull()
+    expect(screen.queryByText('함께 성장했습니다.')).toBeNull()
+    expect(screen.getByText('2개의 자기소개서 항목')).toBeTruthy()
+    expect(screen.getByText('경기도 지원 내용')).toBeTruthy()
+    await user.click(screen.getAllByRole('button', { name: '수정' })[0])
+    expect(onEdit).toHaveBeenCalledWith(expect.objectContaining({ title: '서울시' }))
+
+    rerender(<EssayBoard {...props} items={[...items].reverse()} />)
+    expect(screen.queryByText('공공을 위해')).toBeNull()
+    screen.getByRole('button', { name: '서울시 자기소개서 펼치기' }).focus()
+    await user.keyboard('{Enter}')
+    expect(screen.getByRole('button', { name: '서울시 자기소개서 접기' }).getAttribute('aria-expanded')).toBe('true')
+    expect(screen.getByText('공공을 위해')).toBeTruthy()
+    expect(screen.getByText('함께 성장했습니다.')).toBeTruthy()
+  })
+
   it('highlights the posting opened from an application', () => {
     const noop = () => undefined
     render(
