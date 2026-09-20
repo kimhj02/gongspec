@@ -190,9 +190,9 @@ describe('resource form', () => {
     const user = userEvent.setup()
     render(<ResourceForm initial={null} activeTab="education" onClose={() => undefined} onSave={async () => undefined} />)
 
-    expect(screen.getByText('(공백 포함 0자 · 공백 제외 0자)')).toBeTruthy()
+    expect(screen.getByText('(공백 포함 0자 · 0byte · 공백 제외 0자 · 0byte)')).toBeTruthy()
     await user.type(screen.getByPlaceholderText('배운 내용과 경험을 기록해 주세요.'), '헌법 사례')
-    expect(screen.getByText('(공백 포함 5자 · 공백 제외 4자)')).toBeTruthy()
+    expect(screen.getByText('(공백 포함 5자 · 9byte · 공백 제외 4자 · 8byte)')).toBeTruthy()
   })
 
   it('shows a character count on career responsibilities', async () => {
@@ -200,7 +200,7 @@ describe('resource form', () => {
     render(<ResourceForm initial={null} activeTab="career" onClose={() => undefined} onSave={async () => undefined} />)
 
     await user.type(screen.getByPlaceholderText('담당 업무와 성과를 기록해 주세요.'), '민원 응대')
-    expect(screen.getByText('(공백 포함 5자 · 공백 제외 4자)')).toBeTruthy()
+    expect(screen.getByText('(공백 포함 5자 · 9byte · 공백 제외 4자 · 8byte)')).toBeTruthy()
   })
 
   it('saves a project from the name field without a separate title', async () => {
@@ -371,8 +371,8 @@ describe('essay form', () => {
     await user.type(screen.getByPlaceholderText('예: 2026년 9급 행정직'), '서울시 9급')
     await user.type(screen.getByPlaceholderText('예: 지원동기, 성장과정, 입사 후 포부'), '지원동기')
     await user.type(screen.getByPlaceholderText('해당 항목의 자기소개서를 작성해 주세요.'), '공공의 이익을 위해 지원했습니다.')
-    expect(screen.getByText(/공백 포함 18자/)).toBeTruthy()
-    expect(screen.getByText(/공백 제외 15자/)).toBeTruthy()
+    expect(screen.getByText(/공백 포함 18자 · 32byte/)).toBeTruthy()
+    expect(screen.getByText(/공백 제외 15자 · 29byte/)).toBeTruthy()
     await user.click(screen.getByRole('button', { name: '항목 추가' }))
     const itemFields = screen.getAllByPlaceholderText('예: 지원동기, 성장과정, 입사 후 포부')
     const essayFields = screen.getAllByPlaceholderText('해당 항목의 자기소개서를 작성해 주세요.')

@@ -19,7 +19,7 @@ public class Essay extends ResourceItem {
     @Column(columnDefinition = "TEXT")
     private String entries;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "TEXT")
     private String item;
 
     @Column(columnDefinition = "TEXT")

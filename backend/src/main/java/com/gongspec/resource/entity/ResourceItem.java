@@ -27,7 +27,7 @@ public abstract class ResourceItem extends BaseEntity {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "TEXT")
     private String subtitle;
 
     @Column(columnDefinition = "TEXT")

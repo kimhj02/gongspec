@@ -311,7 +311,8 @@ describe('resource fields', () => {
   })
 
   it('counts spaces the same way the essay form does', () => {
-    expect(characterCountLabel('공공 이익')).toBe('(공백 포함 5자 · 공백 제외 4자)')
+    expect(characterCountLabel('공공 이익')).toBe('(공백 포함 5자 · 9byte · 공백 제외 4자 · 8byte)')
+    expect(characterCountLabel('GongSpec')).toBe('(공백 포함 8자 · 8byte · 공백 제외 8자 · 8byte)')
     expect(fieldsByTab.education.find((field) => field.key === 'content')?.countChars).toBe(true)
     expect(fieldsByTab.training.find((field) => field.key === 'content')?.countChars).toBe(true)
     expect(fieldsByTab.career.find((field) => field.key === 'responsibilities')?.countChars).toBe(true)
