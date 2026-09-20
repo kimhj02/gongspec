@@ -56,21 +56,81 @@ public class WidenResourceTextColumns implements ApplicationRunner {
         if (!TABLES.contains(table) || !COLUMNS.contains(column)) {
             throw new IllegalArgumentException("지원하지 않는 컬럼입니다.");
         }
-        Long length = jdbc.query(
+        ColumnSpec spec = jdbc.query(
                 """
-                SELECT CHARACTER_MAXIMUM_LENGTH
+                SELECT DATA_TYPE, IS_NULLABLE, COLUMN_DEFAULT, COLUMN_COMMENT, CHARACTER_SET_NAME, COLLATION_NAME
                 FROM information_schema.COLUMNS
                 WHERE TABLE_SCHEMA = DATABASE()
                   AND TABLE_NAME = ?
                   AND COLUMN_NAME = ?
                 """,
-                rs -> rs.next() ? rs.getObject(1, Long.class) : null,
+                rs -> {
+                    if (!rs.next()) {
+                        return null;
+                    }
+                    return new ColumnSpec(
+                            rs.getString("DATA_TYPE"),
+                            "YES".equalsIgnoreCase(rs.getString("IS_NULLABLE")),
+                            rs.getString("COLUMN_DEFAULT"),
+                            rs.getString("COLUMN_COMMENT"),
+                            rs.getString("CHARACTER_SET_NAME"),
+                            rs.getString("COLLATION_NAME"));
+                },
                 table,
                 column);
-        if (length == null || length < 0 || length > 255) {
+        if (spec == null || !shouldWiden(spec.dataType())) {
             return;
         }
-        jdbc.execute("ALTER TABLE `" + table + "` MODIFY `" + column + "` TEXT");
-        log.info("Widened {}.{} from VARCHAR({}) to TEXT", table, column, length);
+        jdbc.execute(alterToTextSql(table, column, spec));
+        log.info("Widened {}.{} from {} to TEXT", table, column, spec.dataType());
     }
+
+    static boolean shouldWiden(String dataType) {
+        if (dataType == null || dataType.isBlank()) {
+            return false;
+        }
+        return switch (dataType.toLowerCase()) {
+            case "varchar", "char", "tinytext" -> true;
+            default -> false;
+        };
+    }
+
+    static String alterToTextSql(String table, String column, ColumnSpec spec) {
+        StringBuilder sql = new StringBuilder()
+                .append("ALTER TABLE `")
+                .append(table)
+                .append("` MODIFY `")
+                .append(column)
+                .append("` TEXT");
+        if (isSafeIdent(spec.charset())) {
+            sql.append(" CHARACTER SET ").append(spec.charset());
+        }
+        if (isSafeIdent(spec.collation())) {
+            sql.append(" COLLATE ").append(spec.collation());
+        }
+        sql.append(spec.nullable() ? " NULL" : " NOT NULL");
+        if (spec.columnDefault() != null) {
+            sql.append(" DEFAULT ").append(sqlString(spec.columnDefault()));
+        }
+        if (spec.comment() != null && !spec.comment().isBlank()) {
+            sql.append(" COMMENT ").append(sqlString(spec.comment()));
+        }
+        return sql.toString();
+    }
+
+    private static boolean isSafeIdent(String value) {
+        return value != null && value.matches("[A-Za-z0-9_]+");
+    }
+
+    private static String sqlString(String value) {
+        return "'" + value.replace("'", "''") + "'";
+    }
+
+    record ColumnSpec(
+            String dataType,
+            boolean nullable,
+            String columnDefault,
+            String comment,
+            String charset,
+            String collation) {}
 }
