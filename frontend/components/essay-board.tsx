@@ -5,6 +5,7 @@ import { ChevronDown, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
 import { characterCountLabel, groupEssaysByPosting, mergeEssayResources, parseEssayEntries } from '@/lib/resource-fields'
 import SortableList, { SortableHandle } from '@/components/sortable-list'
+import EssayCopyButton from '@/components/essay-copy-button'
 
 export default function EssayBoard({
   items,
@@ -43,7 +44,7 @@ export default function EssayBoard({
       onReorder={(next) => onReorder?.(next.flatMap(([, essays]) => essays))}
       renderItem={([postingName, essays], bind) => {
         const posting = mergeEssayResources(essays)
-        const entries = parseEssayEntries(posting)
+        const entries = essays.flatMap(parseEssayEntries)
         const focused = Boolean(focusTitle && postingName === focusTitle)
         const collapsed = collapsedPostings.has(postingName)
         const { className, handle, ...rest } = bind
@@ -99,9 +100,12 @@ export default function EssayBoard({
                         {entry.item || `항목 ${index + 1}`}
                         <span className="char-count">{characterCountLabel(entry.essay)}</span>
                       </h3>
-                      <button type="button" className="icon-button" onClick={() => onDeleteEntry(posting, index)} aria-label="항목 삭제">
-                        <Trash2 size={15} />
-                      </button>
+                      <div className="essay-entry-actions">
+                        <EssayCopyButton text={entry.essay} label={entry.item || `항목 ${index + 1}`} />
+                        <button type="button" className="icon-button" onClick={() => onDeleteEntry(posting, index)} aria-label="항목 삭제">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
                     </div>
                     <p>{entry.essay || '내용을 아직 작성하지 않았습니다.'}</p>
                   </section>
