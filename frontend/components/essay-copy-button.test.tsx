@@ -14,6 +14,54 @@ afterEach(() => {
 })
 
 describe('essay copy button', () => {
+  it.each(['success', 'failure'])('ignores stale %s after the body changes', async (result) => {
+    const user = userEvent.setup()
+    let resolve!: () => void
+    let reject!: (error: Error) => void
+    const pending = new Promise<void>((res, rej) => { resolve = res; reject = rej })
+    vi.spyOn(navigator.clipboard, 'writeText').mockReturnValueOnce(pending)
+    const { rerender } = render(<EssayCopyButton text="이전 본문" label="지원동기" />)
+    await user.click(screen.getByRole('button'))
+    rerender(<EssayCopyButton text="새 본문" label="지원동기" />)
+
+    await act(async () => {
+      if (result === 'success') resolve()
+      else reject(new Error('Old request failed'))
+    })
+    expect(screen.getByRole('status').textContent).toBe('')
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect((screen.getByRole('button') as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it.each([
+    ['success', false], ['failure', false], ['success', true], ['failure', true],
+  ] as const)('ignores stale %s when the newer copy has completed: %s', async (result, completed) => {
+    const user = userEvent.setup()
+    let resolveOld!: () => void
+    let rejectOld!: (error: Error) => void
+    let resolveNew!: () => void
+    const oldRequest = new Promise<void>((resolve, reject) => { resolveOld = resolve; rejectOld = reject })
+    const newRequest = new Promise<void>((resolve) => { resolveNew = resolve })
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText')
+      .mockReturnValueOnce(oldRequest).mockReturnValueOnce(newRequest)
+    const { rerender } = render(<EssayCopyButton text="이전 본문" label="지원동기" />)
+    await user.click(screen.getByRole('button'))
+    rerender(<EssayCopyButton text="새 본문" label="지원동기" />)
+    await user.click(screen.getByRole('button'))
+    expect(writeText).toHaveBeenNthCalledWith(2, '새 본문')
+    if (completed) await act(async () => { resolveNew() })
+
+    await act(async () => {
+      if (result === 'success') resolveOld()
+      else rejectOld(new Error('Old request failed'))
+    })
+    expect(screen.getByRole('status').textContent).toBe(completed ? '복사됨' : '')
+    expect((screen.getByRole('button') as HTMLButtonElement).disabled).toBe(!completed)
+    expect(screen.queryByRole('alert')).toBeNull()
+    if (!completed) await act(async () => { resolveNew() })
+    expect(screen.getByRole('status').textContent).toBe('복사됨')
+  })
+
   it('copies only the selected entry body, preserving whitespace and line breaks', async () => {
     const user = userEvent.setup()
     const writeText = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue()

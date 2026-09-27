@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 
 function copyWithoutClipboardApi(text: string) {
@@ -26,9 +26,11 @@ function copyWithoutClipboardApi(text: string) {
 
 export default function EssayCopyButton({ text, label }: { text: string; label: string }) {
   const [status, setStatus] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle')
+  const requestId = useRef(0)
 
   useEffect(() => {
     setStatus('idle')
+    return () => { requestId.current += 1 }
   }, [text])
 
   useEffect(() => {
@@ -38,13 +40,14 @@ export default function EssayCopyButton({ text, label }: { text: string; label: 
   }, [status])
 
   async function copy() {
+    const currentRequestId = ++requestId.current
     setStatus('copying')
     try {
       if (navigator.clipboard?.writeText) await navigator.clipboard.writeText(text)
       else copyWithoutClipboardApi(text)
-      setStatus('copied')
+      if (currentRequestId === requestId.current) setStatus('copied')
     } catch {
-      setStatus('error')
+      if (currentRequestId === requestId.current) setStatus('error')
     }
   }
 
