@@ -187,6 +187,8 @@ button { cursor: pointer; }
 .event-bar.interview { color: #4f6288; background: color-mix(in srgb, #6b7fa8 18%, transparent); }
 .event-bar.personal { color: var(--sage-deep); background: color-mix(in srgb, var(--sage) 16%, transparent); }
 .event-more { margin: 0 3px; border-radius: 4px; color: var(--muted); background: var(--paper-muted); }
+.calendar-overflow-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.calendar-overflow-list .event-bar { display: block; width: 100%; height: auto; margin: 0; padding: 10px 12px; font-size: 13px; white-space: normal; overflow-wrap: anywhere; }
 .calendar-hint { display: flex; align-items: center; gap: 7px; margin: 12px 0 0; color: var(--muted); font-size: 11px; }
 .essay-board { display: flex; flex-direction: column; gap: 22px; }
 .essay-group { display: flex; flex-direction: column; gap: 14px; }
