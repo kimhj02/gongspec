@@ -2,6 +2,7 @@
 
 import { ChevronDown, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
+import { parseChecklist } from '@/lib/application-checklist'
 import { filledDetails, resourceCardSubtitle, resourceCardTitle } from '@/lib/resource-fields'
 import { tabLabel } from '@/lib/tabs'
 import { SortableHandle, type SortableHandleBind } from '@/components/sortable-list'
@@ -30,6 +31,7 @@ export default function ResourceCard({
   const details = filledDetails(item)
   const title = resourceCardTitle(item)
   const subtitle = resourceCardSubtitle(item)
+  const checklist = item.tab === 'applications' ? parseChecklist(item.details?.checklist) : []
   const bodyIsDuplicated = Boolean(item.body && details.some((row) => row.value === item.body))
 
   return (
@@ -55,6 +57,9 @@ export default function ResourceCard({
         <div>
           <h2>{title}</h2>
           {subtitle ? <p>{subtitle}</p> : null}
+          {checklist.length > 0 ? (
+            <p className="checklist-summary">준비 체크리스트 {checklist.filter((entry) => entry.completed).length}/{checklist.length} 완료</p>
+          ) : null}
         </div>
         <ChevronDown className={collapsed ? 'rotate' : ''} size={17} />
       </button>

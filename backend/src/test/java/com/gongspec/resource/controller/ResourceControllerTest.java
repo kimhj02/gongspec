@@ -14,6 +14,7 @@ import com.gongspec.resource.entity.ResourceTab;
 import com.gongspec.user.entity.User;
 import com.gongspec.user.service.UserService;
 import jakarta.servlet.http.Cookie;
+import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,9 @@ class ResourceControllerTest {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Test
     void requiresLogin() throws Exception {
@@ -189,6 +193,54 @@ class ResourceControllerTest {
                 .andExpect(jsonPath("$.tab").value("applications"))
                 .andExpect(jsonPath("$.details.interview2At").value("2026-10-20"))
                 .andExpect(jsonPath("$.details.interview2Result").value("대기중"));
+    }
+
+    @Test
+    void persistsApplicationChecklistChangesAndKeepsThemWhenPinning() throws Exception {
+        Cookie owner = tokenCookie();
+        var mapper = JsonMapper.builder().build();
+        String checklist = mapper.writeValueAsString(List.of(
+                Map.of("id", "task-1", "title", "자기소개서 작성", "completed", false),
+                Map.of("id", "task-2", "title", "증빙서류 준비", "completed", true)));
+        String body = mapper.writeValueAsString(Map.of(
+                "tab", "applications", "title", "사무직 공채",
+                "details", Map.of("institution", "한국전력공사", "documentAt", "2026-10-01", "checklist", checklist)));
+        MvcResult created = mockMvc.perform(post("/api/resources").cookie(owner)
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isCreated()).andReturn();
+        String id = mapper.readTree(created.getResponse().getContentAsString()).get("id").asText();
+        entityManager.flush();
+        entityManager.clear();
+        mockMvc.perform(get("/api/resources?tab=applications").cookie(owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].details.checklist").value(checklist));
+
+        String updated = mapper.writeValueAsString(List.of(
+                Map.of("id", "task-1", "title", "자기소개서 작성", "completed", true)));
+        mockMvc.perform(put("/api/resources/" + id).cookie(owner)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("details",
+                                Map.of("institution", "한국전력공사", "documentAt", "2026-10-01", "checklist", updated)))))
+                .andExpect(status().isOk());
+        entityManager.flush();
+        entityManager.clear();
+        mockMvc.perform(put("/api/resources/" + id).cookie(owner)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"pinned\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.details.checklist").value(updated))
+                .andExpect(jsonPath("$.details.documentAt").value("2026-10-01"));
+
+        mockMvc.perform(put("/api/resources/" + id).cookie(owner)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(Map.of("details",
+                                Map.of("institution", "한국전력공사", "documentAt", "2026-10-01", "checklist", "[]")))))
+                .andExpect(status().isOk());
+        entityManager.flush();
+        entityManager.clear();
+        mockMvc.perform(get("/api/resources?tab=applications").cookie(owner))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].details.checklist").value("[]"))
+                .andExpect(jsonPath("$[0].details.documentAt").value("2026-10-01"));
     }
 
     @ParameterizedTest

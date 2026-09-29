@@ -1,4 +1,5 @@
 import type { Resource, ResourceTab } from '@/lib/api'
+import { parseChecklist, serializeChecklist } from '@/lib/application-checklist'
 import { certificateLevelOptions, isLanguageCertificate, languageScorePlaceholder } from '@/lib/certificates'
 import { expiresAtFrom, formatSchedulePeriod } from '@/lib/dates'
 
@@ -288,6 +289,7 @@ export function toApplicationPayload(
   roundId: InterviewRoundId = '1',
 ): Omit<Resource, 'id'> {
   const details = mergeApplicationDetails(existingDetails, pickApplicationValues(values, stageId, roundId), stageId, roundId)
+  if (values.checklist !== undefined) details.checklist = serializeChecklist(parseChecklist(values.checklist))
   const stages = applicationStages.filter((stage) => stageHasContent(details, stage)).map((stage) => stage.label)
   return {
     ...toResourcePayload('applications', '', details),
@@ -298,14 +300,21 @@ export function toApplicationPayload(
 
 export function overlayApplication(existing: Resource, incoming: Omit<Resource, 'id'>) {
   const existingDetails = existing.details ?? {}
-  const incomingDetails = incoming.details ?? {}
+  const incomingDetails = { ...incoming.details }
+  if (incomingDetails.checklist !== undefined) {
+    const merged = new Map(parseChecklist(existingDetails.checklist).map((item) => [item.id, item]))
+    for (const item of parseChecklist(incomingDetails.checklist)) merged.set(item.id, item)
+    incomingDetails.checklist = serializeChecklist([...merged.values()])
+  }
   const changed: Record<string, string> = {}
   for (const [key, value] of Object.entries(incomingDetails)) {
     if ((value ?? '') !== (existingDetails[key] ?? '')) changed[key] = value
   }
   const scope = Object.keys(changed).length ? changed : incomingDetails
+  const checklistOnly = incomingDetails.checklist !== undefined &&
+    !applicationStages.some((stage) => stage.fields.some((field) => incomingDetails[field.key] !== undefined))
   return toApplicationPayload(
-    incomingDetails,
+    checklistOnly ? { ...existingDetails, ...incomingDetails } : incomingDetails,
     detectIncomingStage(scope),
     existingDetails,
     detectIncomingInterviewRound(scope),
