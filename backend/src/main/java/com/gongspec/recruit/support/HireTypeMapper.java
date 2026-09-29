@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+/** ALIO 고용형태 코드를 정규직·계약직·인턴으로 묶고 대표 유형을 선택한다. */
 public final class HireTypeMapper {
 
     public static final String REQUEST_CODES = "R1010,R1020,R1030,R1050,R1060,R1070";

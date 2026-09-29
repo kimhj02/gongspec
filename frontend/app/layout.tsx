@@ -1,3 +1,4 @@
+/** 모든 페이지의 한국어 HTML, 메타데이터, 전역 스타일과 프로덕션 분석 컴포넌트를 설정한다. */
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import './globals.css'

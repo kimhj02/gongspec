@@ -1,3 +1,4 @@
+/** 한국 공휴일 API 응답을 날짜별 이름으로 정리하고 연속된 공휴일을 하나의 캘린더 기간으로 묶는다. */
 import type { CalendarEvent } from '@/lib/calendar-events'
 import { diffInDays } from '@/lib/dates'
 

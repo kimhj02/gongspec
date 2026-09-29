@@ -1,5 +1,6 @@
 'use client'
 
+/** 달력에서 시작일·종료일을 선택하고 단일 날짜와 기간 선택 모드를 전환한다. */
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
 import { dateKey, formatKoreanRange, monthDays, pad, scheduleSpan } from '@/lib/dates'

@@ -1,5 +1,6 @@
 'use client'
 
+/** 카카오가 돌려준 code·state를 백엔드로 보내 로그인 쿠키를 발급받고 다음 화면으로 이동한다. */
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTheme } from '@/hooks/use-theme'
@@ -22,6 +23,7 @@ export default function KakaoCallbackPage() {
       return
     }
 
+    // effect가 다시 실행되어도 일회용 인가 코드를 중복 교환하지 않도록 탭 세션에 요청 잠금을 둔다.
     const lockKey = `${EXCHANGE_LOCK}:${code}:${state}`
     if (sessionStorage.getItem(lockKey)) {
       return

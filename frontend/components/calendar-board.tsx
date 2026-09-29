@@ -1,5 +1,6 @@
 'use client'
 
+/** 월별 일정 막대를 표시한다. 숨김 일정이 하나면 바로 선택하고 여러 개면 목록에서 선택하게 한다. */
 import { useCallback, useRef, useState } from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react'
 import ModalShell from '@/components/modal-shell'
@@ -40,6 +41,7 @@ export default function CalendarBoard({
     week,
     ...layoutWeekEvents(week, [...holidayEvents, ...events]),
   }))
+  // 선택 당시 배열을 보관하지 않고 현재 배치에서 목록을 읽어 데이터 변경 후에도 실제 숨김 결과를 보여준다.
   const overflowWeek = weeks.find(({ week }) => week.some((day) => day && dateKey(day) === overflowDay))
   const overflowCol = overflowWeek?.week.findIndex((day) => day && dateKey(day) === overflowDay) ?? -1
   const hiddenEvents = overflowWeek?.hiddenEventsByCol[overflowCol] ?? []

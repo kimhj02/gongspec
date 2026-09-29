@@ -1,5 +1,6 @@
 'use client'
 
+/** 지원 준비 항목의 편집 UI. 항목 상태는 부모가 소유하며 서버 저장은 지원 폼 제출 시 수행한다. */
 import { Plus, Trash2 } from 'lucide-react'
 import type { ChecklistItem } from '@/lib/application-checklist'
 

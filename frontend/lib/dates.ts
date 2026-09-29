@@ -1,7 +1,9 @@
+/** 날짜 전용 문자열의 변환, 월별 칸 생성, 기간 포함 여부, 자격증 만료일과 D-day 표시를 계산한다. */
 import type { Schedule } from '@/lib/api'
 
 export const pad = (value: number) => String(value).padStart(2, '0')
 
+// UTC 변환을 거치지 않고 화면의 로컬 연·월·일을 유지한다.
 export const dateKey = (date: Date) =>
   `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 
@@ -22,6 +24,7 @@ export function diffInDays(from: string, to: string) {
   return Math.round((end.getTime() - start.getTime()) / 86_400_000)
 }
 
+/** 종료일이 없으면 하루 일정으로 보고, 시작·종료 순서가 뒤집힌 입력은 비교 가능한 순서로 정리한다. */
 export function scheduleSpan(item: { date: string; endDate?: string }) {
   const start = item.date
   const end = item.endDate || item.date

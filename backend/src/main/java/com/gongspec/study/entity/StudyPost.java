@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.util.UUID;
 
+/** 스터디 모집 조건, 작성자, 연결 공고 ID, 모집 상태와 관리자 숨김 여부를 저장한다. */
 @Entity
 @Table(name = "study_posts")
 public class StudyPost extends BaseEntity {

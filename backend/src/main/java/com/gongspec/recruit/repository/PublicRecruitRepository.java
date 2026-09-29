@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/** ALIO 공고 번호로 저장된 공고를 찾고 진행 중 공고를 필터링해 마감일순으로 조회한다. */
 public interface PublicRecruitRepository extends JpaRepository<PublicRecruit, java.util.UUID> {
 
     Optional<PublicRecruit> findByRecrutPblntSn(Long recrutPblntSn);

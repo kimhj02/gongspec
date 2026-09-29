@@ -1,5 +1,6 @@
 'use client'
 
+/** 자료의 제목·상세값·태그와 접기·고정·편집 동작을 표시한다. 지원 현황에는 체크리스트 진행률도 보여준다. */
 import { ChevronDown, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'
 import { parseChecklist } from '@/lib/application-checklist'

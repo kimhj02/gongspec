@@ -1,5 +1,6 @@
 'use client'
 
+/** 메인 화면의 탭·모달·검색 상태를 조정하고 SWR 조회 결과와 각 기능의 저장 동작을 연결한다. */
 import { useEffect, useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { Archive, CalendarDays, Landmark, Moon, PenLine, Plus, RefreshCw, Search, Sun, Users, X } from 'lucide-react'
@@ -62,11 +63,13 @@ export default function Page() {
   const isStudy = activeTab === 'study'
   const resourceTab = isCalendar || isRecruits || isStudy ? null : activeTab
 
+  // 개인 데이터 요청은 로그인 후에만 활성화한다. 채용공고 목록은 비로그인 사용자도 볼 수 있다.
   const resources = useSWR(
     user && resourceTab ? resourceKey(resourceTab, debouncedQuery) : null,
     ([, tab, nextQuery]) => api.resources.list({ tab, query: nextQuery }),
     { revalidateOnFocus: false, keepPreviousData: true },
   )
+  // 현재 탭의 검색 결과와 별개로 전체 지원 현황을 조회해 캘린더 전형 일정이 누락되지 않게 한다.
   const applications = useSWR(user ? applicationsKey : null, () => api.resources.list({ tab: 'applications' }), { revalidateOnFocus: false })
   const schedules = useSWR(user ? schedulesKey : null, () => api.schedules.list(), { revalidateOnFocus: false })
   const recruits = useSWR(
@@ -215,6 +218,7 @@ export default function Page() {
       } else {
         await api.resources.create(data)
       }
+    // 같은 회사·공고의 신규 입력은 기존 지원 현황에 합쳐 중복 카드를 만들지 않는다.
     } else if (data.tab === 'applications') {
       const existing = (applications.data ?? []).find(
         (item) =>
@@ -246,6 +250,7 @@ export default function Page() {
     }
   }
 
+  // 드래그 결과를 먼저 화면에 반영하고 서버 저장이 실패하면 이전 목록으로 복구한다.
   const saveResourceOrder = async (next: Resource[]) => {
     const previous = resources.data
     await resources.mutate(next, { revalidate: false })
@@ -290,6 +295,7 @@ export default function Page() {
     setShowForm(true)
   }
 
+  // 캘린더 표시 형식은 같아도 지원 전형은 지원 폼, 직접 등록한 일정은 일정 편집기로 연결한다.
   const selectCalendarEvent = (event: CalendarEvent) => {
     if (event.resourceId) {
       openApplication(event.resourceId)

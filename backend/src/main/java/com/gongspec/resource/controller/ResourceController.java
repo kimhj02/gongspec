@@ -1,5 +1,8 @@
 package com.gongspec.resource.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.gongspec.auth.CurrentUser;
 import com.gongspec.resource.dto.ResourceCreateRequest;
 import com.gongspec.resource.dto.ResourceReorderRequest;
@@ -22,6 +25,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 자료 유형·검색어·식별자를 받아 현재 사용자의 자료 조회, 생성, 수정, 삭제, 순서 변경을 처리한다. */
+@Tag(name = "자료", description = "자격증·교육·경력·지원 현황 등 개인 자료 관리")
+@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "cookieAuth")
 @RestController
 @RequestMapping("/api/resources")
 public class ResourceController {
@@ -33,6 +40,7 @@ public class ResourceController {
     }
 
     @GetMapping
+    @Operation(summary = "내 자료 목록 조회")
     public List<ResourceResponse> list(
             @RequestParam(required = false) ResourceTab tab, @RequestParam(required = false) String query) {
         return resourceService.list(CurrentUser.id(), tab, query).stream()
@@ -42,23 +50,27 @@ public class ResourceController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @Operation(summary = "자료 추가")
     public ResourceResponse create(@Valid @RequestBody ResourceCreateRequest request) {
         return ResourceResponse.from(resourceService.create(CurrentUser.id(), request));
     }
 
     @PutMapping("/order")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "자료 순서 변경")
     public void reorder(@Valid @RequestBody ResourceReorderRequest request) {
         resourceService.reorder(CurrentUser.id(), request.ids());
     }
 
     @PutMapping("/{id}")
+    @Operation(summary = "자료 수정")
     public ResourceResponse update(@PathVariable UUID id, @RequestBody ResourceUpdateRequest request) {
         return ResourceResponse.from(resourceService.update(CurrentUser.id(), id, request));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "자료 삭제")
     public void delete(@PathVariable UUID id) {
         resourceService.delete(CurrentUser.id(), id);
     }

@@ -1,3 +1,4 @@
+/** 인증·자료·일정의 기본 동작을 메모리에서 흉내 내는 로컬 UI 확인용 서버. 재시작하면 데이터가 사라진다. */
 import { randomUUID } from 'node:crypto'
 import http from 'node:http'
 

@@ -1,5 +1,6 @@
 'use client'
 
+/** 자료 유형별 입력 폼을 구성한다. 지원 전형·자기소개서·체크리스트의 초안을 저장 payload로 변환한다. */
 import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
 import ComboField from '@/components/combo-field'
@@ -74,6 +75,7 @@ export default function ResourceForm({
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [checklist, setChecklist] = useState<ChecklistItem[]>(() => parseChecklist((initial?.details ?? defaultDetails).checklist))
+  // 편집하지 않은 새 폼은 체크리스트 필드를 추가하지 않아 기존 공고와 합칠 때 불필요한 변경을 피한다.
   const [checklistEdited, setChecklistEdited] = useState(false)
 
   const setValue = (key: string, value: string) => setValues((current) => ({ ...current, [key]: value }))
@@ -94,6 +96,7 @@ export default function ResourceForm({
     setSaving(true)
     setError('')
     try {
+      // 체크리스트의 로컬 초안은 폼 저장 시에만 직렬화하며 빈 행은 이 단계에서 제외한다.
       const applicationValues = checklistEdited ? { ...values, checklist: serializeChecklist(checklist) } : values
       await onSave(isEssay ? toEssayPayload(title, entries) : isApplication ? toApplicationPayload(applicationValues, stageId, initial?.details, roundId) : toResourcePayload(tab, resolvedTitle, values))
     } catch (caught) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.gongspec.common.exception.ApiException;
 import java.util.Arrays;
 
+/** 스터디 진행 방식을 온라인·오프라인·혼합으로 구분한다. */
 public enum StudyMode {
     ONLINE("온라인"),
     OFFLINE("오프라인"),

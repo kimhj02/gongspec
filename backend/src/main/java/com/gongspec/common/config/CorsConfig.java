@@ -7,6 +7,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+/** 설정된 프론트 주소에서 쿠키를 포함한 /api 요청을 보낼 수 있도록 CORS를 구성한다. */
 @Configuration
 public class CorsConfig {
 

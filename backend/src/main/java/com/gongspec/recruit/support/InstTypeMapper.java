@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+/** 기관명 별칭과 내장 분류표로 기관유형을 정리한다. 미등록 기관은 기타로 분류한다. */
 public final class InstTypeMapper {
 
     public static final String GROUP_ENTERPRISE = "공기업";

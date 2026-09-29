@@ -1,5 +1,6 @@
 'use client'
 
+/** 모달 배경과 접근성 이름을 제공하고 Escape·배경 클릭으로 닫는다. 종료 시 이전 포커스 복원을 시도한다. */
 import { useEffect, type ReactNode } from 'react'
 
 export default function ModalShell({

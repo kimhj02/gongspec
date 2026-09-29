@@ -1,3 +1,4 @@
+/** 자격증·어학시험의 선택 목록과 발급기관·급수·유효기간 등 입력 기본값을 관리한다. */
 export type CertificateGroup = '공통' | '행정·경영' | '데이터·전산' | '기술·설비'
 
 export type CertificatePreset = {

@@ -10,6 +10,7 @@ import java.util.UUID;
 import javax.crypto.SecretKey;
 import org.springframework.stereotype.Component;
 
+/** 사용자 UUID를 subject로 담은 서명 토큰을 발급하고 서명·만료를 검증한다. */
 @Component
 public class JwtTokenProvider {
 

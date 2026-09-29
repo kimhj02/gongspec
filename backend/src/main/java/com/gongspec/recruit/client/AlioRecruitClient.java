@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+/** ALIO 진행 중 공고를 페이지 단위로 가져오고 응답 구조와 외부 통신 오류를 정리한다. */
 @Component
 public class AlioRecruitClient {
 

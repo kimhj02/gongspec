@@ -1,5 +1,6 @@
 'use client'
 
+/** 개인 일정의 제목·날짜 범위·메모를 편집하고 기존 유형을 유지한 채 생성·저장·삭제 동작을 부모에 전달한다. */
 import { useEffect, useState } from 'react'
 import { CalendarDays, StickyNote, X } from 'lucide-react'
 import DateRangePicker from '@/components/date-range-picker'

@@ -1,3 +1,4 @@
+/** 원본 배열을 직접 변경하지 않고 지정한 위치 또는 ID의 항목을 이동한다. */
 export function moveItem<T>(items: T[], from: number, to: number) {
   if (from === to || from < 0 || to < 0 || from >= items.length || to >= items.length) return items
   const next = [...items]

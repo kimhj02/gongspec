@@ -18,6 +18,7 @@ import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** 공고 검색 조건을 검증하고 ALIO 공고 번호를 기준으로 저장·갱신·마감 처리를 수행한다. */
 @Service
 public class RecruitService {
 
@@ -80,6 +81,7 @@ public class RecruitService {
         }
 
         int closed = 0;
+        // 전체 응답을 읽은 경우에만 누락 공고를 마감한다. 페이지 제한으로 잘린 수집 결과는 기준으로 삼지 않는다.
         if (fetched >= totalCount) {
             for (PublicRecruit recruit : repository.findByOngoingTrue()) {
                 if (!seen.contains(recruit.getRecrutPblntSn())) {
@@ -96,6 +98,7 @@ public class RecruitService {
         if (serial <= 0) {
             return false;
         }
+        // 지원하는 고용형태에 해당하는 공고만 동기화 대상으로 취급한다.
         Set<String> categories = HireTypeMapper.categories(AlioJson.text(item, "hireTypeLst"));
         String primary = HireTypeMapper.primary(categories);
         if (primary == null) {

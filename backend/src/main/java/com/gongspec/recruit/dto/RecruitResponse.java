@@ -3,6 +3,7 @@ package com.gongspec.recruit.dto;
 import com.gongspec.recruit.entity.PublicRecruit;
 import com.gongspec.recruit.support.InstTypeMapper;
 
+/** 저장된 공고와 기관유형 분류를 채용공고 화면에 필요한 필드로 변환한다. */
 public record RecruitResponse(
         String id,
         long recrutPblntSn,

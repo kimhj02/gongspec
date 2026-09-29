@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.util.Map;
 import java.util.Set;
 
+/** 메모의 본문를 전용 컬럼으로 저장하고 details 맵과 변환한다. */
 @Entity
 @Table(name = "memos")
 public class Memo extends ResourceItem {

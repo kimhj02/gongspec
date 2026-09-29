@@ -2,6 +2,7 @@ package com.gongspec.recruit.support;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+/** ALIO 필드의 누락·null·숫자 문자열을 처리해 문자열 또는 숫자로 읽는다. */
 public final class AlioJson {
 
     private AlioJson() {}

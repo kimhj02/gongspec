@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.Instant;
 
+/** ALIO 공고 번호, 기관·고용형태·접수기간과 최근 수집 시각을 저장한다. */
 @Entity
 @Table(name = "public_recruits")
 public class PublicRecruit extends BaseEntity {

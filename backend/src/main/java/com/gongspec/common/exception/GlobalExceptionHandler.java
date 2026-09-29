@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+/** 컨트롤러 예외를 공통 오류 응답으로 바꾼다. 예상하지 못한 오류의 상세 내용은 서버 로그에 남긴다. */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 

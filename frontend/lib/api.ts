@@ -1,3 +1,4 @@
+/** 백엔드 요청·응답 타입, 쿠키를 포함한 HTTP 호출, 오류 변환과 SWR 캐시 키를 모은다. */
 export type ResourceTab = 'certificate' | 'education' | 'training' | 'career' | 'project' | 'applications' | 'essays' | 'memo' | 'sites'
 export type NavId = 'calendar' | 'recruits' | 'study' | ResourceTab
 export type StudyPurpose = 'NCS' | '면접' | '기타'
@@ -126,6 +127,7 @@ function mergeSignals(signals: AbortSignal[]) {
   return signals[0]
 }
 
+/** 공통 타임아웃과 오류 처리를 적용한다. 204 응답에는 JSON 파싱을 시도하지 않는다. */
 export async function request<T>(path: string, init: RequestOptions = {}): Promise<T> {
   const { timeoutMs, signal: userSignal, headers: initHeaders, ...fetchInit } = init
   const headers = new Headers(initHeaders)
@@ -233,6 +235,7 @@ export function getApiError(error: unknown) {
   return error instanceof Error ? error.message : '서버와 통신할 수 없습니다.'
 }
 
+// 같은 API여도 조회 목적·필터가 다르면 캐시 키를 분리한다. 변경 후에는 관련 캐시를 함께 갱신해야 한다.
 export const meKey = ['/api/auth/me'] as const
 export const resourceKey = (tab: ResourceTab, query: string) => ['/api/resources', tab, query] as const
 export const applicationsKey = ['/api/resources', 'applications', 'calendar'] as const

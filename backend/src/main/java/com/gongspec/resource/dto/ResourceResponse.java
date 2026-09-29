@@ -6,6 +6,7 @@ import com.gongspec.resource.entity.ResourceTab;
 import java.util.List;
 import java.util.Map;
 
+/** 자료 엔티티를 공통 API 형태로 변환하며 비어 있는 태그·상세정보는 응답에서 생략한다. */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ResourceResponse(
         String id,

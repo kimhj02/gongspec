@@ -9,6 +9,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/** 모집글에 달린 댓글의 작성자·본문과 관리자 숨김 여부를 저장한다. */
 @Entity
 @Table(name = "study_comments")
 public class StudyComment extends BaseEntity {

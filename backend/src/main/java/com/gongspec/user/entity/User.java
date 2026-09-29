@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
+/** 카카오 식별정보와 사이트 닉네임·관리자 여부를 저장한다. 화면 표시 닉네임은 사이트 닉네임을 우선한다. */
 @Entity
 @Table(name = "users")
 public class User extends BaseEntity {

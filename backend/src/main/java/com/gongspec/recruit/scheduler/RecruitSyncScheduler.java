@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+/** 설정된 주기에 공고를 동기화한다. 동기화 비활성화 또는 인증키 미설정 시 실행하지 않는다. */
 @Component
 public class RecruitSyncScheduler {
 

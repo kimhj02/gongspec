@@ -1,5 +1,8 @@
 package com.gongspec.admin.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.gongspec.auth.CurrentUser;
 import com.gongspec.study.dto.CommunityReportResponse;
 import com.gongspec.study.service.StudyService;
@@ -13,6 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 신고 목록과 글·댓글 숨김/해제 API를 제공한다. 관리자 권한 확인은 서비스에서 수행한다. */
+@Tag(name = "관리자", description = "관리자 권한이 필요한 신고 조회와 숨김 처리")
+@SecurityRequirement(name = "bearerAuth")
+@SecurityRequirement(name = "cookieAuth")
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -24,30 +31,35 @@ public class AdminController {
     }
 
     @GetMapping("/reports")
+    @Operation(summary = "신고 목록 조회 (관리자)")
     public List<CommunityReportResponse> reports() {
         return studyService.listReports(CurrentUser.id());
     }
 
     @PostMapping("/posts/{id}/hide")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "모집글 숨김 (관리자)")
     public void hidePost(@PathVariable UUID id) {
         studyService.hidePost(CurrentUser.id(), id, true);
     }
 
     @PostMapping("/posts/{id}/unhide")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "모집글 숨김 해제 (관리자)")
     public void unhidePost(@PathVariable UUID id) {
         studyService.hidePost(CurrentUser.id(), id, false);
     }
 
     @PostMapping("/comments/{id}/hide")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "댓글 숨김 (관리자)")
     public void hideComment(@PathVariable UUID id) {
         studyService.hideComment(CurrentUser.id(), id, true);
     }
 
     @PostMapping("/comments/{id}/unhide")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "댓글 숨김 해제 (관리자)")
     public void unhideComment(@PathVariable UUID id) {
         studyService.hideComment(CurrentUser.id(), id, false);
     }

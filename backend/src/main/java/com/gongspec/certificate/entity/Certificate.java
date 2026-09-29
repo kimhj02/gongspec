@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.util.Map;
 import java.util.Set;
 
+/** 자격증의 자격증명·등급/점수·발급기관·취득일·유효기간·등록번호를 전용 컬럼으로 저장하고 details 맵과 변환한다. */
 @Entity
 @Table(name = "certificates")
 public class Certificate extends ResourceItem {

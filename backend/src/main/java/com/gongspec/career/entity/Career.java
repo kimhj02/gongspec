@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.util.Map;
 import java.util.Set;
 
+/** 경력의 근무기관·고용형태·근무기간·담당업무를 전용 컬럼으로 저장하고 details 맵과 변환한다. */
 @Entity
 @Table(name = "careers")
 public class Career extends ResourceItem {

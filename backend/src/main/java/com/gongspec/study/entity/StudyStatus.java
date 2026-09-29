@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.gongspec.common.exception.ApiException;
 import java.util.Arrays;
 
+/** 모집 중·마감 상태의 저장 값과 API 표시 이름을 정의한다. */
 public enum StudyStatus {
     OPEN("모집 중"),
     CLOSED("마감");

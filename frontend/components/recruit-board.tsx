@@ -1,5 +1,6 @@
 'use client'
 
+/** 채용공고를 마감순으로 표시하고 원문 보기 및 지원 현황 추가 동작을 제공한다. */
 import type { PublicRecruit } from '@/lib/api'
 import { recruitDday, recruitPeriodCompact, sortRecruitsByDeadline } from '@/lib/recruits'
 

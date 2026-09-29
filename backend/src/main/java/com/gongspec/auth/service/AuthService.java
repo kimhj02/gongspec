@@ -10,6 +10,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
+/** OAuth state 검증, 카카오 프로필 조회, 사용자 등록·갱신, 자체 JWT 발급을 연결한다. */
 @Service
 public class AuthService {
 

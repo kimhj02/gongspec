@@ -3,6 +3,7 @@ package com.gongspec.common.support;
 import com.gongspec.common.exception.ApiException;
 import java.util.regex.Pattern;
 
+/** 입력 문자열에서 휴대전화 번호와 카카오 오픈채팅 주소 패턴을 찾아 거절한다. */
 public final class ContactGuard {
 
     private static final Pattern PHONE = Pattern.compile("01[016789][\\s.-]?\\d{3,4}[\\s.-]?\\d{4}");

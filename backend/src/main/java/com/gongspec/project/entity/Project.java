@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.util.Map;
 import java.util.Set;
 
+/** 프로젝트의 기간·역할·기술·수행내용·성과·자기소개서 소재를 전용 컬럼으로 저장하고 details 맵과 변환한다. */
 @Entity
 @Table(name = "projects")
 public class Project extends ResourceItem {

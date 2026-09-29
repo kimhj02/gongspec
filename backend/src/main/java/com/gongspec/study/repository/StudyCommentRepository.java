@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/** 공개 댓글·작성자를 조회하고 여러 모집글의 댓글 수를 한 번에 집계한다. */
 public interface StudyCommentRepository extends JpaRepository<StudyComment, UUID> {
 
     @Query(

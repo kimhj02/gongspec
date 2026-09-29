@@ -1,5 +1,6 @@
 'use client'
 
+/** 채용공고의 공기업·준정부·기타 기관유형 필터를 표시한다. */
 import type { InstTypeFilter } from '@/lib/api'
 
 export const instTypeFilterOptions: { value: InstTypeFilter | ''; label: string }[] = [

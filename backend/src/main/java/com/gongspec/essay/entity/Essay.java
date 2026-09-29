@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.util.Map;
 import java.util.Set;
 
+/** 자기소개서의 문항 목록 JSON과 기존 단일 문항·본문를 전용 컬럼으로 저장하고 details 맵과 변환한다. */
 @Entity
 @Table(name = "essays")
 public class Essay extends ResourceItem {

@@ -12,6 +12,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
+/** 카카오 인가 코드를 액세스 토큰으로 교환하고 사용자 프로필을 조회한다. */
 @Component
 public class KakaoOAuthClient {
 
