@@ -1,5 +1,8 @@
 package com.gongspec.auth.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.gongspec.auth.config.AuthCookies;
 import com.gongspec.auth.dto.KakaoCallbackRequest;
 import com.gongspec.auth.dto.KakaoLoginUrl;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /** 카카오 로그인 시작·콜백, 내 로그인 정보 조회, 로그아웃의 HTTP 입출력과 쿠키를 처리한다. */
+@Tag(name = "인증", description = "카카오 로그인·로그아웃과 현재 사용자 정보")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -42,6 +46,7 @@ public class AuthController {
     }
 
     @GetMapping("/kakao/url")
+    @Operation(summary = "카카오 로그인 URL 발급")
     public ResponseEntity<KakaoLoginUrlResponse> kakaoUrl() {
         KakaoLoginUrl loginUrl = authService.createLoginUrl();
         return ResponseEntity.ok()
@@ -50,6 +55,7 @@ public class AuthController {
     }
 
     @PostMapping("/kakao/callback")
+    @Operation(summary = "카카오 로그인 콜백 처리")
     public ResponseEntity<UserResponse> kakaoCallback(
             @Valid @RequestBody KakaoCallbackRequest request,
             @CookieValue(value = AuthCookies.STATE, required = false) String stateCookie) {
@@ -65,12 +71,16 @@ public class AuthController {
                 .body(UserResponse.from(user));
     }
 
+    @SecurityRequirement(name = "bearerAuth")
+    @SecurityRequirement(name = "cookieAuth")
     @GetMapping("/me")
+    @Operation(summary = "현재 로그인 사용자 조회")
     public UserResponse me(Authentication authentication) {
         return UserResponse.from(userService.getById(currentUserId(authentication)));
     }
 
     @PostMapping("/logout")
+    @Operation(summary = "로그아웃")
     public ResponseEntity<Void> logout() {
         return ResponseEntity.noContent()
                 .header(HttpHeaders.SET_COOKIE, AuthCookies.clearToken(cookieSecure()).toString())

@@ -22,6 +22,7 @@
 | 프론트엔드 | Next.js 16.3.3, React 19, TypeScript, Tailwind CSS 4 | [frontend/package.json](frontend/package.json) |
 | 데이터 조회 | SWR, 공통 Fetch 래퍼 | [frontend/lib/api.ts](frontend/lib/api.ts) |
 | 백엔드 | Java 21, Spring Boot 3.5.6, Spring MVC, Spring Security, Spring Data JPA | [backend/pom.xml](backend/pom.xml) |
+| API 문서 | springdoc-openapi 2.8.17, Swagger UI | [OpenApiConfig.java](backend/src/main/java/com/gongspec/common/config/OpenApiConfig.java) |
 | 데이터베이스 | 기본 실행·배포는 MySQL 8.4, 자동 테스트는 H2 메모리 DB | [application.yml](backend/src/main/resources/application.yml), [테스트 설정](backend/src/test/resources/application.yml) |
 | 테스트 | Vitest·Testing Library, JUnit 5·Spring Boot Test·MockMvc | [vitest.config.mts](frontend/vitest.config.mts), `backend/src/test/` |
 | 빌드·배포 | pnpm 9.15.9, Maven, Docker Compose, GitHub Actions | Dockerfile 및 `.github/workflows/` |
@@ -170,6 +171,36 @@ flowchart LR
 | `/api/admin/reports`, `/api/admin/posts/...`, `/api/admin/comments/...` | 신고 조회·숨김/해제 | 서버에서 관리자 여부 확인 |
 
 ALIO 정기 동기화의 기본 시각은 서울 시간 매일 08:10, 16:10입니다. 인증키가 없거나 동기화 설정이 꺼져 있으면 스케줄 실행을 건너뜁니다. 공휴일은 백엔드 ALIO 경로가 아니라 Next.js의 `/holiday-api/:year` 프록시를 통해 Nager.Date에서 조회합니다.
+
+## Swagger UI / OpenAPI
+
+서버를 실행하면 컨트롤러와 요청·응답 DTO에서 API 문서를 자동 생성합니다. 각 기능은 한글 태그로 묶이며, API별 요약과 인증 필요 여부를 표시합니다. Spring Boot 3.5 계열과의 호환성을 고려해 [springdoc 공식 호환성 표](https://springdoc.org/v2/#what-is-the-compatibility-matrix-of-springdoc-openapi-with-spring-boot)의 2.8 계열을 사용합니다.
+
+| 실행 방식 | Swagger UI | OpenAPI JSON |
+|---|---|---|
+| 백엔드 직접 실행 | `http://localhost:8080/swagger-ui.html` | `http://localhost:8080/v3/api-docs` |
+| 프론트 프록시 / Docker 전체 스택 | `http://localhost:13001/swagger-ui.html` | `http://localhost:13001/v3/api-docs` |
+| HTTPS 배포 | `https://<프론트 도메인>/swagger-ui.html` | `https://<프론트 도메인>/v3/api-docs` |
+
+문서 경로는 로그인 없이 열 수 있습니다. 실제 개인 자료 API의 로그인·소유권 검사와 관리자 API의 권한 검사는 그대로 적용됩니다.
+
+API를 실행하려면:
+
+1. 브라우저에서 사이트에 카카오 로그인한 뒤 **같은 사이트 주소**의 Swagger UI를 엽니다. 로그인 쿠키를 브라우저가 전송하므로 HttpOnly 쿠키 값을 직접 입력할 필요가 없습니다. 예를 들어 `localhost`에서 로그인했다면 Swagger도 `localhost`로 접속합니다.
+2. 별도로 발급받은 GongSpec JWT를 사용할 때는 **Authorize → bearerAuth**에 `Bearer ` 접두어 없이 토큰만 입력합니다. 카카오 액세스 토큰은 사용할 수 없습니다.
+3. 사용할 API를 펼치고 **Try it out → Execute**를 누릅니다. 변경 API는 로그인한 사용자의 실제 데이터에 적용됩니다.
+
+`cookieAuth`는 기존 로그인 쿠키 인증을 설명하기 위한 정의입니다. Swagger 입력창에서 HttpOnly 쿠키를 설정하는 방식은 지원하지 않습니다. 관리자 API는 관리자 계정으로 로그인하거나 해당 계정의 JWT를 사용해야 합니다.
+
+설정 위치:
+
+- `common/config/OpenApiConfig.java`: 문서 제목, 상대 서버 주소(`/`), Bearer·쿠키 인증 정의
+- 각 Controller의 `@Tag`, `@Operation`, `@SecurityRequirement`: 기능 분류·요약·인증 표시
+- `application.yml`의 `springdoc`: 문서 대상과 Swagger UI 문서 경로
+- `SecurityConfig.java`: 문서와 UI 정적 파일의 공개 접근
+- `frontend/next.config.mjs`: `/swagger-ui.html`, `/swagger-ui/**`, `/v3/api-docs/**`, `/v3/api-docs.yaml`의 백엔드 전달
+
+문서의 서버 주소는 상대 경로이므로 Docker 내부의 `backend:8080` 대신 사용자가 접속한 프론트 주소로 API를 호출합니다. 프록시 설정이 바뀐 경우 프론트도 재시작하거나 이미지를 다시 빌드해야 합니다.
 
 ## 개발 환경 준비
 

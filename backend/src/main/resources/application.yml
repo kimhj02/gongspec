@@ -46,3 +46,13 @@ alio:
 logging:
   level:
     org.hibernate.SQL: debug
+
+# 문서와 실행 요청 모두 현재 접속한 출처를 사용해 Next.js 프록시에서도 내부 호스트를 노출하지 않는다.
+springdoc:
+  paths-to-match: /api/**
+  swagger-ui:
+    disable-swagger-default-url: true
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
+    tags-sorter: alpha
+    operations-sorter: method
