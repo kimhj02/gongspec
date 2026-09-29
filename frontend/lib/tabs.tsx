@@ -1,3 +1,4 @@
+/** 탭 ID, 메뉴 아이콘·이름, 탭별 화면 안내와 생성·수정 버튼 문구를 정의한다. */
 import { Archive, Award, BriefcaseBusiness, CalendarDays, ClipboardList, FileText, FolderKanban, GraduationCap, Landmark, PenLine, Sparkles, Users } from 'lucide-react'
 import type { NavId, ResourceTab } from '@/lib/api'
 

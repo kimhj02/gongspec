@@ -3,6 +3,7 @@ package com.gongspec.auth.config;
 import java.time.Duration;
 import org.springframework.http.ResponseCookie;
 
+/** 로그인 JWT와 OAuth state 쿠키의 이름·수명·HttpOnly·SameSite 설정을 한곳에서 관리한다. */
 public final class AuthCookies {
 
     public static final String TOKEN = "gongspec_token";

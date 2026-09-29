@@ -1,5 +1,6 @@
 'use client'
 
+/** 다가오거나 진행 중인 일정을 추려 D-day와 함께 보여주고 선택 이벤트를 부모에 전달한다. */
 import { eventTypeClass, type CalendarEvent } from '@/lib/calendar-events'
 import { ddayLabel, formatSchedulePeriod, upcomingSchedules } from '@/lib/dates'
 

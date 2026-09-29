@@ -4,6 +4,7 @@ import com.gongspec.common.exception.ApiException;
 import com.gongspec.common.support.ContactGuard;
 import java.util.regex.Pattern;
 
+/** 사이트 닉네임의 공백을 정리하고 허용 문자·길이·연락처 포함 여부를 검증한다. */
 public final class SiteNickname {
 
     private static final Pattern ALLOWED = Pattern.compile("^[가-힣a-zA-Z0-9]{2,16}$");

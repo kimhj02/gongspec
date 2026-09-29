@@ -2,6 +2,7 @@ package com.gongspec.recruit.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/** ALIO 인증키·기본 주소·정기 동기화 주기와 시간대 설정을 바인딩한다. */
 @ConfigurationProperties(prefix = "alio")
 public record AlioProperties(String serviceKey, String baseUrl, Sync sync) {
 

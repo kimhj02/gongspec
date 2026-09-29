@@ -1,5 +1,6 @@
 'use client'
 
+/** 로그인 후 사이트 닉네임을 설정하고 갱신된 사용자 정보를 인증 캐시에 반영한다. */
 import { FormEvent, useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/use-auth'
 import { useTheme } from '@/hooks/use-theme'

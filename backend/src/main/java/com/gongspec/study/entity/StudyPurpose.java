@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonValue;
 import com.gongspec.common.exception.ApiException;
 import java.util.Arrays;
 
+/** 스터디 목적을 NCS·면접·기타로 구분하고 API에서 사용하는 한글 이름을 정의한다. */
 public enum StudyPurpose {
     NCS("NCS"),
     INTERVIEW("면접"),

@@ -1,5 +1,6 @@
 'use client'
 
+/** 자기소개서를 공고명으로 묶어 표시하고 문항별 본문 복사·삭제와 공고별 편집·순서 변경을 연결한다. */
 import { useEffect, useState } from 'react'
 import { ChevronDown, Pencil, Pin, PinOff, Trash2 } from 'lucide-react'
 import type { Resource } from '@/lib/api'

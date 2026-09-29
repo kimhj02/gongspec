@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/** 실행 디렉터리 또는 상위 디렉터리의 .env를 읽고 빈 줄·주석·인용부호를 처리한다. */
 final class DotenvLoader {
 
     private DotenvLoader() {}

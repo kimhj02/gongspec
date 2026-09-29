@@ -2,6 +2,7 @@ package com.gongspec.common.exception;
 
 import org.springframework.http.HttpStatus;
 
+/** 업무 처리 중 발생한 오류의 HTTP 상태와 사용자에게 보여줄 메시지를 함께 전달한다. */
 public class ApiException extends RuntimeException {
 
     private final HttpStatus status;

@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.util.Map;
 import java.util.Set;
 
+/** 지원 현황의 회사·공고·지원 주소와 서류·필기·최대 3차 면접의 날짜·결과를 전용 컬럼으로 저장하고 details 맵과 변환한다. */
 @Entity
 @Table(name = "applications")
 public class JobApplication extends ResourceItem {

@@ -1,5 +1,6 @@
 'use client'
 
+/** 관리자에게 신고 목록을 보여주고 대상 글·댓글의 숨김 상태를 변경한다. 최종 권한 검증은 서버에서 수행한다. */
 import { useEffect, useState } from 'react'
 import useSWR from 'swr'
 import { Moon, Sun } from 'lucide-react'

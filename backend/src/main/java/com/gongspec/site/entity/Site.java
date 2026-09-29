@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.util.Map;
 import java.util.Set;
 
+/** 사이트의 URL·설명를 전용 컬럼으로 저장하고 details 맵과 변환한다. */
 @Entity
 @Table(name = "sites")
 public class Site extends ResourceItem {

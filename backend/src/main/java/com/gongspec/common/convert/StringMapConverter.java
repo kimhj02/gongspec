@@ -8,6 +8,7 @@ import jakarta.persistence.Converter;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/** 상세정보 맵을 DB의 JSON 문자열로 저장하고 조회 시 문자열 맵으로 복원한다. */
 @Converter
 public class StringMapConverter implements AttributeConverter<Map<String, String>, String> {
 

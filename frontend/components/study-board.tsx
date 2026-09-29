@@ -1,5 +1,6 @@
 'use client'
 
+/** 스터디 목록·모집글 편집·상세 댓글·신고 모달을 관리하고 변경 후 관련 SWR 데이터를 갱신한다. */
 import { FormEvent, useMemo, useState } from 'react'
 import useSWR from 'swr'
 import { Plus, Search, X } from 'lucide-react'

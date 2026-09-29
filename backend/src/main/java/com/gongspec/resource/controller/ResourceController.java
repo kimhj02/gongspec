@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 자료 유형·검색어·식별자를 받아 현재 사용자의 자료 조회, 생성, 수정, 삭제, 순서 변경을 처리한다. */
 @RestController
 @RequestMapping("/api/resources")
 public class ResourceController {

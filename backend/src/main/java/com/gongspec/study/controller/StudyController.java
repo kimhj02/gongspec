@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 스터디 모집글·댓글·신고·모집 상태 변경 요청을 현재 사용자 기준으로 전달한다. */
 @RestController
 @RequestMapping("/api/study")
 public class StudyController {

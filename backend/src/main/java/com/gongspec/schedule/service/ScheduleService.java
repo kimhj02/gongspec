@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** 일정 저장·수정·삭제에 현재 사용자의 소유권 확인과 트랜잭션을 적용한다. */
 @Service
 @Transactional(readOnly = true)
 public class ScheduleService {

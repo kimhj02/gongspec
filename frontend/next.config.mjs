@@ -1,3 +1,4 @@
+/** standalone 배포 출력과 백엔드 API·공휴일 API 프록시 경로를 설정한다. */
 const backend = (process.env.API_BASE_URL || 'http://localhost:8080').replace(/\/$/, '')
 
 /** @type {import('next').NextConfig} */

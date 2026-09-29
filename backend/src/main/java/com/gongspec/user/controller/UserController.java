@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 현재 로그인 사용자의 사이트 닉네임 변경 요청을 처리한다. */
 @RestController
 @RequestMapping("/api/users")
 public class UserController {

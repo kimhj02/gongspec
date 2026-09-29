@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+/** 숨기지 않은 모집글을 조건별로 검색하고 작성자 정보도 함께 조회한다. */
 public interface StudyPostRepository extends JpaRepository<StudyPost, UUID> {
 
     @Query(

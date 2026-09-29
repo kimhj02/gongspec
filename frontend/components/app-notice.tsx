@@ -1,5 +1,6 @@
 'use client'
 
+/** 저장 성공·실패 등의 안내 메시지와 닫기 버튼을 표시한다. */
 import { X } from 'lucide-react'
 
 export type Notice = { type: 'error' | 'success'; message: string }

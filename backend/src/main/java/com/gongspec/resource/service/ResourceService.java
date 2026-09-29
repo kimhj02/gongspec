@@ -39,6 +39,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** 자료 유형별 저장소 선택, 사용자 소유권 확인, 정렬 및 변경 트랜잭션을 담당한다. */
 @Service
 @Transactional(readOnly = true)
 public class ResourceService {
@@ -87,6 +88,7 @@ public class ResourceService {
         User user = userService.getById(userId);
         ResourceItem item = newItem(user, request.tab(), request.title());
         item.setSortOrder(nextSortOrder(listByTab(userId, request.tab())));
+        // 생성/수정은 ResourceItem의 동일한 필드 반영 규칙을 사용한다.
         apply(item, request.title(), request.subtitle(), request.body(), request.tags(), request.date(), request.pinned(), request.collapsed(), request.details());
         return save(item);
     }
@@ -123,6 +125,7 @@ public class ResourceService {
                 throw ApiException.badRequest("순서가 올바르지 않습니다.");
             }
         }
+        // 검색 결과 일부만 재정렬해도 요청에 없는 자료는 원래 위치를 유지한다.
         Deque<UUID> queue = new ArrayDeque<>(ids);
         List<ResourceItem> next = new ArrayList<>(all.size());
         for (ResourceItem item : all) {
@@ -221,6 +224,7 @@ public class ResourceService {
         }
     }
 
+    // 존재 여부와 타인 소유 여부를 같은 404 응답으로 처리해 다른 사용자의 자료를 노출하지 않는다.
     private ResourceItem getOwned(UUID userId, UUID id) {
         return findOwned(userId, id).orElseThrow(() -> ApiException.notFound("자료를 찾을 수 없습니다."));
     }

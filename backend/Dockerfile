@@ -1,3 +1,4 @@
+# Maven으로 실행 JAR를 만들고 JRE 이미지에는 결과물만 복사한다. 테스트는 별도 CI에서 수행한다.
 FROM maven:3.9.11-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .

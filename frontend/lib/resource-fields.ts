@@ -1,3 +1,4 @@
+/** 자료별 입력 항목 정의와 폼 초기값·저장 payload·카드 표시 변환을 함께 관리한다. */
 import type { Resource, ResourceTab } from '@/lib/api'
 import { parseChecklist, serializeChecklist } from '@/lib/application-checklist'
 import { certificateLevelOptions, isLanguageCertificate, languageScorePlaceholder } from '@/lib/certificates'
@@ -262,6 +263,7 @@ export function pickApplicationValues(
   return next
 }
 
+/** 선택한 전형의 필드만 교체하고 나머지 전형·확장 상세값은 보존한다. */
 export function mergeApplicationDetails(
   existing: Record<string, string> = {},
   incoming: Record<string, string>,
@@ -282,6 +284,7 @@ export function mergeApplicationDetails(
   return next
 }
 
+/** 입력값과 기존 상세정보를 합쳐 지원 현황 API payload를 만든다. */
 export function toApplicationPayload(
   values: Record<string, string>,
   stageId: ApplicationStageId,
@@ -298,6 +301,7 @@ export function toApplicationPayload(
   }
 }
 
+/** 동일 회사·공고를 새로 추가할 때 기존 자료에 입력을 합친다. 직접 수정·삭제와는 다른 병합 경로다. */
 export function overlayApplication(existing: Resource, incoming: Omit<Resource, 'id'>) {
   const existingDetails = existing.details ?? {}
   const incomingDetails = { ...incoming.details }
@@ -311,6 +315,7 @@ export function overlayApplication(existing: Resource, incoming: Omit<Resource, 
     if ((value ?? '') !== (existingDetails[key] ?? '')) changed[key] = value
   }
   const scope = Object.keys(changed).length ? changed : incomingDetails
+  // 전형 날짜 없이 체크리스트만 추가한 요청이 기본 전형(서류)의 기존 값을 지우지 않도록 한다.
   const checklistOnly = incomingDetails.checklist !== undefined &&
     !applicationStages.some((stage) => stage.fields.some((field) => incomingDetails[field.key] !== undefined))
   return toApplicationPayload(
@@ -433,6 +438,7 @@ export function emptyEssayEntry(): EssayEntry {
   return { item: '', essay: '' }
 }
 
+/** 문항 목록 JSON을 읽고, 목록이 없는 기존 자료는 단일 문항 표현에서 복원한다. */
 export function parseEssayEntries(resource: Pick<Resource, 'subtitle' | 'body' | 'details'>): EssayEntry[] {
   const details = resource.details ?? {}
   if (details.entries) {

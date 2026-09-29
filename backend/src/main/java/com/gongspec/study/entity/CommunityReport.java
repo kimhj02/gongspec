@@ -13,6 +13,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.util.UUID;
 
+/** 신고자·대상 유형·대상 ID·사유를 저장하며 같은 사용자의 동일 대상 중복 신고를 제한한다. */
 @Entity
 @Table(
         name = "community_reports",

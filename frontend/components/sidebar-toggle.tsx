@@ -1,5 +1,6 @@
 'use client'
 
+/** 사이드바 표시 상태와 열기/닫기 버튼의 접근성 상태를 동기화하는 화면 틀이다. */
 import type { ReactNode } from 'react'
 
 export function SidebarToggle({ open, onToggle }: { open: boolean; onToggle: () => void }) {

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/** 자료의 제목·소유자·정렬 상태와 상세정보 변환을 정의하는 매핑 상위 클래스. 공통 필드는 각 자료 테이블에 저장된다. */
 @MappedSuperclass
 public abstract class ResourceItem extends BaseEntity {
 
@@ -67,6 +68,7 @@ public abstract class ResourceItem extends BaseEntity {
 
     protected abstract void exportSpecific(Map<String, String> details);
 
+    // 공통 필드는 null이면 유지한다. details는 부분 병합하지 않으므로 호출자가 보존할 상세값까지 보내야 한다.
     public void merge(
             String title,
             String subtitle,
@@ -97,6 +99,7 @@ public abstract class ResourceItem extends BaseEntity {
         if (collapsed != null) {
             this.collapsed = collapsed;
         }
+        // 알려진 키는 전용 컬럼으로, 그 외 키(예: 지원 체크리스트)는 extras JSON으로 나누어 저장한다.
         if (details != null) {
             applySpecific(details);
             this.extras = DetailMap.extras(details, specificKeys());
@@ -143,6 +146,7 @@ public abstract class ResourceItem extends BaseEntity {
         return collapsed;
     }
 
+    // 응답에는 전용 컬럼과 확장 정보를 다시 하나의 details 맵으로 합친다.
     public Map<String, String> getDetails() {
         Map<String, String> details = new LinkedHashMap<>();
         exportSpecific(details);

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 카카오 로그인 시작·콜백, 내 로그인 정보 조회, 로그아웃의 HTTP 입출력과 쿠키를 처리한다. */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -52,6 +53,7 @@ public class AuthController {
     public ResponseEntity<UserResponse> kakaoCallback(
             @Valid @RequestBody KakaoCallbackRequest request,
             @CookieValue(value = AuthCookies.STATE, required = false) String stateCookie) {
+        // 인가 코드를 사용하기 전에 로그인 시작 시 발급한 쿠키와 콜백 state가 같은지 확인한다.
         authService.verifyState(stateCookie, request.state());
         User user = authService.loginWithKakao(request.code());
         String token = authService.createToken(user);

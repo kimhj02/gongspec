@@ -1,5 +1,7 @@
+/** details.checklist에 저장한 JSON을 화면용 항목으로 읽고, 저장 시 공백과 빈 항목을 정리한다. */
 export type ChecklistItem = { id: string; title: string; completed: boolean }
 
+/** 이전 자료의 누락·손상된 JSON은 빈 목록으로 처리하고 잘못된 항목과 중복 ID를 제외한다. */
 export function parseChecklist(value?: string): ChecklistItem[] {
   if (!value) return []
   try {

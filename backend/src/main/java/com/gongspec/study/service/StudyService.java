@@ -32,6 +32,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** 스터디 작성자 권한, 연락처 제한, 공고 연결, 중복 신고 및 관리자 숨김 처리를 검증한다. */
 @Service
 @Transactional(readOnly = true)
 public class StudyService {
@@ -60,6 +61,7 @@ public class StudyService {
         if (posts.isEmpty()) {
             return List.of();
         }
+        // 글마다 추가 조회하지 않도록 댓글 수와 연결 공고를 목록 단위로 모아서 조회한다.
         List<UUID> postIds = posts.stream().map(StudyPost::getId).toList();
         Map<UUID, Long> commentCounts = new HashMap<>();
         for (StudyCommentRepository.CommentCount row : commentRepository.countVisibleByPostIds(postIds)) {
@@ -264,6 +266,7 @@ public class StudyService {
         if (reportRepository.existsByReporterIdAndTargetTypeAndTargetId(userId, type, targetId)) {
             throw ApiException.badRequest("이미 신고한 내용입니다.");
         }
+        // 동시 요청으로 사전 중복 확인을 모두 통과해도 DB 고유 제약 위반을 같은 오류로 변환한다.
         try {
             reportRepository.saveAndFlush(new CommunityReport(reporter, type, targetId, reason.trim()));
         } catch (DataIntegrityViolationException exception) {

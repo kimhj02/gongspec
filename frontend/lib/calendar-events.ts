@@ -1,3 +1,4 @@
+/** 개인 일정과 지원 전형 날짜를 동일한 CalendarEvent 형태로 바꿔 캘린더에 전달한다. */
 import type { Resource, Schedule, ScheduleType } from '@/lib/api'
 import { applicationCompanyName, applicationPostingName, toDateInputValue } from '@/lib/resource-fields'
 

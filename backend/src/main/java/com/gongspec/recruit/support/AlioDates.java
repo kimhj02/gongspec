@@ -1,5 +1,6 @@
 package com.gongspec.recruit.support;
 
+/** ALIO 날짜에서 숫자를 추출해 앞 8자리를 YYYY-MM-DD 형식으로 바꾼다. */
 public final class AlioDates {
 
     private AlioDates() {}

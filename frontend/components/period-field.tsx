@@ -1,5 +1,6 @@
 'use client'
 
+/** 교육·경력 등의 기간 요약 버튼과 날짜 범위 선택기를 연결한다. */
 import { useState } from 'react'
 import DateRangePicker from '@/components/date-range-picker'
 import { formatKoreanRange } from '@/lib/dates'

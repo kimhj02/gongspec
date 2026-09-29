@@ -8,6 +8,7 @@ import jakarta.persistence.Converter;
 import java.util.ArrayList;
 import java.util.List;
 
+/** 문자열 목록을 DB의 JSON 문자열로 저장하고 조회 시 목록으로 복원한다. */
 @Converter
 public class StringListConverter implements AttributeConverter<List<String>, String> {
 

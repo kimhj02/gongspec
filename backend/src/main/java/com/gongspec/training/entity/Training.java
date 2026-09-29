@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import java.util.Map;
 import java.util.Set;
 
+/** 직업교육의 교육기관·과목·NCS·교육시간·기간·내용를 전용 컬럼으로 저장하고 details 맵과 변환한다. */
 @Entity
 @Table(name = "trainings")
 public class Training extends ResourceItem {

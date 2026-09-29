@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+/** CORS 허용 주소, 쿠키 Secure 여부, 관리자 카카오 ID 목록의 설정과 기본값을 관리한다. */
 @ConfigurationProperties(prefix = "app")
 public record AppProperties(Cors cors, Cookie cookie, Admin admin) {
 

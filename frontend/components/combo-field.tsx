@@ -1,5 +1,6 @@
 'use client'
 
+/** 선택형 입력에 옵션 목록과 선택적인 직접 입력을 제공한다. 목록은 포털로 띄워 부모 영역의 잘림을 피한다. */
 import { ChevronDown, Search, Tag } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'

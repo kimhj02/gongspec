@@ -1,5 +1,6 @@
 'use client'
 
+/** 개인 자료를 이용하려는 비로그인 사용자에게 카카오 로그인 진입 화면을 보여준다. */
 type LoginGateProps = {
   onLogin: () => void
   pending?: boolean

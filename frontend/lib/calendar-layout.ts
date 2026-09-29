@@ -1,3 +1,4 @@
+/** 기간 일정을 주 단위로 잘라 겹치지 않는 행에 배치하고, 표시 한도를 넘는 일정은 날짜별로 기록한다. */
 import type { CalendarEvent } from '@/lib/calendar-events'
 import { dateKey, scheduleSpan } from '@/lib/dates'
 
@@ -20,6 +21,7 @@ export function chunkWeeks<T>(days: T[], size = 7) {
 
 export function layoutWeekEvents(week: (Date | null)[], events: CalendarEvent[], maxLanes = VISIBLE_EVENT_LANES) {
   const keys = week.map((day) => (day ? dateKey(day) : null))
+  // 주 경계로 자른 뒤 시작 위치·기간 길이·공휴일 여부·제목 순으로 배치 우선순위를 결정한다.
   const candidates = events
     .map((event) => {
       const clipped = clipToWeek(keys, event)
@@ -41,6 +43,7 @@ export function layoutWeekEvents(week: (Date | null)[], events: CalendarEvent[],
   const hiddenEventsByCol: CalendarEvent[][] = Array.from({ length: week.length }, () => [])
 
   for (const item of candidates) {
+    // 앞 일정이 끝난 행을 재사용한다. 사용 가능한 행이 없으면 날짜별 숨김 목록에 넣는다.
     let lane = laneEnds.findIndex((end) => end < item.startCol)
     if (lane === -1) {
       if (laneEnds.length >= maxLanes) {
@@ -67,6 +70,7 @@ export function layoutWeekEvents(week: (Date | null)[], events: CalendarEvent[],
   return { segments, overflowByCol, hiddenEventsByCol }
 }
 
+// 한 일정이 여러 주에 걸치면 각 주의 구간과 좌우 이어짐 상태를 따로 계산한다.
 function clipToWeek(keys: (string | null)[], event: CalendarEvent) {
   const { start, end } = scheduleSpan(event)
   let startCol = -1

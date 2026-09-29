@@ -11,6 +11,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
+/** MySQL의 기존 자료 subtitle 및 자기소개서 item 컬럼을 필요한 경우 TEXT로 확장한다. */
 @Component
 public class WidenResourceTextColumns implements ApplicationRunner {
 

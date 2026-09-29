@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 진행 중 채용공고 검색과 수동 동기화 요청을 받아 응답 DTO로 반환한다. */
 @RestController
 @RequestMapping("/api/recruits")
 public class RecruitController {

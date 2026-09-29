@@ -18,6 +18,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/** 공개 API와 로그인 필수 API를 구분하고 세션 대신 JWT 필터로 요청을 인증한다. */
 @Configuration
 public class SecurityConfig {
 

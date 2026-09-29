@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 로그인 사용자의 일정 목록·등록·전체 수정·삭제를 HTTP API로 제공한다. */
 @RestController
 @RequestMapping("/api/schedules")
 public class ScheduleController {

@@ -14,6 +14,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+/** 엔티티에 UUID 식별자와 생성·수정 시각을 제공한다. 자체 테이블을 만드는 클래스는 아니다. */
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {

@@ -4,6 +4,7 @@ import com.gongspec.study.entity.CommunityReport;
 import com.gongspec.study.entity.ReportTargetType;
 import java.time.Instant;
 
+/** 신고 정보에 대상 글 제목·댓글 본문·숨김 상태를 합쳐 관리자 화면에 전달한다. */
 public record CommunityReportResponse(
         String id,
         ReportTargetType targetType,

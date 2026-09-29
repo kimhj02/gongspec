@@ -1,8 +1,10 @@
 'use client'
 
+/** 본문만 클립보드에 복사하며 진행·성공·실패 상태를 표시하고 오래된 비동기 결과는 무시한다. */
 import { useEffect, useRef, useState } from 'react'
 import { Check, Copy } from 'lucide-react'
 
+// Clipboard API가 없는 환경에서는 임시 textarea를 사용한 뒤 사용자의 포커스와 선택 범위를 복원한다.
 function copyWithoutClipboardApi(text: string) {
   const focused = document.activeElement
   const selection = window.getSelection()
@@ -26,6 +28,7 @@ function copyWithoutClipboardApi(text: string) {
 
 export default function EssayCopyButton({ text, label }: { text: string; label: string }) {
   const [status, setStatus] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle')
+  // 본문 변경·언마운트 이전에 시작한 복사가 늦게 끝나더라도 현재 버튼 상태를 덮어쓰지 않게 한다.
   const requestId = useRef(0)
 
   useEffect(() => {

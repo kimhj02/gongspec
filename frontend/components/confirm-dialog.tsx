@@ -1,5 +1,6 @@
 'use client'
 
+/** 삭제 등 실행 전 확인이 필요한 동작의 제목·설명과 취소/실행 버튼을 표시한다. */
 import { X } from 'lucide-react'
 import ModalShell from '@/components/modal-shell'
 

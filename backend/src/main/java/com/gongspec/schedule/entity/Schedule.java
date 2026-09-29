@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
+/** 사용자 일정의 날짜 범위·메모·유형을 저장하며 빈 종료일과 메모는 null로 정리한다. */
 @Entity
 @Table(name = "schedules")
 public class Schedule extends BaseEntity {

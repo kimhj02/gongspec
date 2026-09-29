@@ -1,5 +1,6 @@
 'use client'
 
+/** 드래그와 위아래 방향키로 목록 순서를 바꾼다. 변경 결과의 저장은 부모 onReorder가 담당한다. */
 import { Fragment, useRef, useState, type DragEvent, type KeyboardEvent, type ReactNode } from 'react'
 import { GripVertical } from 'lucide-react'
 import { moveItem } from '@/lib/reorder'

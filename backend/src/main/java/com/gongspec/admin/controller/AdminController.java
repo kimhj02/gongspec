@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/** 신고 목록과 글·댓글 숨김/해제 API를 제공한다. 관리자 권한 확인은 서비스에서 수행한다. */
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {

@@ -1,5 +1,6 @@
 'use client'
 
+/** 현재 사용자 조회와 로그인·로그아웃 상태를 관리한다. 401은 로그인하지 않은 상태로 취급한다. */
 import { useState } from 'react'
 import useSWR from 'swr'
 import { api, isUnauthorized, meKey, type AuthUser } from '@/lib/api'

@@ -1,5 +1,6 @@
 'use client'
 
+/** 채용공고의 정규직·계약직·인턴 필터 선택값을 부모 화면에 전달한다. */
 import type { HireTypeFilter } from '@/lib/api'
 
 export const hireFilterOptions: { value: HireTypeFilter | ''; label: string }[] = [

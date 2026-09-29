@@ -1,3 +1,4 @@
+/** Base UI 버튼에 공통 스타일 변형과 크기 선택을 적용한다. */
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
 import { cva, type VariantProps } from 'class-variance-authority'
 

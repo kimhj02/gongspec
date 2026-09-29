@@ -8,6 +8,7 @@ import com.gongspec.study.entity.StudyStatus;
 import java.time.Instant;
 import java.util.UUID;
 
+/** 모집글에 작성자 표시명·내 글 여부·댓글 수·연결 공고 제목을 합쳐 반환한다. */
 public record StudyPostResponse(
         String id,
         String title,

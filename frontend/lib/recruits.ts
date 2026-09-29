@@ -1,3 +1,4 @@
+/** 채용공고의 날짜·고용형태 표시와 마감순 정렬, 지원 현황으로 옮길 초기 입력값을 만든다. */
 import { dateKey, ddayLabel, diffInDays, formatKoreanDate } from '@/lib/dates'
 import type { PublicRecruit } from '@/lib/api'
 

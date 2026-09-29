@@ -12,6 +12,7 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 import org.springframework.core.env.MutablePropertySources;
 
+/** application.yml 해석 전에 .env 값을 등록하되 실제 환경변수가 지정된 값은 덮어쓰지 않는다. */
 public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
     static final String PROPERTY_SOURCE_NAME = "dotenvFile";

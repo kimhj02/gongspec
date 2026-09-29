@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+/** 상세정보 맵의 빈 값을 정리하고 전용 컬럼으로 처리하지 않는 키를 extras로 분리한다. */
 public final class DetailMap {
 
     private DetailMap() {}
