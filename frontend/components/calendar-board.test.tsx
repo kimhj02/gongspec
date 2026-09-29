@@ -1,15 +1,73 @@
 /** @vitest-environment jsdom */
 
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import CalendarBoard from '@/components/calendar-board'
 import ScheduleModal from '@/components/schedule-modal'
 import { monthDays } from '@/lib/dates'
+import type { CalendarEvent } from '@/lib/calendar-events'
 
 afterEach(() => cleanup())
 
 describe('calendar board', () => {
+  const overflowEvents: CalendarEvent[] = [
+    ...['A', 'B', 'C'].map((title) => ({
+      id: title, title, date: '2026-09-10', endDate: '2026-09-12', type: '개인' as const, source: 'schedule' as const,
+    })),
+    { id: 'hidden', title: '숨겨진 연수', date: '2026-09-11', endDate: '2026-09-12', type: '개인', source: 'schedule' },
+    { id: 'exam', title: '숨겨진 면접', date: '2026-09-12', type: '면접', source: 'application', resourceId: 'app-1' },
+  ]
+
+  function renderOverflow(events = overflowEvents) {
+    const onSelectDay = vi.fn()
+    const onSelectEvent = vi.fn()
+    render(<CalendarBoard
+      month={new Date(2026, 8, 1)} setMonth={() => undefined}
+      days={monthDays(new Date(2026, 8, 1))} today="2026-09-08" selectedDay={null}
+      events={events} onSelectDay={onSelectDay} onSelectEvent={onSelectEvent}
+    />)
+    return { onSelectDay, onSelectEvent }
+  }
+
+  it.each([overflowEvents[3], overflowEvents[4]])('opens a single hidden $source directly', async (event) => {
+    const user = userEvent.setup()
+    const { onSelectDay, onSelectEvent } = renderOverflow([...overflowEvents.slice(0, 3), event])
+    await user.click(screen.getByRole('button', { name: `9월 12일 ${event.title} 상세 화면으로 이동` }))
+    expect(onSelectEvent).toHaveBeenCalledWith(event)
+    expect(onSelectDay).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it.each([overflowEvents[3], overflowEvents[4]])('lists only hidden events and selects a $source', async (event) => {
+    const user = userEvent.setup()
+    const { onSelectDay, onSelectEvent } = renderOverflow()
+    const more = screen.getByRole('button', { name: '9월 12일 일정 더보기' })
+    expect(more.textContent).toBe('+2')
+    await user.click(more)
+    const dialog = within(screen.getByRole('dialog', { name: '2026-09-12 숨겨진 일정' }))
+    expect(dialog.getByRole('button', { name: '숨겨진 연수' })).toBeTruthy()
+    expect(dialog.getByRole('button', { name: '숨겨진 면접' })).toBeTruthy()
+    expect(dialog.queryByRole('button', { name: 'A' })).toBeNull()
+    expect(onSelectEvent).not.toHaveBeenCalled()
+    await user.click(dialog.getByRole('button', { name: event.title }))
+    expect(onSelectEvent).toHaveBeenCalledWith(event)
+    expect(onSelectDay).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('dismisses the hidden list with Escape and restores focus to the more button', async () => {
+    const user = userEvent.setup()
+    const { onSelectEvent, onSelectDay } = renderOverflow()
+    const more = screen.getByRole('button', { name: '9월 12일 일정 더보기' })
+    await user.click(more)
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(document.activeElement).toBe(more)
+    expect(onSelectEvent).not.toHaveBeenCalled()
+    expect(onSelectDay).not.toHaveBeenCalled()
+  })
+
   it('shows application exam dates as chips and opens a day on click', async () => {
     const user = userEvent.setup()
     const onSelectDay = vi.fn()

@@ -1,6 +1,8 @@
 'use client'
 
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useCallback, useRef, useState } from 'react'
+import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react'
+import ModalShell from '@/components/modal-shell'
 import { eventTypeClass, type CalendarEvent } from '@/lib/calendar-events'
 import { chunkWeeks, layoutWeekEvents } from '@/lib/calendar-layout'
 import { dateKey, isOnDay, pad } from '@/lib/dates'
@@ -28,6 +30,19 @@ export default function CalendarBoard({
   onSelectEvent: (event: CalendarEvent) => void
 }) {
   const holidayEvents = holidayEventsFrom(holidays)
+  const [overflowDay, setOverflowDay] = useState<string | null>(null)
+  const overflowTrigger = useRef<HTMLButtonElement | null>(null)
+  const closeOverflow = useCallback(() => {
+    setOverflowDay(null)
+    overflowTrigger.current?.focus()
+  }, [])
+  const weeks = chunkWeeks(days).map((week) => ({
+    week,
+    ...layoutWeekEvents(week, [...holidayEvents, ...events]),
+  }))
+  const overflowWeek = weeks.find(({ week }) => week.some((day) => day && dateKey(day) === overflowDay))
+  const overflowCol = overflowWeek?.week.findIndex((day) => day && dateKey(day) === overflowDay) ?? -1
+  const hiddenEvents = overflowWeek?.hiddenEventsByCol[overflowCol] ?? []
 
   return (
     <section className="calendar-board">
@@ -65,8 +80,7 @@ export default function CalendarBoard({
         ))}
       </div>
       <div className="calendar-month">
-        {chunkWeeks(days).map((week, weekIndex) => {
-          const { segments, overflowByCol } = layoutWeekEvents(week, [...holidayEvents, ...events])
+        {weeks.map(({ week, segments, overflowByCol, hiddenEventsByCol }, weekIndex) => {
           const holidaySegments = segments.filter((item) => item.event.source === 'holiday')
           const eventSegments = segments.filter((item) => item.event.source !== 'holiday')
           const laneCount = segments.reduce((max, item) => Math.max(max, item.lane + 1), 0)
@@ -124,14 +138,25 @@ export default function CalendarBoard({
                     const day = week[col]
                     if (!count || !day) return null
                     const key = dateKey(day)
+                    const hidden = hiddenEventsByCol[col]
+                    const directEvent = hidden.length === 1 && hidden[0].source !== 'holiday' ? hidden[0] : null
                     return (
                       <button
                         type="button"
                         key={`${weekIndex}-more-${key}`}
                         className="event-more"
                         style={{ gridColumn: col + 1, gridRow: laneCount + 1 }}
-                        aria-label={`${day.getMonth() + 1}월 ${day.getDate()}일 일정 더보기`}
-                        onClick={() => onSelectDay(key)}
+                        aria-label={directEvent
+                          ? `${day.getMonth() + 1}월 ${day.getDate()}일 ${directEvent.title} 상세 화면으로 이동`
+                          : `${day.getMonth() + 1}월 ${day.getDate()}일 일정 더보기`}
+                        onClick={(click) => {
+                          if (directEvent) {
+                            onSelectEvent(directEvent)
+                          } else {
+                            overflowTrigger.current = click.currentTarget
+                            setOverflowDay(key)
+                          }
+                        }}
                       >
                         +{count}
                       </button>
@@ -143,6 +168,36 @@ export default function CalendarBoard({
           )
         })}
       </div>
+      {overflowDay && hiddenEvents.length > 0 && (
+        <ModalShell onClose={closeOverflow} labelledBy="calendar-overflow-title" className="small-modal">
+          <div className="modal-header">
+            <h2 id="calendar-overflow-title">{overflowDay} 숨겨진 일정</h2>
+            <button type="button" className="icon-button" onClick={closeOverflow} aria-label="닫기" autoFocus>
+              <X size={18} />
+            </button>
+          </div>
+          <ul className="calendar-overflow-list">
+            {hiddenEvents.map((event) => (
+              <li key={event.id}>
+                {event.source === 'holiday' ? (
+                  <span className="event-bar holiday">{event.title}</span>
+                ) : (
+                  <button
+                    type="button"
+                    className={`event-bar ${eventTypeClass(event.type, event.source)}`}
+                    onClick={() => {
+                      closeOverflow()
+                      onSelectEvent(event)
+                    }}
+                  >
+                    {event.title}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </ModalShell>
+      )}
       <p className="calendar-hint">
         <CalendarDays size={14} /> 날짜를 눌러 일정을 추가하거나, 지원 현황의 서류·필기·면접 날짜가 자동으로 표시됩니다.
       </p>

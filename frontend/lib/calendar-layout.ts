@@ -38,12 +38,16 @@ export function layoutWeekEvents(week: (Date | null)[], events: CalendarEvent[],
   const laneEnds: number[] = []
   const segments: WeekSegment[] = []
   const overflowByCol = Array.from({ length: week.length }, () => 0)
+  const hiddenEventsByCol: CalendarEvent[][] = Array.from({ length: week.length }, () => [])
 
   for (const item of candidates) {
     let lane = laneEnds.findIndex((end) => end < item.startCol)
     if (lane === -1) {
       if (laneEnds.length >= maxLanes) {
-        for (let col = item.startCol; col <= item.endCol; col++) overflowByCol[col] += 1
+        for (let col = item.startCol; col <= item.endCol; col++) {
+          overflowByCol[col] += 1
+          hiddenEventsByCol[col].push(item.event)
+        }
         continue
       }
       lane = laneEnds.length
@@ -60,7 +64,7 @@ export function layoutWeekEvents(week: (Date | null)[], events: CalendarEvent[],
     })
   }
 
-  return { segments, overflowByCol }
+  return { segments, overflowByCol, hiddenEventsByCol }
 }
 
 function clipToWeek(keys: (string | null)[], event: CalendarEvent) {

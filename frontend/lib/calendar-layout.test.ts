@@ -3,6 +3,19 @@ import { chunkWeeks, layoutWeekEvents } from './calendar-layout'
 import { monthDays } from './dates'
 
 describe('calendar layout', () => {
+  it('tracks the actual hidden events on each day, including multi-day continuations', () => {
+    const week = monthDays(new Date(2026, 8, 1)).slice(7, 14)
+    const visible = { id: 'visible', title: '연수', date: '2026-09-10', endDate: '2026-09-12', type: '개인' as const, source: 'schedule' as const }
+    const hidden = { ...visible, id: 'hidden', title: '면담', date: '2026-09-11' }
+    const exam = { ...visible, id: 'exam', title: '면접', date: '2026-09-12', source: 'application' as const, resourceId: 'app-1' }
+    const { overflowByCol, hiddenEventsByCol } = layoutWeekEvents(week, [visible, hidden, exam], 1)
+
+    expect(overflowByCol).toEqual([0, 0, 0, 0, 0, 1, 2])
+    expect(hiddenEventsByCol[4]).toEqual([])
+    expect(hiddenEventsByCol[5]).toEqual([hidden])
+    expect(hiddenEventsByCol[6]).toEqual([hidden, exam])
+  })
+
   it('places a 3-day schedule on one connected segment', () => {
     const week = monthDays(new Date(2026, 8, 1)).slice(7, 14)
     const { segments } = layoutWeekEvents(week, [
