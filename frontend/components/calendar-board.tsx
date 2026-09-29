@@ -138,17 +138,20 @@ export default function CalendarBoard({
                     const day = week[col]
                     if (!count || !day) return null
                     const key = dateKey(day)
+                    const hidden = hiddenEventsByCol[col]
+                    const directEvent = hidden.length === 1 && hidden[0].source !== 'holiday' ? hidden[0] : null
                     return (
                       <button
                         type="button"
                         key={`${weekIndex}-more-${key}`}
                         className="event-more"
                         style={{ gridColumn: col + 1, gridRow: laneCount + 1 }}
-                        aria-label={`${day.getMonth() + 1}월 ${day.getDate()}일 일정 더보기`}
+                        aria-label={directEvent
+                          ? `${day.getMonth() + 1}월 ${day.getDate()}일 ${directEvent.title} 상세 화면으로 이동`
+                          : `${day.getMonth() + 1}월 ${day.getDate()}일 일정 더보기`}
                         onClick={(click) => {
-                          const hidden = hiddenEventsByCol[col]
-                          if (hidden.length === 1 && hidden[0].source !== 'holiday') {
-                            onSelectEvent(hidden[0])
+                          if (directEvent) {
+                            onSelectEvent(directEvent)
                           } else {
                             overflowTrigger.current = click.currentTarget
                             setOverflowDay(key)

@@ -33,7 +33,7 @@ describe('calendar board', () => {
   it.each([overflowEvents[3], overflowEvents[4]])('opens a single hidden $source directly', async (event) => {
     const user = userEvent.setup()
     const { onSelectDay, onSelectEvent } = renderOverflow([...overflowEvents.slice(0, 3), event])
-    await user.click(screen.getByRole('button', { name: '9월 12일 일정 더보기' }))
+    await user.click(screen.getByRole('button', { name: `9월 12일 ${event.title} 상세 화면으로 이동` }))
     expect(onSelectEvent).toHaveBeenCalledWith(event)
     expect(onSelectDay).not.toHaveBeenCalled()
     expect(screen.queryByRole('dialog')).toBeNull()
