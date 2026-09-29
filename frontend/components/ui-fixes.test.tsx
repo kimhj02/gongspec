@@ -271,7 +271,7 @@ describe('application form', () => {
     expect(screen.queryByText('서류 마감일')).toBeNull()
 
     await user.type(screen.getByLabelText('필기 시험일'), '2026-09-20')
-    await user.click(screen.getByRole('button', { name: /추가/ }))
+    await user.click(screen.getByRole('button', { name: /^추가$/ }))
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -316,7 +316,7 @@ describe('application form', () => {
     expect((screen.getByLabelText('서류 발표일') as HTMLInputElement).value).toBe('')
     expect(screen.getByRole('tab', { name: '서류' }).getAttribute('aria-selected')).toBe('true')
 
-    await user.click(screen.getByRole('button', { name: /추가/ }))
+    await user.click(screen.getByRole('button', { name: /^추가$/ }))
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
         tab: 'applications',
@@ -352,7 +352,7 @@ describe('application form', () => {
     await user.type(screen.getByPlaceholderText('예: 서울교통공사'), '서울교통공사')
     await user.type(screen.getByPlaceholderText('예: 2026년 9급 행정직'), '9급 행정직')
     await user.type(screen.getByLabelText('2차 면접일'), '2026-10-20')
-    await user.click(screen.getByRole('button', { name: /추가/ }))
+    await user.click(screen.getByRole('button', { name: /^추가$/ }))
 
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({

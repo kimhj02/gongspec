@@ -5,6 +5,8 @@ import { Plus, Trash2, X } from 'lucide-react'
 import ComboField from '@/components/combo-field'
 import PeriodField from '@/components/period-field'
 import ModalShell from '@/components/modal-shell'
+import ApplicationChecklist from '@/components/application-checklist'
+import { parseChecklist, serializeChecklist, type ChecklistItem } from '@/lib/application-checklist'
 import { getApiError, type Resource, type ResourceTab } from '@/lib/api'
 import {
   certificateFieldsFor,
@@ -71,6 +73,8 @@ export default function ResourceForm({
   })
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(() => parseChecklist((initial?.details ?? defaultDetails).checklist))
+  const [checklistEdited, setChecklistEdited] = useState(false)
 
   const setValue = (key: string, value: string) => setValues((current) => ({ ...current, [key]: value }))
   const patchValues = (patch: Record<string, string>) => setValues((current) => ({ ...current, ...patch }))
@@ -90,7 +94,8 @@ export default function ResourceForm({
     setSaving(true)
     setError('')
     try {
-      await onSave(isEssay ? toEssayPayload(title, entries) : isApplication ? toApplicationPayload(values, stageId, initial?.details, roundId) : toResourcePayload(tab, resolvedTitle, values))
+      const applicationValues = checklistEdited ? { ...values, checklist: serializeChecklist(checklist) } : values
+      await onSave(isEssay ? toEssayPayload(title, entries) : isApplication ? toApplicationPayload(applicationValues, stageId, initial?.details, roundId) : toResourcePayload(tab, resolvedTitle, values))
     } catch (caught) {
       setError(getApiError(caught))
     } finally {
@@ -231,6 +236,14 @@ export default function ResourceForm({
                 <FieldControl key={field.key} field={field} values={values} onChange={setValue} />
               ))}
             </div>
+            <ApplicationChecklist
+              items={checklist}
+              disabled={saving}
+              onChange={(next) => {
+                setChecklist(next)
+                setChecklistEdited(true)
+              }}
+            />
           </>
         ) : (
           <>

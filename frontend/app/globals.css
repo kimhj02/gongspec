@@ -190,6 +190,18 @@ button { cursor: pointer; }
 .calendar-overflow-list { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .calendar-overflow-list .event-bar { display: block; width: 100%; height: auto; margin: 0; padding: 10px 12px; font-size: 13px; white-space: normal; overflow-wrap: anywhere; }
 .calendar-hint { display: flex; align-items: center; gap: 7px; margin: 12px 0 0; color: var(--muted); font-size: 11px; }
+.application-checklist { min-width: 0; margin: 4px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: 10px; }
+.application-checklist legend { padding: 0 6px; color: var(--ink-soft); font-size: 14px; font-weight: 700; }
+.checklist-summary { margin: 0 0 12px; color: var(--sage-deep); font-size: 12px; font-weight: 700; }
+.card-title-row .checklist-summary { color: var(--sage-deep); }
+.checklist-items { display: flex; flex-direction: column; gap: 8px; margin: 0 0 12px; padding: 0; list-style: none; }
+.checklist-items li { display: flex; align-items: center; gap: 8px; }
+.checklist-items input[type="checkbox"] { flex: 0 0 18px; width: 18px; height: 18px; margin: 0; padding: 0; accent-color: var(--sage-deep); }
+.checklist-items input[type="text"] { flex: 1; min-width: 0; }
+.checklist-items .is-completed input[type="text"] { color: var(--muted); text-decoration: line-through; }
+.checklist-items .icon-button { flex-shrink: 0; }
+.checklist-add { display: inline-flex; align-items: center; gap: 6px; }
+.checklist-hint { margin: 10px 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
 .essay-board { display: flex; flex-direction: column; gap: 22px; }
 .essay-group { display: flex; flex-direction: column; gap: 14px; }
 .essay-group-header { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
